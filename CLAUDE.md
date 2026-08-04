@@ -21,6 +21,35 @@ If modular structure pins down the latents (up to module permutation and
 within-module coordinate change), it gives a principled route to interpretable
 latent dynamical models for neural data.
 
+### 1.0 The novelty claim is APPLICATION, not method (governing, 2026-08-04)
+
+**Read this before deciding what to work on.** The deliverable is *a simple,
+identifiable latent dynamics model for a neural population*. That is novel in
+the **neuroscience** literature — LFADS and its descendants produce latents
+defined only up to arbitrary reparameterisation, and nobody hands a
+neuroscientist a fitted model plus a statement of what about it is real. It
+does **not** need to be novel in dynamical systems or in nonlinear ICA.
+
+Three consequences, and they reverse earlier priorities:
+
+1. **Published machinery is a resource, not a threat.** Block-identifiability
+   (§1.3 of `literature.md`; tasks 38, 8) means the behavioural half can be
+   *cited* rather than proved. Discovering that a lemma already exists is
+   progress, not a setback — it removes an obligation. Assemble from available
+   parts and say so.
+2. **"Essentially proved, needs writing up" is a finished state.** Route C is
+   the asset (task 11). Its value here is that it is *correct and applicable*,
+   not that it is new.
+3. **Prefer the claim a neuroscientist can act on.** That is task 37 — the
+   partition, module dimensions, and per-module invariants (Lyapunov spectrum,
+   rotation number, attractor topology) — *not* block-diagonality of $h$. §7 has
+   always said coordinates are unidentifiable; under this framing that ceases to
+   be a caveat and becomes the specification.
+
+What still has to be true: the identifiability statement must be **correct**,
+its hypotheses **checkable on real data**, and the recovery **validated against
+synthetic ground truth**. Rigour is not what relaxes — scope of novelty is.
+
 ### 1.1 Scope — the minimal objective (governing constraint)
 
 **The target is an autonomous, single-area, nonlinear latent dynamical system
@@ -94,9 +123,9 @@ Current state of this repo:
 | Literature positioning (step 8) | `theory/literature.md` | Drafted, provenance-tagged; needs write-up into §8 |
 | Numerical falsification | `experiments/` | exp01–exp10 pass, all JSONs current. **`exp11` and `exp12` intentionally report FAILING checks** — they encode predictions the *dynamics-only* regime refuted. Per §8 those are committed, not tuned away, so **neither is registered in `run_all.py`**, which covers exp01–exp10 only. Both are also **superseded in part by §3.12** and carry a banner saying so; read `exp13` instead for anything behavioural. Read their JSONs directly |
 | Learning the partition from data | `src/idyn/selection.py`, `exp06` | Lattice search + fitted-model certification; fit and uniqueness each cover the other's blind spot |
-| **The behavioural penalty was a decoy** | `theory` §3.12, `models._behavioural_penalty`, `exp13` | **Found and fixed — this voids the two rows below.** The penalty scored the pinned block's conditional moments on the *raw* block, so it falls like $\varepsilon^2/\varepsilon^4$ when the block shrinks. The optimiser paid it with scale: pinned block **21× smaller** than its partner, raw $u$-dependence $0.0015$, and still carrying the $u$-varying latent at **dCor 0.99** (scale-normalised $u$-dep **1.07** vs $0.15$ for a genuinely invariant block). **No arm of `exp11`/`exp12` ever imposed Lemma D's behavioural hypothesis.** Fix: whiten the block first → invariant under $GL(d_b)$, the §7 gauge group. `TrainConfig.behavior_whiten=True` (default); both old experiments pinned to `False` so they still reproduce their JSONs |
-| **B∘C under learning — linear decoder** | `exp11`, `metrics.jacobian_block_report` | **Void as a B∘C result (§3.12).** The measurement is sound — `jac_diag` $\in[0.988,0.999]$ over 8 restarts, sd $0.004$ — but behaviour was never imposed, so it is a *dynamics-only* result. Doubly uninformative here: §3.5 forces $h\in GL(d)$ under a linear decoder, so this regime could not have tested the nonlinear claim either way |
-| **B∘C under learning — nonlinear decoder** | `exp11`, `exp12`, `systems.MLPDecoder` | **Headline retracted (§3.12).** `exp12` reported `jac_diag` falling monotonically $0.994 \to 0.730 \to 0.702 \to 0.567$ across doses $(0.00,0.31,0.43,0.60)$ and read it as "behaviour's half of B∘C fails once $h$ is nonlinear". **That reading is unsupported: behaviour's half was never applied.** The dose-response itself survives and is real (the strength-0 control — `jac_diag` $0.994$, sd $0.009$, lower **exactly $0.000$** — rules out a degenerate metric), but it measures how observation nonlinearity degrades a **dynamics-only** fit. With the penalty fixed at the recalibrated $w=1.0$, `exp13` (8 restarts) gets `jac_diag` $0.815$ at the top dose against $0.567$ here, and the forbidden `upper` falls to $\le0.081$ across *every* dose and restart (from $0.316$) — so the degradation reported here is largely an artifact of the decoy penalty, though block-diagonality is still not uniform (task 33/34) |
+| **The behavioural penalty was a decoy** | **§3.12** (canonical), `models._behavioural_penalty`, `exp13` | **Found and fixed.** The penalty was gauge-dependent, so the optimiser paid it by shrinking the pinned block 21× rather than making it $u$-invariant. **No arm of `exp11`/`exp12` ever imposed Lemma D's behavioural hypothesis**, which voids both rows below. Fix: whiten the block → invariant under $GL(d_b)$, the §7 gauge group. Numbers and the four-defect pattern in §3.12 |
+| **B∘C under learning — linear decoder** | `exp11` | **Void as a B∘C result (§3.12)** — behaviour was never imposed, so it is dynamics-only. Measurement itself is sound (`jac_diag` $\in[0.988,0.999]$, sd $0.004$). Doubly uninformative anyway: §3.5 forces $h\in GL(d)$ here |
+| **B∘C under learning — nonlinear decoder** | `exp11`, `exp12` → superseded by `exp13` | **Headline retracted (§3.12), then reversed.** `exp12`'s monotone decline $0.994\to0.730\to0.702\to0.567$ is real but measures *dynamics-only* fitting. With the penalty fixed, `exp13` gets $0.815$ at the top dose and kills the forbidden `upper` to $\le0.081$ at **every** dose and restart (from $0.316$). Not uniform — see tasks 33/34 |
 | **Nonlinear block-structure metrics** | `src/idyn/metrics.py` | `jacobian_block_report` (= $M_{ij}$ itself, standardised) + `distance_correlation_block_report` (model-free). The linear `filtration_report` is provably blind here — §3.10 |
 | **Nonlinear data decoder** | `src/idyn/systems.py` `MLPDecoder` | Affine coupling flow, invertible in closed form, analytic, ~45% nonlinear residual. Until 2026-08-03 **no experiment generated nonlinear observations at all** — §3.11 |
 | Test suite | `tests/` | 236 tests, all passing |
@@ -759,7 +788,7 @@ negative control comes back unique, stop and re-examine assumptions.
 | **32** | **close the gap between Lemma D and `exp12`** | **RESOLVED — and not by any of the three candidates I listed.** The answer is **(iv): the experiment never imposed the behavioural hypothesis.** `models._behavioural_penalty` scored the pinned block's conditional moments on the *raw* block, so it falls like $\varepsilon^2/\varepsilon^4$ when the block shrinks; the optimiser satisfied it by making the block **21× smaller** than its partner, while that block still carried the $u$-varying latent at **dCor 0.99** (scale-normalised $u$-dependence **1.07**, against $0.15$ for a genuinely invariant block and $1.09$ for the true *varying* one). So the discrepancy was never a hypothesis the fit *breaks* — it is one the experiment never *applied*. Full write-up §3.12; fix is `TrainConfig.behavior_whiten=True` (default), which restores the constraint (u-dep $\to 0.037$ at matched weight, scale ratio $\to 1.4\times$). **Consequence: exp11 and exp12's behavioural conclusions are void**, and `approaches.md` §B.1's B column is *untested*, not refuted. Successor is task 33 |
 | **33** | **does B∘C survive a nonlinear observation map once behaviour is *actually* imposed?** | **ANSWERED, PARTLY YES** (`exp13`, 8 restarts × 4 doses × 2 penalties). **(a) The forbidden direction is now uniformly killed.** `upper` $\le 0.081$ over *every* dose and *every* restart, against $0.316$ raw — Lemma C's half is clean once behaviour stops being paid off with scale. **(b) Block-diagonality improves sharply at the high doses**: `jac_diag` $0.702\to0.893$ at dose $0.43$ and $0.567\to0.815$ at $0.60$. **exp12's "degrades to a filtration" is refuted.** **(c) But it is not uniform, and the exception is sharp** — at dose $0.31$ the whitened fit lands *triangular in all 8 restarts* (`jac_diag` $0.546$, `lower` $0.416$, **sd $0.029$**). Deterministic, so not underpowering. So the defensible claim is: behaviour genuinely supplies its kill, and B∘C reaches block-diagonal at 3 of 4 doses — not at all of them. Successor is task 34 |
 | **38** | **NEW: the "partial iVAE lemma" is PUBLISHED — reposition the behavioural half** | open, and it **changes what Route B can claim** (`literature.md` §1.3). The obligation task 27 called the B∘C front line — "$u$-invariant complement identified as a subspace, not a corollary of Khemakhem et al." — is the literature's **block-identifiability** (von Kügelgen et al. 2021, Def. 4.1: $\hat c = h(c)$ for invertible $h$ — verbatim our target and verbatim §7). Two theorems in *our* setting, an auxiliary variable indexing a law rather than paired views: **Kong et al. arXiv 2306.06510 Thm 4.2** and **Sun et al. arXiv 2208.14161 Prop. 4.2**, both giving the invariant block up to invertible transformation, both allowing invariant/varying dependence, and Kong's componentwise-monotonic domain action $z_s=f_u(\tilde z_s)$ **exactly matches our variance modulation** $z_A=s(u)\tilde z_A$. **Lemma D is not redundant** — it needs **two** behaviour levels against Kong's $2n_s+1$ and Sun's $2\ell+1$, and buys that economy with the dynamics (the gap forces coupling degree $\ge2$). That economy is now the defensible novelty of the behavioural half, and it should be stated that way rather than as "we proved a lemma nobody had". **Blocking check first:** Kong's A2 is *componentwise* conditional independence, which our within-module coordinates violate — read from summaries, A2/A3 look like they serve the finer $z_s$ conclusion while the block conclusion rests on A1 + A4 (a cylinder-set condition, not a factorisation), but **this was not read from the proof.** Verify before citing |
-| **35** | **Route B′ — take the auxiliary variable to be the time index $t$** | open, **and promoted 2026-08-04: it is the mechanism that matches the target model class.** Autonomous LFADS is random $g_0$ + deterministic generator, so *all* of its trial-to-trial randomness sits in the initial condition. At fixed $t$, across trials, that is an **ensemble** — exactly the variability TCL/iVAE/B′ consume. Conversely the *path*-conditioning family (PCL, SNICA) is excluded by the target model itself, not by an incidental modelling choice: within a trial, consecutive states are deterministically related. So the split in `literature.md` §1.2 is not "which assumptions do we happen to satisfy" but **which family the science is actually in**. Also **it is free**: no behavioural annotation, no experimental design. This is exactly TCL's construction (Hyvärinen & Morioka), and it is available because the process is non-stationary (task 8 correction). **But it is a different mechanism, not a cheaper $u$ for Route B.** Lemma D runs on *invariance* — one block's law must be flat in $u$ — and time moves every block: measured scale-normalised $t$-dependence $1.32$ (A) and $4.20$ (B), against behaviour's $1.14$ / $\mathbf{0.14}$. **There is no $t$-invariant subspace, so Lemma D cannot be run on $u=t$ at all.** What $u=t$ can power is the iVAE/TCL *variability* condition, and there the appeal is real: for Gaussian $p_0$ the per-module natural parameters go like $s_i^{-2t}$, which are linearly independent across modules **iff the contraction rates differ** — i.e. the variability condition is satisfied exactly when Lemma C's spectral gap holds. Same hypothesis, a second extraction from it, and possibly one that beats §3.7's provable triangular ceiling without any new physical assumption. Three costs, all sharp: **(i) budget** — only $\approx9$–$10$ usable $t$ levels before the fast block underflows (`var_B` $9.6\times10^{-1}\to9.1\times10^{-7}$ by $t{=}10$) against Khemakhem's $nk+1=9$ for $d=4$ Gaussian, so it is *right at the line*; **(ii) reach — I had this exactly backwards, corrected by measurement.** I first claimed B′ is fixed-point territory because "on an attractor $p_t$ is stationary". Wrong: $p_t$ is stationary iff $p_0$ **is** the invariant measure, which on a cycle means *uniform phase* — and trial-aligned data is precisely the non-uniform case. Measured on two `LimitCycleBlock`s ($a=0.3$, $\beta=0$), $T=60$: with concentrated initial phase the scale-normalised $t$-dependence is $1.489$ early ($t\in[0,12)$) and $1.493$ late ($t\in[45,57)$) — **it does not decay at all**, phase coherence held at $0.881$. With uniform initial phase it collapses to $0.057$/$0.081$, flat — B′ genuinely dead, as the theory says it must be. So on a limit cycle B′'s variability is **persistent**, not transient, which makes it *stronger* off the fixed point than on it, and free of the $\approx9$-level budget in (i); **(iii) cost 3** — if TCL-style identification succeeds, modularity may be doing no work. Partial defence on (iii): within-module coordinates are *not* independent, so plain TCL does not apply and a block/subspace version is needed, which is where modularity re-enters. **The reason this route is now interesting: it may answer task 23.** $u=t$ is sensitive to the **rotation number**, which is exactly the finer conjugacy invariant task 23 says is needed and which Lyapunov exponents provably cannot see. Same measurement: two limit cycles with $\omega = 0.5$ vs $1.3$ have *identical* spectra $\{0, -0.9163\}$ — spectrally indistinguishable, gap $0$, Lemma C dead — yet their $u=t$ phase signatures separate cleanly (mean phase difference $1.571$ rad). Set $\omega_1=\omega_2=0.9$ and the separation collapses to $0.006$: **equal rotation numbers are B′'s analogue of resonance.** Caveat, and it is the practical one: coherence was preserved *exactly* here because the model is noiseless with $\beta=0$ (no shear, so frequency is radius-independent). Real dephasing — noise, frequency heterogeneity, $\beta\neq0$ during the radial transient — sets a finite horizon governed by the dephasing rate rather than by contraction. Longer than (i)'s budget, not infinite |
+| **35** | **Route B′ — auxiliary variable = the time index $t$** | open, **promoted: it matches the target model class and it is free.** Autonomous LFADS is random $g_0$ + deterministic generator, so all trial-to-trial randomness is in the initial condition; at fixed $t$ across trials that is an **ensemble**, exactly what TCL/iVAE consume. Path-conditioning (PCL/SNICA) is excluded by the target itself, not by a modelling choice. Available because the process is non-stationary (task 8 correction). **Not a cheaper $u$ for Lemma D** — Lemma D needs one block *flat* in $u$, and time moves every block ($t$-dep $1.32$/$4.20$ vs behaviour's $1.14$/$\mathbf{0.14}$), so there is no $t$-invariant subspace. What it powers is the TCL/iVAE **variability** condition: per-module natural parameters go like $s_i^{-2t}$, linearly independent across modules **iff the contraction rates differ** — i.e. satisfied exactly when Lemma C's gap holds. Same hypothesis, second extraction. **It may answer task 23**, the route's sharpest limitation: $u=t$ sees the **rotation number**, which Lyapunov exponents provably cannot. Measured — two limit cycles, $\omega=0.5$ vs $1.3$, *identical* spectra $\{0,-0.9163\}$ so Lemma C is dead, yet phase signatures separate by $1.571$ rad; at $\omega_1=\omega_2=0.9$ separation collapses to $0.006$ (**equal rotation numbers are B′'s resonance analogue**). Three costs: **(i)** at a fixed point only $\approx9$–$10$ usable $t$ levels before the fast block underflows, against Khemakhem's $nk+1=9$ — right at the line; **(ii)** on a *cycle* the variability is **persistent**, not transient ($t$-dep $1.489$ early, $1.493$ late, coherence held $0.881$; uniform initial phase → $0.057$, correctly dead), so B′ is **stronger off the fixed point than on it** — I first claimed the opposite and was corrected by measurement. Caveat: coherence held exactly because the model is noiseless with $\beta=0$; real dephasing sets a finite horizon, longer than (i)'s but not infinite; **(iii)** cost 3 — if TCL-style identification works, modularity may do no work. Defence: within-module coordinates are dependent, so plain TCL does not apply and a block version is needed |
 | **36** | **add process noise to the modules — but it is a CHANGE OF TARGET, not a fidelity fix** | open, and **demoted 2026-08-04 after checking LFADS.** I originally justified this as "determinism was chosen for convenience, not the science — LFADS latents are stochastic." **That justification is wrong.** In an autonomous LFADS model one samples $g_0$ from the prior and then simulates a **deterministic** RNN forward; the only per-timestep stochasticity is the *inferred inputs* $u_t$, which §1.1 scopes out. So under this project's own scope, LFADS is exactly **random initial condition + deterministic flow** — which is precisely what `make_dataset` builds. Determinism here is *faithful to the target*. What remains true: determinism is what makes PCL/SNICA inapplicable (`literature.md` §1.2 point 1 — the pair $(z_t,z_{t-1})$ lives on the graph of $f_i$), and adding noise would open that family, close §3.8's distributional-equivalence `TODO(gap)`, and make the sibling SNICA implementation reusable. But that is **moving to a model class where identifiability is easier**, not modelling LFADS more accurately, and it should be argued on those terms. Note the link to §3.8: if input drive $u_t$ is ever brought back in scope, LFADS's stochastic inputs *would* supply a per-timestep stochastic drive, and this task merges with that one |
 | **37** | **NEW: re-target from block-diagonality to dynamical invariants** | open. §7 already concedes that what is identified is the **partition plus each $f_i$'s conjugacy class**, never coordinates. The applied goal may need strictly less than block-diagonality of $h$: the number of modules, their dimensions, and per-module invariants (Lyapunov spectrum, rotation number, attractor topology). That reads as *"this population carries a slow 2-D rotation at 8 Hz and a fast 3-D decaying component"* — usable by a neuroscientist, and testable. Lemma C (filtration) plus task 35 (rotation number) may deliver it **without** ever proving $h$ block-diagonal, i.e. without needing tasks 33/34 to close |
 | **34** | **NEW (ACTIVE): why does the dose-$0.31$ arm land triangular in every restart?** | open — **the current front line.** It is the one arm where imposing behaviour *lowers* `jac_diag` (whitened $0.546$ vs raw $0.730$), and the tightness (sd $0.025$/$0.029$ over 8 restarts) rules out optimiser noise: it is a property of the objective at that dose, not of the seed. Leading hypothesis, and it is my error to check first: **`W_WHITENED = 1.0` was calibrated on the endpoint doses only** ($0.00$ and $0.60$), so the interior was never tuned — sweep $w$ at `strength=0.5` before looking for anything deeper. Note the decoders form a *one-parameter family* (same rng draw, scaled), so this is not a decoder-draw artifact. Second hypothesis: `obs-nl` is non-monotone in `strength` in a way that makes $0.31$ special beyond its dose |
@@ -767,81 +796,51 @@ negative control comes back unique, stop and re-examine assumptions.
 
 ### Which route
 
-**All three routes are live. See [`theory/approaches.md`](theory/approaches.md)**
-— it is the decision document, with the comparison table, what each claims, what
-each costs, and what single fact would settle it. Read it before picking.
+[`theory/approaches.md`](theory/approaches.md) is the decision document — the
+comparison table, what each route claims and costs, and what single fact would
+settle it. The trade in one line each:
 
-> **Caveat as of 2026-08-04 (§3.12):** `approaches.md` §B.1 describes B∘C as
-> reaching block-diagonality. `exp11`/`exp12` appeared to contradict that, but
-> those runs never imposed the behavioural constraint (the penalty was paid off
-> with scale), so §B.1's B column is **untested, not refuted**. `exp13` (task 33)
-> is the first real test. Nothing about A or C is affected.
+- **A** (normal forms) — the original prize; two unproved lemmas, and it
+  structurally cannot leave the fixed point (limit cycles are Siegel).
+- **B** (behavioural auxiliary) — supplies the cross-derivative the gap provably
+  cannot; the conclusion is now **published** as block-identifiability (task 38),
+  so it is a citation, not an obligation.
+- **C** (filtration) — proved, unconditionally nonlinear, reaches periodic
+  attractors, immune to the learning gap. Weaker: it commits to a hierarchy.
 
-One-line summary of the trade:
+C is a strict weakening of A; B composes with either.
 
-- **A** is the prize (the original target) and depends on two unproved lemmas
-  plus the learning gap;
-- **B** introduces a genuinely new mechanism — behaviour kills one
-  cross-derivative *for free*, converting the provably-unsatisfiable two-sided
-  gap into a satisfiable one-sided one — but changes the model and risks making
-  modularity non-load-bearing;
-- **C** is the only claim currently standing on proved ground, is
-  unconditionally nonlinear, and is immune to the learning gap — but is weaker
-  and commits the science to a hierarchy.
+**DECISION (2026-08-04, under §1.0).** Priority is **C + task 37**: the
+filtration, plus per-module invariants, as the applied claim. Rationale, which
+changed this session:
 
-C is a strict weakening of A, so proving A subsumes it; B composes with either.
+1. **C is what is left that is both proved and unduplicated.** Task 38 moved B's
+   conclusion into the literature; §1.0 says that is a *gain* (cite it), but it
+   means B is no longer where our own content sits. Lemma C has no ICA analogue.
+2. **C covers oscillations and A does not** (task 22 — Lemma C′ holds at
+   attracting periodic orbits). Oscillations are the least exotic thing in a
+   neural population, so this is decisive for the applied goal, not a tiebreak.
+3. **Task 37 needs strictly less than block-diagonality.** Lemma C gives the
+   ordering; task 35 ($u=t$) gives rotation number, which Lyapunov exponents
+   provably cannot see and which may settle task 23. Neither needs $h$
+   block-diagonal, so tasks 33/34 stop being on the critical path.
 
-**DECISION (current).** Route **C is recorded as a standing success** — proved
-(Lemma C + `identifiability.md` §4.2), unconditionally nonlinear, numerically
-verified (`exp05`), with a recovery metric (`metrics.filtration_report`). Its
-formal write-up is **deliberately deferred**, not abandoned: it is the safe
-fallback the paper can fall back on.
+**Route B status.** Its two halves are both discharged in restricted settings —
+Lemma C (dynamics) and Lemma D (behaviour, additive $h_B$ + linear modules).
+Under learning, `exp13` kills the forbidden direction uniformly and reaches
+block-diagonal at 3 of 4 doses (task 33); the exception is task 34, now
+demoted. Lemma D's residual value is its **two-level economy** over the
+published results (task 38), not the conclusion itself.
 
-**C got stronger (task 22, §4.4).** It now also holds at attracting *periodic*
-orbits, which is precisely where Route A's normal-form machinery fails (limit
-cycles sit in the Siegel domain). So off the fixed point the two routes diverge
-rather than converge: the filtration survives, block-diagonality does not. If A
-stalls, C is not merely the fallback but the only claim that covers oscillatory
-latents at all — and oscillations are the least exotic thing in a neural
-population. Worth weighing when deciding how long to keep A active.
+**Route A is parked** mid-push: the fixed-point theorem is essentially
+assembled; open are higher-degree (B2), the FLAT-D $C^k$ write-up, and the
+Siegel extension it cannot reach.
 
-**PIVOT (current, 2026-07-29): active work is Route B∘C.** After pushing A this
-session (Tier 2 non-empty, the degree-2 (B2) graph criterion, tasks 24–26), the
-decision — on the grounds that the neuroscience regime is oscillatory/attractor
-and behaviourally-annotated, where A structurally cannot reach — was to pivot to
-the **B∘C hybrid**. It is the more direct path to something applied: behaviour
-kills one cross-derivative ($M_{BA}$, invariant subspace canonical), Lemma C kills
-the complementary one ($M_{AB}$, one-sided gap), together block-diagonal, and — key
-— it inherits C's reach past the fixed point (the dynamics half is Lemma C) while
-keeping modularity load-bearing (behaviour alone is triangular, dynamics alone is
-triangular; the block-diagonal conclusion needs both). Mechanism built and
-verified (`behavior.py`, `exp10`, `approaches.md` §B.1).
-
-**Under learning, the negative result was retracted (2026-08-04, §3.12).**
-`exp11`/`exp12` reported that B∘C weakens to a triangular $h$ once the
-observation map is genuinely nonlinear, and read that as *behaviour failing to
-supply its second kill*. **That reading is withdrawn.** The behavioural penalty
-those runs trained against was gauge-dependent, and the optimiser satisfied it
-by shrinking the pinned block 21× rather than by making it $u$-invariant — the
-block still carried the $u$-varying latent at dCor $0.99$. Behaviour's half was
-never applied in any arm, so neither experiment tested the composition. What
-survives is a real dose-response for **dynamics-only** fitting.
-
-With the penalty fixed and $w$ recalibrated, `exp13` (8 restarts × 4 doses)
-**reverses the negative result but does not deliver a clean positive.** The
-forbidden cross-block is now killed *uniformly* — `upper` $\le 0.081$ at every
-dose and every restart, against $0.316$ — and block-diagonality improves sharply
-at the two highest doses ($0.702\to0.893$, $0.567\to0.815$). But at dose $0.31$
-the fit lands **triangular in all 8 restarts** (`jac_diag` $0.546$, `lower`
-$0.416$, sd $0.029$), so the recovery is not uniform in the dose. Task 34.
-
-Because task 31 proved **Lemma D**, the partial-iVAE lemma is no longer the open
-obligation it was under task 27 — the behavioural kill is discharged
-*dynamically*, for additive $h_B$ with linear modules. What remains of Route B is
-Lemma D's own open cases (non-additive $h_B$, anisotropic modulation, nonlinear
-modules), not a partial iVAE theorem.
-A is parked mid-push (fixed-point theorem essentially assembled; open: higher-degree
-(B2), FLAT-D $C^k$ write-up, and the Siegel extension it cannot reach). C stands.
+> Historical note, to stop it being re-litigated: `exp11`/`exp12` once reported
+> that B∘C degrades to a filtration under a nonlinear observation map. That was
+> withdrawn — those runs never imposed the behavioural hypothesis (§3.12). The
+> pivot to B∘C (2026-07-29) and its apparent refutation are both superseded by
+> the decision above.
 
 Route A's remaining cost is now small and named (see `route_a_assessment.md`):
 1. **(FLAT-D) flat-tangency residual** — the existence half is located and

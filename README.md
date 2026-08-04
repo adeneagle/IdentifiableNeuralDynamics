@@ -9,6 +9,16 @@ defined only up to arbitrary invertible reparameterisation. If modular structure
 pins down the latents, it gives a principled route to interpretable latent
 dynamical models.
 
+**The novelty claim is application, not method.** The deliverable is *a simple,
+identifiable latent dynamics model for a neural population* — novel in the
+**neuroscience** literature, where LFADS-style latents come with no statement of
+what about them is real. It need not be novel in dynamical systems or nonlinear
+ICA. So published machinery is a resource to cite rather than an obligation to
+discharge, and the claim to aim at is the one a neuroscientist can act on: the
+partition, module dimensions, and per-module dynamical invariants — *not*
+block-diagonality of the reparameterisation. Rigour does not relax; the scope of
+novelty does. See [CLAUDE.md](CLAUDE.md) §1.0.
+
 **Scope.** The target is an **autonomous, single-area** nonlinear latent
 dynamical system. Modules are dynamical factors *within one population* —
 separate timescales, distinct oscillatory components — **not brain regions**.
