@@ -1,0 +1,231 @@
+{
+  "experiment": "exp03_modular_recovery",
+  "utc": "2026-08-04T04:29:02.283467+00:00",
+  "seed": 0,
+  "s_values": [
+    0.95,
+    0.7
+  ],
+  "partition": [
+    2,
+    2
+  ],
+  "lyapunov_spectra": [
+    [
+      -0.051293294386524614,
+      -0.051293294388575585
+    ],
+    [
+      -0.35667494393873805,
+      -0.35667494393873805
+    ]
+  ],
+  "lyapunov_gap": 0.30538164955016245,
+  "exact_gap": 0.30538164955118186,
+  "linearisation_canonical": true,
+  "linearisation_reasons": [
+    "(A1) ok; (A2) ok with separation 6.126e-01"
+  ],
+  "n_restarts": 8,
+  "modular": {
+    "fit_quality": [
+      0.02037486433982849,
+      0.0003756991936825216,
+      0.0011389543069526553,
+      0.00041239819256588817,
+      0.00040323511348105967,
+      0.0003894891997333616,
+      0.0003194320888724178,
+      0.010323889553546906
+    ],
+    "reports": [
+      {
+        "on_block_fraction": 0.7851476665122076,
+        "chance_level": 0.5,
+        "assignment": [
+          1,
+          0
+        ],
+        "is_block_permutation": false,
+        "invertible": true,
+        "mcc": 0.7770453172122503,
+        "recovered": false
+      },
+      {
+        "on_block_fraction": 0.999804771840294,
+        "chance_level": 0.5,
+        "assignment": [
+          1,
+          0
+        ],
+        "is_block_permutation": false,
+        "invertible": true,
+        "mcc": 0.9197818354112117,
+        "recovered": true
+      },
+      {
+        "on_block_fraction": 0.9973761450651769,
+        "chance_level": 0.5,
+        "assignment": [
+          1,
+          0
+        ],
+        "is_block_permutation": false,
+        "invertible": true,
+        "mcc": 0.9026610987615995,
+        "recovered": true
+      },
+      {
+        "on_block_fraction": 0.9998976849389395,
+        "chance_level": 0.5,
+        "assignment": [
+          1,
+          0
+        ],
+        "is_block_permutation": false,
+        "invertible": true,
+        "mcc": 0.8588765684729636,
+        "recovered": true
+      },
+      {
+        "on_block_fraction": 0.9998841657983047,
+        "chance_level": 0.5,
+        "assignment": [
+          1,
+          0
+        ],
+        "is_block_permutation": false,
+        "invertible": true,
+        "mcc": 0.9763885666914008,
+        "recovered": true
+      },
+      {
+        "on_block_fraction": 0.9998629305058931,
+        "chance_level": 0.5,
+        "assignment": [
+          0,
+          1
+        ],
+        "is_block_permutation": false,
+        "invertible": true,
+        "mcc": 0.8675487776782205,
+        "recovered": true
+      },
+      {
+        "on_block_fraction": 0.9998940559001188,
+        "chance_level": 0.5,
+        "assignment": [
+          1,
+          0
+        ],
+        "is_block_permutation": false,
+        "invertible": true,
+        "mcc": 0.9483976459426073,
+        "recovered": true
+      },
+      {
+        "on_block_fraction": 0.9353967447937533,
+        "chance_level": 0.5,
+        "assignment": [
+          1,
+          0
+        ],
+        "is_block_permutation": false,
+        "invertible": true,
+        "mcc": 0.9046270651066506,
+        "recovered": false
+      }
+    ],
+    "assignments": [
+      [
+        1,
+        1,
+        0,
+        0
+      ],
+      [
+        1,
+        1,
+        0,
+        0
+      ],
+      [
+        1,
+        1,
+        0,
+        0
+      ],
+      [
+        1,
+        1,
+        0,
+        0
+      ],
+      [
+        1,
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        1,
+        1
+      ],
+      [
+        1,
+        1,
+        0,
+        0
+      ],
+      [
+        1,
+        1,
+        0,
+        0
+      ]
+    ],
+    "distinct_groupings": 1,
+    "grouping_counts": {
+      "01|23": 5
+    },
+    "n_recovered": 6,
+    "n_converged": 5,
+    "n_recovered_converged": 5,
+    "mean_on_block": 0.964658020669336,
+    "min_on_block": 0.7851476665122076
+  },
+  "unconstrained": {
+    "fit_quality": 0.0006214544991962612,
+    "on_block_fraction": 0.5730109396730838,
+    "chance_level": 0.5,
+    "assignment": [
+      0,
+      1
+    ],
+    "is_block_permutation": false,
+    "invertible": true,
+    "mcc": 0.7505046627089269,
+    "recovered": false
+  },
+  "all_passed": true,
+  "checks": [
+    {
+      "passed": true,
+      "claim": "modules have separated Lyapunov spectra (gap 0.3054)"
+    },
+    {
+      "passed": true,
+      "claim": "linearisation at the fixed point satisfies (A1) and (A2)"
+    },
+    {
+      "passed": true,
+      "claim": "modular fit recovers the partition in 5/5 converged restarts (6/8 overall; mean on-block 0.9647 vs chance 0.5000)"
+    },
+    {
+      "passed": true,
+      "claim": "the recovered grouping is unique across near-optimal restarts {'01|23': 5} -- the contrast with experiment 2, which is non-unique on the same machinery, is the result"
+    }
+  ]
+}

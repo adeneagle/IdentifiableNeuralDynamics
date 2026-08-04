@@ -1,0 +1,190 @@
+{
+  "experiment": "exp09_tier2_nonempty",
+  "utc": "2026-08-04T02:48:15.683505+00:00",
+  "seed": 0,
+  "mu": 0.7,
+  "c": 0.9,
+  "nu": 0.5,
+  "degree": 2,
+  "homological_spectrum": [
+    {
+      "component": 0,
+      "exponent": [
+        2,
+        0
+      ],
+      "value": 0.21000000000000002,
+      "resonant": false
+    },
+    {
+      "component": 1,
+      "exponent": [
+        2,
+        0
+      ],
+      "value": 0.0,
+      "resonant": true
+    },
+    {
+      "component": 0,
+      "exponent": [
+        1,
+        1
+      ],
+      "value": 0.35700000000000004,
+      "resonant": false
+    },
+    {
+      "component": 1,
+      "exponent": [
+        1,
+        1
+      ],
+      "value": 0.14700000000000002,
+      "resonant": false
+    },
+    {
+      "component": 0,
+      "exponent": [
+        0,
+        2
+      ],
+      "value": 0.45990000000000003,
+      "resonant": false
+    },
+    {
+      "component": 1,
+      "exponent": [
+        0,
+        2
+      ],
+      "value": 0.2499,
+      "resonant": false
+    }
+  ],
+  "n_resonances": 1,
+  "obstruction": {
+    "c": 0.9,
+    "linearizable": false,
+    "linearizable_with_c_zero": true,
+    "min_abs_nonresonant_eigenvalue": 0.14700000000000002
+  },
+  "secular": {
+    "slope": 1.175510204081633,
+    "slope_exact": 1.1755102040816332,
+    "closed_form_error": 5.551115123125783e-17,
+    "control_spread": 0.0
+  },
+  "partners": [
+    {
+      "nu": 0.5,
+      "cross_nonresonant": true,
+      "note": "default"
+    },
+    {
+      "nu": 0.55,
+      "cross_nonresonant": true,
+      "note": ""
+    },
+    {
+      "nu": 0.6,
+      "cross_nonresonant": true,
+      "note": ""
+    },
+    {
+      "nu": 0.48999999999999994,
+      "cross_nonresonant": false,
+      "note": "= mu^2, collides"
+    },
+    {
+      "nu": 0.3429999999999999,
+      "cross_nonresonant": false,
+      "note": "= mu^3, true resonance"
+    }
+  ],
+  "blind_spot": {
+    "linear_summands": 2,
+    "linear_reads_decomposable": true,
+    "ratio_drift_per_step": 1.8367346938775513,
+    "ratio_final": 73.93813775510205,
+    "drift_is_exact": true,
+    "control_ratio_spread": 2.220446049250313e-16
+  },
+  "nonlinear_check": [
+    {
+      "case": "resonant node (c=0.9)",
+      "linear_indecomposable": false,
+      "nonlinear_indecomposable": true,
+      "max_coupling": 0.9000000000000001,
+      "correct": true
+    },
+    {
+      "case": "linear control (c=0)",
+      "linear_indecomposable": false,
+      "nonlinear_indecomposable": false,
+      "max_coupling": 0.0,
+      "correct": true
+    },
+    {
+      "case": "non-resonant cross (nu=0.6)",
+      "linear_indecomposable": false,
+      "nonlinear_indecomposable": false,
+      "max_coupling": 0.0,
+      "correct": true
+    }
+  ],
+  "coupling_graph": [
+    {
+      "module": "nu=0.5 non-resonant  -> {0,1}(+){2}",
+      "n_components": 2,
+      "indecomposable": false,
+      "expected_indecomposable": false,
+      "correct": true
+    },
+    {
+      "module": "nu=mu^3, z0*z1 edge  -> connected",
+      "n_components": 1,
+      "indecomposable": true,
+      "expected_indecomposable": true,
+      "correct": true
+    },
+    {
+      "module": "nu=mu^4, z1^2 edge   -> connected",
+      "n_components": 1,
+      "indecomposable": true,
+      "expected_indecomposable": true,
+      "correct": true
+    }
+  ],
+  "all_passed": true,
+  "checks": [
+    {
+      "passed": true,
+      "claim": "the homological operator at degree 2 has exactly one zero eigenvalue, at z_a^2 e_b, because lam_b - lam_a^2 = mu^2 - mu^2 vanishes identically"
+    },
+    {
+      "passed": true,
+      "claim": "with c = 0.9 the quadratic term is obstructed (the surviving coefficient IS the normal-form invariant); with c = 0 it is removable -- so the obstruction tracks c and is not an artefact"
+    },
+    {
+      "passed": true,
+      "claim": "the resonance is dynamically visible: b_n/mu^(2n) drifts linearly at exactly c z_a^2/mu^2 = 1.175510, and is constant when c = 0"
+    },
+    {
+      "passed": true,
+      "claim": "cross-module non-resonance holds for the witness (mu = 0.7, nu = 0.5) while a within-module resonance is live -- so **Tier 2 is non-empty** -- and partners at mu^2 and mu^3 are correctly rejected"
+    },
+    {
+      "passed": true,
+      "claim": "the linearised (B2) test reports this module DECOMPOSABLE (2 summands) while the map admits no invariant curve tangent to e_a -- a false negative in certify_fitted_model, sitting exactly in Tier 2"
+    },
+    {
+      "passed": true,
+      "claim": "the nonlinear (B2) check closes it: the resonant node reads indecomposable, the linear control and the NON-resonant cross term both read decomposable -- only the resonant coupling obstructs, and coordinate-invariantly"
+    },
+    {
+      "passed": true,
+      "claim": "the criterion is graph CONNECTEDNESS: a 3-block module coupled only on {0,1} is correctly read as decomposable (its {0,1}(+){2} split is an exact invariant product), while genuinely connected 3-block modules read indecomposable -- 'any coupling' would over-report the first"
+    }
+  ]
+}

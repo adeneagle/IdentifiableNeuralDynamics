@@ -1,0 +1,2271 @@
+{
+  "experiment": "exp13_conjugacy_residual",
+  "utc": "2026-08-04T03:51:30.219371+00:00",
+  "seed": 0,
+  "n_obs": 12,
+  "steps": 4000,
+  "n_restarts": 8,
+  "strengths": [
+    0.0,
+    0.5,
+    1.5,
+    2.0
+  ],
+  "w_behavior_raw": 5.0,
+  "w_behavior_whitened": 1.0,
+  "u_levels": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "n_per_u": 250,
+  "T": 15,
+  "n_probe": 2000,
+  "lyap_T": 300,
+  "lyap_warmup": 100,
+  "arms_raw": [
+    {
+      "strength": 0.0,
+      "whiten": false,
+      "w_behavior": 5.0,
+      "obs_nonlinearity": 1.6108285545599155e-15,
+      "udep_floor_true_invariant": 0.1546315285173102,
+      "udep_true_varying": 1.0935937458387999,
+      "n_restarts": 8,
+      "per_restart": [
+        {
+          "restart": 0,
+          "fit_quality": 0.010443848557770252,
+          "jac_diag": 0.9980178684840687,
+          "jac_lower": 3.189141252149123e-05,
+          "jac_upper": 0.0019502401034098011,
+          "udep_raw": 0.0015365809032057355,
+          "udep_norm": 1.0719413584579904,
+          "block_scale_ratio": 21.379051208496094,
+          "conj_on_rel_step": 0.13278584302472246,
+          "conj_off_rel_step": 0.13680109288794182,
+          "conj_on_rel_state": 0.1862273859725094,
+          "learned_gap": -0.4987362624224646,
+          "additivity_defect": 0.000443590879147355,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            -1.1027625183701362,
+            -1.1030050788099184
+          ],
+          "learned_spec_fast": [
+            -0.6042688163874538,
+            -0.6045116641125605
+          ]
+        },
+        {
+          "restart": 1,
+          "fit_quality": 0.008485302329063416,
+          "jac_diag": 0.9905291917303757,
+          "jac_lower": 0.0003206756421621799,
+          "jac_upper": 0.009150132627462195,
+          "udep_raw": 0.0021793200059185155,
+          "udep_norm": 1.078163987525787,
+          "block_scale_ratio": 28.006589889526367,
+          "conj_on_rel_step": 0.17160348629475025,
+          "conj_off_rel_step": 0.1612113160095874,
+          "conj_on_rel_state": 0.075670272153924,
+          "learned_gap": -0.26148593853796076,
+          "additivity_defect": 0.0004233742902476889,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            -1.1129761883325033,
+            -1.112480684283712
+          ],
+          "learned_spec_fast": [
+            -0.8514902497945426,
+            -0.8516679300484925
+          ]
+        },
+        {
+          "restart": 2,
+          "fit_quality": 0.006964815780520439,
+          "jac_diag": 0.9859744069597799,
+          "jac_lower": 6.165730353848547e-05,
+          "jac_upper": 0.01396393573668155,
+          "udep_raw": 0.001373836827577396,
+          "udep_norm": 1.0814626829144487,
+          "block_scale_ratio": 33.921382904052734,
+          "conj_on_rel_step": 0.17345814354324846,
+          "conj_off_rel_step": 0.18148758578507368,
+          "conj_on_rel_state": 0.20767248704333674,
+          "learned_gap": -0.3760350407868942,
+          "additivity_defect": 0.0006530029898084304,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            -1.0148872150505612,
+            -1.0148843430558656
+          ],
+          "learned_spec_fast": [
+            -0.6392385600319194,
+            -0.638852174263667
+          ]
+        },
+        {
+          "restart": 3,
+          "fit_quality": 0.005813695956021547,
+          "jac_diag": 0.9980746044162366,
+          "jac_lower": 8.761539488029885e-05,
+          "jac_upper": 0.0018377801888830156,
+          "udep_raw": 0.001325812943018625,
+          "udep_norm": 1.0879100647468118,
+          "block_scale_ratio": 24.135154724121094,
+          "conj_on_rel_step": 0.16757275569394997,
+          "conj_off_rel_step": 0.17298902923361434,
+          "conj_on_rel_state": 0.2239798600583038,
+          "learned_gap": -0.33522069794460674,
+          "additivity_defect": 0.0008904864285334522,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            -1.0081313360386637,
+            -1.0079515703122524
+          ],
+          "learned_spec_fast": [
+            -0.6730687582237275,
+            -0.6729106380940569
+          ]
+        },
+        {
+          "restart": 4,
+          "fit_quality": 0.008476989343762398,
+          "jac_diag": 0.9955520494546196,
+          "jac_lower": 0.00011337540002668347,
+          "jac_upper": 0.004334575145353745,
+          "udep_raw": 0.001390034894904382,
+          "udep_norm": 1.0812545610286288,
+          "block_scale_ratio": 16.389179229736328,
+          "conj_on_rel_step": 0.1772933760634642,
+          "conj_off_rel_step": 0.16549286774611954,
+          "conj_on_rel_state": 0.23254841224487213,
+          "learned_gap": -0.3210339801041845,
+          "additivity_defect": 0.0018430389906361876,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            -1.0999325767825578,
+            -1.0997758575524692
+          ],
+          "learned_spec_fast": [
+            -0.7788985966783734,
+            -0.7815016673743019
+          ]
+        },
+        {
+          "restart": 5,
+          "fit_quality": 0.007366479840129614,
+          "jac_diag": 0.9702692915204201,
+          "jac_lower": 9.42800783631909e-05,
+          "jac_upper": 0.029636428401216827,
+          "udep_raw": 0.002074273526192977,
+          "udep_norm": 1.077831169292589,
+          "block_scale_ratio": 45.473350524902344,
+          "conj_on_rel_step": 0.10967367864008315,
+          "conj_off_rel_step": 0.19579569061592544,
+          "conj_on_rel_state": 0.049398649806491196,
+          "learned_gap": -0.26418672992499603,
+          "additivity_defect": 0.0005129883168029215,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            -0.9182823709730673,
+            -0.9185575935933695
+          ],
+          "learned_spec_fast": [
+            -0.6543708636683735,
+            -0.6546847900212852
+          ]
+        },
+        {
+          "restart": 6,
+          "fit_quality": 0.007805383764207363,
+          "jac_diag": 0.9918221917964567,
+          "jac_lower": 0.00013404430669863065,
+          "jac_upper": 0.008043763896844709,
+          "udep_raw": 0.00132220111800591,
+          "udep_norm": 1.070745658980686,
+          "block_scale_ratio": 23.61273193359375,
+          "conj_on_rel_step": 0.1763352576274947,
+          "conj_off_rel_step": 0.16431622880469834,
+          "conj_on_rel_state": 0.23966884241642883,
+          "learned_gap": -0.3717567689787714,
+          "additivity_defect": 0.0016886710791193635,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            -1.0411728617641216,
+            -1.0406686152683182
+          ],
+          "learned_spec_fast": [
+            -0.6696626408918863,
+            -0.6694160927853502
+          ]
+        },
+        {
+          "restart": 7,
+          "fit_quality": 0.006419280543923378,
+          "jac_diag": 0.997770866680424,
+          "jac_lower": 0.0001221062451674743,
+          "jac_upper": 0.002107027074408573,
+          "udep_raw": 0.0013452204144995957,
+          "udep_norm": 1.0841991806575746,
+          "block_scale_ratio": 15.001663208007812,
+          "conj_on_rel_step": 0.17147636569292526,
+          "conj_off_rel_step": 0.17345599183630164,
+          "conj_on_rel_state": 0.2300008726002632,
+          "learned_gap": -0.4322338474462607,
+          "additivity_defect": 0.001139976646182514,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            -1.0884347100366922,
+            -1.0878931064196535
+          ],
+          "learned_spec_fast": [
+            -0.656694197686957,
+            -0.6562008625904315
+          ]
+        }
+      ],
+      "fit_quality_median": 0.0075859318021684885,
+      "jac_diag_median": 0.9936871206255382,
+      "jac_lower_median": 0.00010382773919493719,
+      "jac_upper_median": 0.006189169521099227,
+      "udep_raw_median": 0.0013819358612408889,
+      "udep_norm_median": 1.0797092742772079,
+      "block_scale_ratio_median": 23.873943328857422,
+      "conj_on_rel_step_median": 0.17153992599383777,
+      "conj_off_rel_step_median": 0.16924094848986693,
+      "conj_on_rel_state_median": 0.2158261735508203,
+      "learned_gap_median": -0.3534887334616891,
+      "additivity_defect_median": 0.0007717447091709414,
+      "fit_quality_min": 0.005813695956021547,
+      "jac_diag_min": 0.9702692915204201,
+      "jac_lower_min": 3.189141252149123e-05,
+      "jac_upper_min": 0.0018377801888830156,
+      "udep_raw_min": 0.00132220111800591,
+      "udep_norm_min": 1.070745658980686,
+      "block_scale_ratio_min": 15.001663208007812,
+      "conj_on_rel_step_min": 0.10967367864008315,
+      "conj_off_rel_step_min": 0.13680109288794182,
+      "conj_on_rel_state_min": 0.049398649806491196,
+      "learned_gap_min": -0.4987362624224646,
+      "additivity_defect_min": 0.0004233742902476889,
+      "fit_quality_max": 0.010443848557770252,
+      "jac_diag_max": 0.9980746044162366,
+      "jac_lower_max": 0.0003206756421621799,
+      "jac_upper_max": 0.029636428401216827,
+      "udep_raw_max": 0.0021793200059185155,
+      "udep_norm_max": 1.0879100647468118,
+      "block_scale_ratio_max": 45.473350524902344,
+      "conj_on_rel_step_max": 0.1772933760634642,
+      "conj_off_rel_step_max": 0.19579569061592544,
+      "conj_on_rel_state_max": 0.23966884241642883,
+      "learned_gap_max": -0.26148593853796076,
+      "additivity_defect_max": 0.0018430389906361876,
+      "fit_quality_sd": 0.0013512252127666352,
+      "jac_diag_sd": 0.008816056382320987,
+      "jac_lower_sd": 8.169268906874805e-05,
+      "jac_upper_sd": 0.00881473506401134,
+      "udep_raw_sd": 0.00032959903066369096,
+      "udep_norm_sd": 0.00544641769650928,
+      "block_scale_ratio_sd": 9.286054229736571,
+      "conj_on_rel_step_sd": 0.023302525704278158,
+      "conj_off_rel_step_sd": 0.015974051708508998,
+      "conj_on_rel_state_sd": 0.07026613377137621,
+      "learned_gap_sd": 0.07568997445793346,
+      "additivity_defect_sd": 0.0005238982366954828
+    },
+    {
+      "strength": 0.5,
+      "whiten": false,
+      "w_behavior": 5.0,
+      "obs_nonlinearity": 0.3120733745449904,
+      "udep_floor_true_invariant": 0.1546315285173102,
+      "udep_true_varying": 1.0935937458387999,
+      "n_restarts": 8,
+      "per_restart": [
+        {
+          "restart": 0,
+          "fit_quality": 0.01761903613805771,
+          "jac_diag": 0.6519378188972189,
+          "jac_lower": 0.2848203012799588,
+          "jac_upper": 0.06324187982282234,
+          "udep_raw": 0.006503805217254227,
+          "udep_norm": 0.857981057993181,
+          "block_scale_ratio": 14.349562644958496,
+          "conj_on_rel_step": 0.20599748687927602,
+          "conj_off_rel_step": 0.23816853343723318,
+          "conj_on_rel_state": 0.16312616258775556,
+          "learned_gap": 0.10859982890964581,
+          "additivity_defect": 0.017654132795939928,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            0.001552436210174466,
+            -0.12526206216715308
+          ],
+          "learned_spec_fast": [
+            -0.2338618910767989,
+            -1.695590982493573
+          ]
+        },
+        {
+          "restart": 1,
+          "fit_quality": 0.015976686030626297,
+          "jac_diag": 0.9220228250877119,
+          "jac_lower": 0.06974619407928657,
+          "jac_upper": 0.008230980833001599,
+          "udep_raw": 0.005479050454848598,
+          "udep_norm": 0.9251755620759821,
+          "block_scale_ratio": 9.991353988647461,
+          "conj_on_rel_step": 0.26836453243119507,
+          "conj_off_rel_step": 0.304398678885559,
+          "conj_on_rel_state": 0.14210486624143825,
+          "learned_gap": 0.5125812533955081,
+          "additivity_defect": 0.02133104726569424,
+          "assignment": [
+            0,
+            1
+          ],
+          "learned_spec_slow": [
+            -0.03919876711874174,
+            -0.3510652679204788
+          ],
+          "learned_spec_fast": [
+            -0.8636997223013386,
+            -0.863646521315987
+          ]
+        },
+        {
+          "restart": 2,
+          "fit_quality": 0.020129378885030746,
+          "jac_diag": 0.8357906150969754,
+          "jac_lower": 0.15483257594664687,
+          "jac_upper": 0.009376808956377868,
+          "udep_raw": 0.005531553505559987,
+          "udep_norm": 0.8790160591803802,
+          "block_scale_ratio": 12.610198974609375,
+          "conj_on_rel_step": 0.31213837833355945,
+          "conj_off_rel_step": 0.29893693903647106,
+          "conj_on_rel_state": 0.17079572825512307,
+          "learned_gap": 0.9679582004827568,
+          "additivity_defect": 0.043517892391042416,
+          "assignment": [
+            0,
+            1
+          ],
+          "learned_spec_slow": [
+            0.00030448440675918633,
+            -0.026352579311833085
+          ],
+          "learned_spec_fast": [
+            -0.9943107797945899,
+            -0.995540367083633
+          ]
+        },
+        {
+          "restart": 3,
+          "fit_quality": 0.01286895852535963,
+          "jac_diag": 0.663621586101915,
+          "jac_lower": 0.2654618148258045,
+          "jac_upper": 0.07091659907228053,
+          "udep_raw": 0.014382874899783411,
+          "udep_norm": 0.7536728843681302,
+          "block_scale_ratio": 7.2620849609375,
+          "conj_on_rel_step": 0.16742012825798674,
+          "conj_off_rel_step": 0.20038788928504342,
+          "conj_on_rel_state": 0.11027021760041084,
+          "learned_gap": 0.1952253159813213,
+          "additivity_defect": 0.0490529875756814,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            -0.08544592036222426,
+            -0.08864087316099269
+          ],
+          "learned_spec_fast": [
+            -0.283866189142314,
+            -0.8876674647868535
+          ]
+        },
+        {
+          "restart": 4,
+          "fit_quality": 0.014559676870703697,
+          "jac_diag": 0.7196113929209867,
+          "jac_lower": 0.24361169152806644,
+          "jac_upper": 0.036776915550946906,
+          "udep_raw": 0.005969802294516529,
+          "udep_norm": 0.5945143041584023,
+          "block_scale_ratio": 6.33248233795166,
+          "conj_on_rel_step": 0.2627228775321041,
+          "conj_off_rel_step": 0.2814793848745652,
+          "conj_on_rel_state": 0.1965555602393066,
+          "learned_gap": 0.8012337422048508,
+          "additivity_defect": 0.1521037096808521,
+          "assignment": [
+            0,
+            1
+          ],
+          "learned_spec_slow": [
+            -0.0005173480661063606,
+            -0.01810779906242133
+          ],
+          "learned_spec_fast": [
+            -0.8193415412672721,
+            -0.8243186287121139
+          ]
+        },
+        {
+          "restart": 5,
+          "fit_quality": 0.019046809524297714,
+          "jac_diag": 0.7866643602892811,
+          "jac_lower": 0.2050106486254446,
+          "jac_upper": 0.008324991085274354,
+          "udep_raw": 0.0059108661964689954,
+          "udep_norm": 0.8932069624532891,
+          "block_scale_ratio": 12.371917724609375,
+          "conj_on_rel_step": 0.2965815582787625,
+          "conj_off_rel_step": 0.2812264816609713,
+          "conj_on_rel_state": 0.16327081694448414,
+          "learned_gap": 0.45602058641291915,
+          "additivity_defect": 0.031012714097069925,
+          "assignment": [
+            0,
+            1
+          ],
+          "learned_spec_slow": [
+            -0.0009083262290064445,
+            -0.11820459373649367
+          ],
+          "learned_spec_fast": [
+            -0.5742251801494128,
+            -0.5743618314656368
+          ]
+        },
+        {
+          "restart": 6,
+          "fit_quality": 0.010334093123674393,
+          "jac_diag": 0.7406084804320471,
+          "jac_lower": 0.2550817479768749,
+          "jac_upper": 0.00430977159107798,
+          "udep_raw": 0.005097125168300571,
+          "udep_norm": 0.7267762854502997,
+          "block_scale_ratio": 11.814740180969238,
+          "conj_on_rel_step": 0.22326609113608928,
+          "conj_off_rel_step": 0.213575033251572,
+          "conj_on_rel_state": 0.11595566712160757,
+          "learned_gap": 0.10142350325747182,
+          "additivity_defect": 0.016129212628784046,
+          "assignment": [
+            0,
+            1
+          ],
+          "learned_spec_slow": [
+            0.00012032571627954253,
+            -0.1575135124454082
+          ],
+          "learned_spec_fast": [
+            -0.25893701570288,
+            -0.2612055033098423
+          ]
+        },
+        {
+          "restart": 7,
+          "fit_quality": 0.02211853116750717,
+          "jac_diag": 0.5130528429404778,
+          "jac_lower": 0.4782761428984746,
+          "jac_upper": 0.008671014161047512,
+          "udep_raw": 0.019787313040027496,
+          "udep_norm": 0.47305818825466833,
+          "block_scale_ratio": 1.2802304029464722,
+          "conj_on_rel_step": 0.2711103036710838,
+          "conj_off_rel_step": 0.2565436533542556,
+          "conj_on_rel_state": 0.14368403385058956,
+          "learned_gap": -0.15844207089197568,
+          "additivity_defect": 0.011151828301930927,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            -0.19319772114138556,
+            -0.19263051598486877
+          ],
+          "learned_spec_fast": [
+            -0.03677639131855146,
+            -0.03475565024940988
+          ]
+        }
+      ],
+      "fit_quality_median": 0.016797861084342003,
+      "jac_diag_median": 0.7301099366765169,
+      "jac_lower_median": 0.24934671975247066,
+      "jac_upper_median": 0.00902391155871269,
+      "udep_raw_median": 0.005940334245492762,
+      "udep_norm_median": 0.8058269711806556,
+      "block_scale_ratio_median": 10.90304708480835,
+      "conj_on_rel_step_median": 0.2655437049816496,
+      "conj_off_rel_step_median": 0.26888506750761343,
+      "conj_on_rel_state_median": 0.15340509821917256,
+      "learned_gap_median": 0.32562295119712026,
+      "additivity_defect_median": 0.026171880681382084,
+      "fit_quality_min": 0.010334093123674393,
+      "jac_diag_min": 0.5130528429404778,
+      "jac_lower_min": 0.06974619407928657,
+      "jac_upper_min": 0.00430977159107798,
+      "udep_raw_min": 0.005097125168300571,
+      "udep_norm_min": 0.47305818825466833,
+      "block_scale_ratio_min": 1.2802304029464722,
+      "conj_on_rel_step_min": 0.16742012825798674,
+      "conj_off_rel_step_min": 0.20038788928504342,
+      "conj_on_rel_state_min": 0.11027021760041084,
+      "learned_gap_min": -0.15844207089197568,
+      "additivity_defect_min": 0.011151828301930927,
+      "fit_quality_max": 0.02211853116750717,
+      "jac_diag_max": 0.9220228250877119,
+      "jac_lower_max": 0.4782761428984746,
+      "jac_upper_max": 0.07091659907228053,
+      "udep_raw_max": 0.019787313040027496,
+      "udep_norm_max": 0.9251755620759821,
+      "block_scale_ratio_max": 14.349562644958496,
+      "conj_on_rel_step_max": 0.31213837833355945,
+      "conj_off_rel_step_max": 0.304398678885559,
+      "conj_on_rel_state_max": 0.1965555602393066,
+      "learned_gap_max": 0.9679582004827568,
+      "additivity_defect_max": 0.1521037096808521,
+      "fit_quality_sd": 0.003668566076019415,
+      "jac_diag_sd": 0.11675615861775068,
+      "jac_lower_sd": 0.11009520420080465,
+      "jac_upper_sd": 0.025483836257081765,
+      "udep_raw_sd": 0.005105933843510334,
+      "udep_norm_sd": 0.14982852075363573,
+      "block_scale_ratio_sd": 4.025620792330976,
+      "conj_on_rel_step_sd": 0.045330629686495684,
+      "conj_off_rel_step_sd": 0.036388883355453726,
+      "conj_on_rel_state_sd": 0.0268882837132988,
+      "learned_gap_sd": 0.35732171329659695,
+      "additivity_defect_sd": 0.043203008582046766
+    },
+    {
+      "strength": 1.5,
+      "whiten": false,
+      "w_behavior": 5.0,
+      "obs_nonlinearity": 0.43104798696017227,
+      "udep_floor_true_invariant": 0.1546315285173102,
+      "udep_true_varying": 1.0935937458387999,
+      "n_restarts": 8,
+      "per_restart": [
+        {
+          "restart": 0,
+          "fit_quality": 0.04680352658033371,
+          "jac_diag": 0.6274864301598397,
+          "jac_lower": 0.26491327814971233,
+          "jac_upper": 0.10760029169044799,
+          "udep_raw": 0.007511665358298636,
+          "udep_norm": 0.6571456067357005,
+          "block_scale_ratio": 7.8343424797058105,
+          "conj_on_rel_step": 0.32538922856406377,
+          "conj_off_rel_step": 0.3468646721038889,
+          "conj_on_rel_state": 0.6314287935162697,
+          "learned_gap": 0.7706136143549498,
+          "additivity_defect": 0.1566408887568387,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            -0.27964088280330474,
+            -0.279023372717352
+          ],
+          "learned_spec_fast": [
+            -1.0502544971582546,
+            -1.0558244064918743
+          ]
+        },
+        {
+          "restart": 1,
+          "fit_quality": 0.02706427127122879,
+          "jac_diag": 0.7164980552212956,
+          "jac_lower": 0.21796659143228786,
+          "jac_upper": 0.06553535334641654,
+          "udep_raw": 0.009636099321529291,
+          "udep_norm": 0.8730807275137867,
+          "block_scale_ratio": 7.738101482391357,
+          "conj_on_rel_step": 0.24697778089669103,
+          "conj_off_rel_step": 0.24708326542437825,
+          "conj_on_rel_state": 0.16166154083563192,
+          "learned_gap": 0.9898107579701692,
+          "additivity_defect": 0.14202460683076426,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            -0.23125493375768244,
+            -0.2313925969491206
+          ],
+          "learned_spec_fast": [
+            -1.2212033549192898,
+            -1.2214489661938475
+          ]
+        },
+        {
+          "restart": 2,
+          "fit_quality": 0.028267240151762962,
+          "jac_diag": 0.6912259848135772,
+          "jac_lower": 0.215233008746779,
+          "jac_upper": 0.0935410064396438,
+          "udep_raw": 0.012636051932201554,
+          "udep_norm": 0.7744520568470378,
+          "block_scale_ratio": 6.458327770233154,
+          "conj_on_rel_step": 0.23419844898995132,
+          "conj_off_rel_step": 0.26848612777980907,
+          "conj_on_rel_state": 0.2927422106205559,
+          "learned_gap": 0.6973683299228334,
+          "additivity_defect": 0.17529127617800605,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            -0.21618206758395087,
+            -0.21464181989126843
+          ],
+          "learned_spec_fast": [
+            -0.9135503975067842,
+            -1.4106272859334716
+          ]
+        },
+        {
+          "restart": 3,
+          "fit_quality": 0.024100851267576218,
+          "jac_diag": 0.7120180770626421,
+          "jac_lower": 0.18645038458126983,
+          "jac_upper": 0.10153153835608808,
+          "udep_raw": 0.009879051426165715,
+          "udep_norm": 0.7643221656251065,
+          "block_scale_ratio": 8.943086624145508,
+          "conj_on_rel_step": 0.22504750918299204,
+          "conj_off_rel_step": 0.2316726425365502,
+          "conj_on_rel_state": 0.15340167609323235,
+          "learned_gap": 0.9697204326666834,
+          "additivity_defect": 0.16701706002718536,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            0.0007874631265460253,
+            -0.03835855624653684
+          ],
+          "learned_spec_fast": [
+            -1.0082771102468329,
+            -1.0080789889132202
+          ]
+        },
+        {
+          "restart": 4,
+          "fit_quality": 0.02744767814874649,
+          "jac_diag": 0.5219754402157097,
+          "jac_lower": 0.3353601922085722,
+          "jac_upper": 0.14266436757571788,
+          "udep_raw": 0.0058217608370413525,
+          "udep_norm": 0.6679583583326668,
+          "block_scale_ratio": 6.390857696533203,
+          "conj_on_rel_step": 0.27866719192119277,
+          "conj_off_rel_step": 0.2944919886387538,
+          "conj_on_rel_state": 0.5823181066450115,
+          "learned_gap": -1.9151102346758415,
+          "additivity_defect": 0.29227118010728353,
+          "assignment": [
+            0,
+            1
+          ],
+          "learned_spec_slow": [
+            -1.7492460812048793,
+            -3.1141107297859207
+          ],
+          "learned_spec_fast": [
+            -1.1997375783607989,
+            -1.1990004951100792
+          ]
+        },
+        {
+          "restart": 5,
+          "fit_quality": 0.030754329636693,
+          "jac_diag": 0.6630885309118181,
+          "jac_lower": 0.16807181733265916,
+          "jac_upper": 0.16883965175552268,
+          "udep_raw": 0.007983073242747381,
+          "udep_norm": 0.7884648459663772,
+          "block_scale_ratio": 9.140790939331055,
+          "conj_on_rel_step": 0.25816451537150487,
+          "conj_off_rel_step": 0.27654863247386036,
+          "conj_on_rel_state": 0.30547195103956154,
+          "learned_gap": 0.7308092587576674,
+          "additivity_defect": 0.1782438898031252,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            -0.16032119725493094,
+            -0.16065139753401578
+          ],
+          "learned_spec_fast": [
+            -0.8914606562916833,
+            -0.8956109462582157
+          ]
+        },
+        {
+          "restart": 6,
+          "fit_quality": 0.018344225361943245,
+          "jac_diag": 0.8349890845022467,
+          "jac_lower": 0.150334387712194,
+          "jac_upper": 0.014676527785559395,
+          "udep_raw": 0.005996258023559911,
+          "udep_norm": 0.9440232502758872,
+          "block_scale_ratio": 13.589359283447266,
+          "conj_on_rel_step": 0.32547681483010577,
+          "conj_off_rel_step": 0.3273867964985871,
+          "conj_on_rel_state": 0.14613437302908744,
+          "learned_gap": 0.7420337644633772,
+          "additivity_defect": 0.055288714475016154,
+          "assignment": [
+            0,
+            1
+          ],
+          "learned_spec_slow": [
+            0.21822443820190987,
+            -0.34602543925848855
+          ],
+          "learned_spec_fast": [
+            -1.0914192650951573,
+            -1.0880592037218657
+          ]
+        },
+        {
+          "restart": 7,
+          "fit_quality": 0.034862492233514786,
+          "jac_diag": 0.8524905320402071,
+          "jac_lower": 0.06236427369803545,
+          "jac_upper": 0.08514519426175747,
+          "udep_raw": 0.03273485499238137,
+          "udep_norm": 0.6506460631232842,
+          "block_scale_ratio": 1.4246383905410767,
+          "conj_on_rel_step": 0.24616126033177288,
+          "conj_off_rel_step": 0.2659658545268942,
+          "conj_on_rel_state": 0.40398597312570084,
+          "learned_gap": 0.5863713715374832,
+          "additivity_defect": 0.13796670834775224,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            -0.5082244444808701,
+            -0.5101126515989007
+          ],
+          "learned_spec_fast": [
+            -1.096484023136384,
+            -3.3223805229210455
+          ]
+        }
+      ],
+      "fit_quality_median": 0.027857459150254726,
+      "jac_diag_median": 0.7016220309381096,
+      "jac_lower_median": 0.2008416966640244,
+      "jac_upper_median": 0.09753627239786594,
+      "udep_raw_median": 0.008809586282138336,
+      "udep_norm_median": 0.7693871112360722,
+      "block_scale_ratio_median": 7.786221981048584,
+      "conj_on_rel_step_median": 0.252571148134098,
+      "conj_off_rel_step_median": 0.2725173801268347,
+      "conj_on_rel_state_median": 0.2991070808300587,
+      "learned_gap_median": 0.7364215116105224,
+      "additivity_defect_median": 0.16182897439201205,
+      "fit_quality_min": 0.018344225361943245,
+      "jac_diag_min": 0.5219754402157097,
+      "jac_lower_min": 0.06236427369803545,
+      "jac_upper_min": 0.014676527785559395,
+      "udep_raw_min": 0.0058217608370413525,
+      "udep_norm_min": 0.6506460631232842,
+      "block_scale_ratio_min": 1.4246383905410767,
+      "conj_on_rel_step_min": 0.22504750918299204,
+      "conj_off_rel_step_min": 0.2316726425365502,
+      "conj_on_rel_state_min": 0.14613437302908744,
+      "learned_gap_min": -1.9151102346758415,
+      "additivity_defect_min": 0.055288714475016154,
+      "fit_quality_max": 0.04680352658033371,
+      "jac_diag_max": 0.8524905320402071,
+      "jac_lower_max": 0.3353601922085722,
+      "jac_upper_max": 0.16883965175552268,
+      "udep_raw_max": 0.03273485499238137,
+      "udep_norm_max": 0.9440232502758872,
+      "block_scale_ratio_max": 13.589359283447266,
+      "conj_on_rel_step_max": 0.32547681483010577,
+      "conj_off_rel_step_max": 0.3468646721038889,
+      "conj_on_rel_state_max": 0.6314287935162697,
+      "learned_gap_max": 0.9898107579701692,
+      "additivity_defect_max": 0.29227118010728353,
+      "fit_quality_sd": 0.007863445605409383,
+      "jac_diag_sd": 0.10014587468049675,
+      "jac_lower_sd": 0.07558452653326171,
+      "jac_upper_sd": 0.043728121804699906,
+      "udep_raw_sd": 0.008284892141657743,
+      "udep_norm_sd": 0.09905657461383292,
+      "block_scale_ratio_sd": 3.181197733742688,
+      "conj_on_rel_step_sd": 0.036592418952033086,
+      "conj_off_rel_step_sd": 0.03647621272869206,
+      "conj_on_rel_state_sd": 0.17858693436363346,
+      "learned_gap_sd": 0.901517442856857,
+      "additivity_defect_sd": 0.06105258932513491
+    },
+    {
+      "strength": 2.0,
+      "whiten": false,
+      "w_behavior": 5.0,
+      "obs_nonlinearity": 0.6029091525298709,
+      "udep_floor_true_invariant": 0.1546315285173102,
+      "udep_true_varying": 1.0935937458387999,
+      "n_restarts": 8,
+      "per_restart": [
+        {
+          "restart": 0,
+          "fit_quality": 0.0022419258020818233,
+          "jac_diag": 0.5176588514895192,
+          "jac_lower": 0.16654403714163918,
+          "jac_upper": 0.3157971113688417,
+          "udep_raw": 0.0034475664098180736,
+          "udep_norm": 0.7718883933369531,
+          "block_scale_ratio": 0.567572295665741,
+          "conj_on_rel_step": 0.5375637195759013,
+          "conj_off_rel_step": 0.5993826449405604,
+          "conj_on_rel_state": 0.30407626432988827,
+          "learned_gap": -0.031192354022006707,
+          "additivity_defect": 0.2951099277007984,
+          "assignment": [
+            0,
+            1
+          ],
+          "learned_spec_slow": [
+            -1.6520678821377535,
+            -1.6520685991068407
+          ],
+          "learned_spec_fast": [
+            -1.622011733392944,
+            -1.620876245084834
+          ]
+        },
+        {
+          "restart": 1,
+          "fit_quality": 0.021308522671461105,
+          "jac_diag": 0.5346991959359255,
+          "jac_lower": 0.3383194787983087,
+          "jac_upper": 0.12698132526576578,
+          "udep_raw": 0.004717548377939307,
+          "udep_norm": 0.8964984858353746,
+          "block_scale_ratio": 7.233805179595947,
+          "conj_on_rel_step": 0.27787443609956386,
+          "conj_off_rel_step": 0.2468624608284784,
+          "conj_on_rel_state": 0.26972931875430217,
+          "learned_gap": -0.8813493822609392,
+          "additivity_defect": 0.37153443172543726,
+          "assignment": [
+            0,
+            1
+          ],
+          "learned_spec_slow": [
+            -1.7132845085146595,
+            -1.7156275833305017
+          ],
+          "learned_spec_fast": [
+            -0.8371485027471325,
+            -0.8342782010695625
+          ]
+        },
+        {
+          "restart": 2,
+          "fit_quality": 0.020774617791175842,
+          "jac_diag": 0.5127960639888806,
+          "jac_lower": 0.3069517524647739,
+          "jac_upper": 0.18025218354634545,
+          "udep_raw": 0.007338898097868749,
+          "udep_norm": 0.7530563227912419,
+          "block_scale_ratio": 2.9589107036590576,
+          "conj_on_rel_step": 0.42815692926642296,
+          "conj_off_rel_step": 0.45973245505020577,
+          "conj_on_rel_state": 0.28929086218544253,
+          "learned_gap": -0.02334266298508547,
+          "additivity_defect": 0.20603162843209086,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            -1.5485016092230535,
+            -1.5570366054967242
+          ],
+          "learned_spec_fast": [
+            -1.5336939425116387,
+            -2.875170747593065
+          ]
+        },
+        {
+          "restart": 3,
+          "fit_quality": 0.025895334780216217,
+          "jac_diag": 0.8271328572294401,
+          "jac_lower": 0.059987828263935665,
+          "jac_upper": 0.11287931450662421,
+          "udep_raw": 0.009124022058241747,
+          "udep_norm": 0.8952907166430476,
+          "block_scale_ratio": 4.165667533874512,
+          "conj_on_rel_step": 0.35271407875037697,
+          "conj_off_rel_step": 0.36599933339234486,
+          "conj_on_rel_state": 0.35032211610047176,
+          "learned_gap": 0.8656063681707412,
+          "additivity_defect": 0.2573120533176061,
+          "assignment": [
+            0,
+            1
+          ],
+          "learned_spec_slow": [
+            -0.0027293011331874935,
+            -0.7108490273968343
+          ],
+          "learned_spec_fast": [
+            -1.5764553955675755,
+            -3.1532355884097285
+          ]
+        },
+        {
+          "restart": 4,
+          "fit_quality": 0.0025782964657992125,
+          "jac_diag": 0.7310446905427692,
+          "jac_lower": 0.1256296958599837,
+          "jac_upper": 0.1433256135972471,
+          "udep_raw": 0.003867074685830055,
+          "udep_norm": 0.5663213937345161,
+          "block_scale_ratio": 0.7894150614738464,
+          "conj_on_rel_step": 0.47877176843038477,
+          "conj_off_rel_step": 0.505210538405122,
+          "conj_on_rel_state": 0.25837138442412,
+          "learned_gap": 0.30019132926824876,
+          "additivity_defect": 0.40688550019243735,
+          "assignment": [
+            0,
+            1
+          ],
+          "learned_spec_slow": [
+            -0.7352558544277862,
+            -0.7411222897242533
+          ],
+          "learned_spec_fast": [
+            -1.041313618992502,
+            -1.8611606863708479
+          ]
+        },
+        {
+          "restart": 5,
+          "fit_quality": 0.021074414253234863,
+          "jac_diag": 0.5409301380429425,
+          "jac_lower": 0.35592521517671466,
+          "jac_upper": 0.10314464678034295,
+          "udep_raw": 0.0057321201456488,
+          "udep_norm": 0.8240671579095669,
+          "block_scale_ratio": 7.398332118988037,
+          "conj_on_rel_step": 0.26826871789957624,
+          "conj_off_rel_step": 0.2641437250691539,
+          "conj_on_rel_state": 0.1341697104150346,
+          "learned_gap": -1.882326854559983,
+          "additivity_defect": 0.334737765488513,
+          "assignment": [
+            0,
+            1
+          ],
+          "learned_spec_slow": [
+            -2.1309337104137738,
+            -3.012781552010381
+          ],
+          "learned_spec_fast": [
+            -1.130454697450398,
+            -1.1306443608254095
+          ]
+        },
+        {
+          "restart": 6,
+          "fit_quality": 0.03310179337859154,
+          "jac_diag": 0.5932400541569038,
+          "jac_lower": 0.2612473515747511,
+          "jac_upper": 0.14551259426834495,
+          "udep_raw": 0.0059623870134627305,
+          "udep_norm": 0.8439407671748946,
+          "block_scale_ratio": 8.857421875,
+          "conj_on_rel_step": 0.35258247382048113,
+          "conj_off_rel_step": 0.3190134917312694,
+          "conj_on_rel_state": 0.32261891674707815,
+          "learned_gap": -0.34964222506556863,
+          "additivity_defect": 0.18929195059282444,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            -1.3732937947147354,
+            -1.3755982825551787
+          ],
+          "learned_spec_fast": [
+            -1.02595605748961,
+            -5.433223294432892
+          ]
+        },
+        {
+          "restart": 7,
+          "fit_quality": 0.0253459382802248,
+          "jac_diag": 0.644719107557571,
+          "jac_lower": 0.196140836334733,
+          "jac_upper": 0.15914005610769608,
+          "udep_raw": 0.005366833322168954,
+          "udep_norm": 0.7655540837420125,
+          "block_scale_ratio": 4.917140007019043,
+          "conj_on_rel_step": 0.27738402477975505,
+          "conj_off_rel_step": 0.26249172408548144,
+          "conj_on_rel_state": 0.6773355429617556,
+          "learned_gap": -1.0564364156612212,
+          "additivity_defect": 0.3410736013025352,
+          "assignment": [
+            0,
+            1
+          ],
+          "learned_spec_slow": [
+            -1.482979916461219,
+            -2.845700757880046
+          ],
+          "learned_spec_fast": [
+            -1.789264342218825,
+            -1.7931714717086489
+          ]
+        }
+      ],
+      "fit_quality_median": 0.021191468462347984,
+      "jac_diag_median": 0.5670850960999232,
+      "jac_lower_median": 0.22869409395474205,
+      "jac_upper_median": 0.14441910393279603,
+      "udep_raw_median": 0.0055494767339088775,
+      "udep_norm_median": 0.79797777562326,
+      "block_scale_ratio_median": 4.541403770446777,
+      "conj_on_rel_step_median": 0.35264827628542905,
+      "conj_off_rel_step_median": 0.34250641256180714,
+      "conj_on_rel_state_median": 0.29668356325766543,
+      "learned_gap_median": -0.19041728954378767,
+      "additivity_defect_median": 0.31492384659465567,
+      "fit_quality_min": 0.0022419258020818233,
+      "jac_diag_min": 0.5127960639888806,
+      "jac_lower_min": 0.059987828263935665,
+      "jac_upper_min": 0.10314464678034295,
+      "udep_raw_min": 0.0034475664098180736,
+      "udep_norm_min": 0.5663213937345161,
+      "block_scale_ratio_min": 0.567572295665741,
+      "conj_on_rel_step_min": 0.26826871789957624,
+      "conj_off_rel_step_min": 0.2468624608284784,
+      "conj_on_rel_state_min": 0.1341697104150346,
+      "learned_gap_min": -1.882326854559983,
+      "additivity_defect_min": 0.18929195059282444,
+      "fit_quality_max": 0.03310179337859154,
+      "jac_diag_max": 0.8271328572294401,
+      "jac_lower_max": 0.35592521517671466,
+      "jac_upper_max": 0.3157971113688417,
+      "udep_raw_max": 0.009124022058241747,
+      "udep_norm_max": 0.8964984858353746,
+      "block_scale_ratio_max": 8.857421875,
+      "conj_on_rel_step_max": 0.5375637195759013,
+      "conj_off_rel_step_max": 0.5993826449405604,
+      "conj_on_rel_state_max": 0.6773355429617556,
+      "learned_gap_max": 0.8656063681707412,
+      "additivity_defect_max": 0.40688550019243735,
+      "fit_quality_sd": 0.010307469505345215,
+      "jac_diag_sd": 0.10702770403158232,
+      "jac_lower_sd": 0.09959396723037807,
+      "jac_upper_sd": 0.06295682141102514,
+      "udep_raw_sd": 0.0017316480270042438,
+      "udep_norm_sd": 0.09925938060049977,
+      "block_scale_ratio_sd": 2.8865136167678136,
+      "conj_on_rel_step_sd": 0.09439625695038582,
+      "conj_off_rel_step_sd": 0.12196244965152461,
+      "conj_on_rel_state_sd": 0.14594785333270027,
+      "learned_gap_sd": 0.8085364056094124,
+      "additivity_defect_sd": 0.0727731495042678
+    }
+  ],
+  "arms_whitened": [
+    {
+      "strength": 0.0,
+      "whiten": true,
+      "w_behavior": 1.0,
+      "obs_nonlinearity": 1.6108285545599155e-15,
+      "udep_floor_true_invariant": 0.1546315285173102,
+      "udep_true_varying": 1.0935937458387999,
+      "n_restarts": 8,
+      "per_restart": [
+        {
+          "restart": 0,
+          "fit_quality": 0.04399598389863968,
+          "jac_diag": 0.9889348477143255,
+          "jac_lower": 0.010433675818568062,
+          "jac_upper": 0.0006314764671065556,
+          "udep_raw": 0.09625845308010703,
+          "udep_norm": 0.1069211605313701,
+          "block_scale_ratio": 1.0481752157211304,
+          "conj_on_rel_step": 0.24669619168284257,
+          "conj_off_rel_step": 0.26377707830699976,
+          "conj_on_rel_state": 0.24821247436487118,
+          "learned_gap": 0.15156349068227792,
+          "additivity_defect": 0.0011076048026965662,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            0.08661308238203881,
+            -0.5015593351354471
+          ],
+          "learned_spec_fast": [
+            -0.6539626301800121,
+            -0.6531228258177251
+          ]
+        },
+        {
+          "restart": 1,
+          "fit_quality": 0.053427912294864655,
+          "jac_diag": 0.919137767702476,
+          "jac_lower": 0.011124242751178159,
+          "jac_upper": 0.06973798954634584,
+          "udep_raw": 0.11088152868115425,
+          "udep_norm": 0.1312397056363813,
+          "block_scale_ratio": 0.9682536721229553,
+          "conj_on_rel_step": 0.25989019453643125,
+          "conj_off_rel_step": 0.29107607002193486,
+          "conj_on_rel_state": 0.2820728650751149,
+          "learned_gap": 0.5178882023691134,
+          "additivity_defect": 0.10564755930507154,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            0.00030302929052447775,
+            -0.42643131526634576
+          ],
+          "learned_spec_fast": [
+            -0.9463722046116256,
+            -0.9443195176354591
+          ]
+        },
+        {
+          "restart": 2,
+          "fit_quality": 0.04003841429948807,
+          "jac_diag": 0.989358612943331,
+          "jac_lower": 0.010194213595391341,
+          "jac_upper": 0.0004471734612776125,
+          "udep_raw": 0.09606591025895592,
+          "udep_norm": 0.1095010834064795,
+          "block_scale_ratio": 1.0323452949523926,
+          "conj_on_rel_step": 0.22613688005880916,
+          "conj_off_rel_step": 0.25366902494226007,
+          "conj_on_rel_state": 0.23973990346456373,
+          "learned_gap": 0.11211697211584137,
+          "additivity_defect": 0.0008801483050514431,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            -0.5400866012089285,
+            -0.5406669099453756
+          ],
+          "learned_spec_fast": [
+            -0.6528644499530163,
+            -0.652783882061217
+          ]
+        },
+        {
+          "restart": 3,
+          "fit_quality": 0.050313547253608704,
+          "jac_diag": 0.9186717661179215,
+          "jac_lower": 3.361928397405305e-05,
+          "jac_upper": 0.0812946145981044,
+          "udep_raw": 0.00990906962142717,
+          "udep_norm": 0.012939014042877775,
+          "block_scale_ratio": 1.0452015399932861,
+          "conj_on_rel_step": 0.2351889105936891,
+          "conj_off_rel_step": 0.23569360976319376,
+          "conj_on_rel_state": 0.30950736426589,
+          "learned_gap": 0.3632838717565945,
+          "additivity_defect": 0.0006382641360530048,
+          "assignment": [
+            0,
+            1
+          ],
+          "learned_spec_slow": [
+            -0.23667312328666093,
+            -0.23668908049946294
+          ],
+          "learned_spec_fast": [
+            -0.6014223710035108,
+            -0.5999729522560574
+          ]
+        },
+        {
+          "restart": 4,
+          "fit_quality": 0.02116086147725582,
+          "jac_diag": 0.9145970761539676,
+          "jac_lower": 0.019159205617859464,
+          "jac_upper": 0.06624371822817296,
+          "udep_raw": 0.0016710943817067531,
+          "udep_norm": 0.035982559577716546,
+          "block_scale_ratio": 5.73583984375,
+          "conj_on_rel_step": 0.20915135468466028,
+          "conj_off_rel_step": 0.179905454870489,
+          "conj_on_rel_state": 0.3230964495316861,
+          "learned_gap": -0.4710126239349579,
+          "additivity_defect": 0.1995850914371692,
+          "assignment": [
+            0,
+            1
+          ],
+          "learned_spec_slow": [
+            -0.6754829511156547,
+            -0.6775236494503526
+          ],
+          "learned_spec_fast": [
+            -0.2065110255153947,
+            -1.3622142766285334
+          ]
+        },
+        {
+          "restart": 5,
+          "fit_quality": 0.027047231793403625,
+          "jac_diag": 0.9639782041252056,
+          "jac_lower": 2.9593906427681607e-05,
+          "jac_upper": 0.035992201968366756,
+          "udep_raw": 0.012875610588743907,
+          "udep_norm": 0.01910214163090289,
+          "block_scale_ratio": 1.355210781097412,
+          "conj_on_rel_step": 0.1818442662192534,
+          "conj_off_rel_step": 0.1759884196288824,
+          "conj_on_rel_state": 0.22565704969595501,
+          "learned_gap": -0.9165549272485792,
+          "additivity_defect": 0.00035368518991912466,
+          "assignment": [
+            0,
+            1
+          ],
+          "learned_spec_slow": [
+            -1.0092511323948725,
+            -1.009800262703029
+          ],
+          "learned_spec_fast": [
+            -0.09324533545444964,
+            -0.09429308607424171
+          ]
+        },
+        {
+          "restart": 6,
+          "fit_quality": 0.051993224769830704,
+          "jac_diag": 0.9365184301035422,
+          "jac_lower": 0.0002071111688175107,
+          "jac_upper": 0.0632744587276403,
+          "udep_raw": 0.010684333184344898,
+          "udep_norm": 0.01540193125711221,
+          "block_scale_ratio": 1.0630375146865845,
+          "conj_on_rel_step": 0.23314219766208494,
+          "conj_off_rel_step": 0.25143926283782514,
+          "conj_on_rel_state": 0.31831712093086734,
+          "learned_gap": 0.07635192894666776,
+          "additivity_defect": 0.0012905235103129159,
+          "assignment": [
+            0,
+            1
+          ],
+          "learned_spec_slow": [
+            -0.34852452406031853,
+            -0.34855819426832185
+          ],
+          "learned_spec_fast": [
+            -0.4249101232149896,
+            -0.4267309299408854
+          ]
+        },
+        {
+          "restart": 7,
+          "fit_quality": 0.02629930153489113,
+          "jac_diag": 0.9777304163563973,
+          "jac_lower": 2.821624563206044e-05,
+          "jac_upper": 0.022241367397970585,
+          "udep_raw": 0.006950470455497968,
+          "udep_norm": 0.011731519324759836,
+          "block_scale_ratio": 1.3221827745437622,
+          "conj_on_rel_step": 0.19314222678680526,
+          "conj_off_rel_step": 0.1729797149304638,
+          "conj_on_rel_state": 0.2539534991989755,
+          "learned_gap": -1.16886179558037,
+          "additivity_defect": 0.00035537720409378764,
+          "assignment": [
+            0,
+            1
+          ],
+          "learned_spec_slow": [
+            -1.2223132109713448,
+            -1.2222086733993571
+          ],
+          "learned_spec_fast": [
+            -0.05345141539097479,
+            -0.05433278775029313
+          ]
+        }
+      ],
+      "fit_quality_median": 0.04201719909906387,
+      "jac_diag_median": 0.9502483171143739,
+      "jac_lower_median": 0.005200662382104426,
+      "jac_upper_median": 0.04963333034800353,
+      "udep_raw_median": 0.011779971886544402,
+      "udep_norm_median": 0.027542350604309717,
+      "block_scale_ratio_median": 1.0556063652038574,
+      "conj_on_rel_step_median": 0.22963953886044705,
+      "conj_off_rel_step_median": 0.24356643630050945,
+      "conj_on_rel_state_median": 0.26801318213704517,
+      "learned_gap_median": 0.09423445053125457,
+      "additivity_defect_median": 0.0009938765538740047,
+      "fit_quality_min": 0.02116086147725582,
+      "jac_diag_min": 0.9145970761539676,
+      "jac_lower_min": 2.821624563206044e-05,
+      "jac_upper_min": 0.0004471734612776125,
+      "udep_raw_min": 0.0016710943817067531,
+      "udep_norm_min": 0.011731519324759836,
+      "block_scale_ratio_min": 0.9682536721229553,
+      "conj_on_rel_step_min": 0.1818442662192534,
+      "conj_off_rel_step_min": 0.1729797149304638,
+      "conj_on_rel_state_min": 0.22565704969595501,
+      "learned_gap_min": -1.16886179558037,
+      "additivity_defect_min": 0.00035368518991912466,
+      "fit_quality_max": 0.053427912294864655,
+      "jac_diag_max": 0.989358612943331,
+      "jac_lower_max": 0.019159205617859464,
+      "jac_upper_max": 0.0812946145981044,
+      "udep_raw_max": 0.11088152868115425,
+      "udep_norm_max": 0.1312397056363813,
+      "block_scale_ratio_max": 5.73583984375,
+      "conj_on_rel_step_max": 0.25989019453643125,
+      "conj_off_rel_step_max": 0.29107607002193486,
+      "conj_on_rel_state_max": 0.3230964495316861,
+      "learned_gap_max": 0.5178882023691134,
+      "additivity_defect_max": 0.1995850914371692,
+      "fit_quality_sd": 0.012004095826276035,
+      "jac_diag_sd": 0.030390135403717104,
+      "jac_lower_sd": 0.0068542574387751255,
+      "jac_upper_sd": 0.030034245566105445,
+      "udep_raw_sd": 0.04515886311158271,
+      "udep_norm_sd": 0.04787651900457627,
+      "block_scale_ratio_sd": 1.5325669366194692,
+      "conj_on_rel_step_sd": 0.024901199849881987,
+      "conj_off_rel_step_sd": 0.042678399187690744,
+      "conj_on_rel_state_sd": 0.035827563005327336,
+      "learned_gap_sd": 0.5752027060357915,
+      "additivity_defect_sd": 0.06981978945001016
+    },
+    {
+      "strength": 0.5,
+      "whiten": true,
+      "w_behavior": 1.0,
+      "obs_nonlinearity": 0.3120733745449904,
+      "udep_floor_true_invariant": 0.1546315285173102,
+      "udep_true_varying": 1.0935937458387999,
+      "n_restarts": 8,
+      "per_restart": [
+        {
+          "restart": 0,
+          "fit_quality": 0.06229982152581215,
+          "jac_diag": 0.5661990716466916,
+          "jac_lower": 0.4080766316540628,
+          "jac_upper": 0.02572429669924564,
+          "udep_raw": 0.0573957351952797,
+          "udep_norm": 0.06579283389948926,
+          "block_scale_ratio": 0.6144198179244995,
+          "conj_on_rel_step": 0.3592563284091381,
+          "conj_off_rel_step": 0.3607530560897426,
+          "conj_on_rel_state": 0.24615127042015314,
+          "learned_gap": 0.23209899604070797,
+          "additivity_defect": 0.11530866691710631,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            0.25122846131485815,
+            -0.16909587525243455
+          ],
+          "learned_spec_fast": [
+            -0.40249080912095253,
+            -0.4011948712931425
+          ]
+        },
+        {
+          "restart": 1,
+          "fit_quality": 0.025173023343086243,
+          "jac_diag": 0.5411724875674776,
+          "jac_lower": 0.42290755330865965,
+          "jac_upper": 0.03591995912386278,
+          "udep_raw": 0.04294503780043072,
+          "udep_norm": 0.04998898930824503,
+          "block_scale_ratio": 1.0293840169906616,
+          "conj_on_rel_step": 0.26328106135629203,
+          "conj_off_rel_step": 0.2823990753409685,
+          "conj_on_rel_state": 0.18698178293483628,
+          "learned_gap": -0.2679388876009362,
+          "additivity_defect": 0.0757277368049184,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            -0.06479787430332261,
+            -0.059523310685474555
+          ],
+          "learned_spec_fast": [
+            0.2031410132976136,
+            -0.7652715490586249
+          ]
+        },
+        {
+          "restart": 2,
+          "fit_quality": 0.025680746883153915,
+          "jac_diag": 0.5431170470859769,
+          "jac_lower": 0.42161133519836114,
+          "jac_upper": 0.03527161771566206,
+          "udep_raw": 0.03826485655233629,
+          "udep_norm": 0.048436365315055685,
+          "block_scale_ratio": 0.9882605671882629,
+          "conj_on_rel_step": 0.2675793275300813,
+          "conj_off_rel_step": 0.2832825657432638,
+          "conj_on_rel_state": 0.18221374267407078,
+          "learned_gap": -0.21315740268591216,
+          "additivity_defect": 0.058995005787638145,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            -0.24769712409074388,
+            -0.24255182137851397
+          ],
+          "learned_spec_fast": [
+            -0.034539721404831705,
+            -1.2381859173862289
+          ]
+        },
+        {
+          "restart": 3,
+          "fit_quality": 0.03151269257068634,
+          "jac_diag": 0.5016583141426177,
+          "jac_lower": 0.4867258662904242,
+          "jac_upper": 0.011615819566958148,
+          "udep_raw": 0.04862223848815403,
+          "udep_norm": 0.061521658803051334,
+          "block_scale_ratio": 0.9527902603149414,
+          "conj_on_rel_step": 0.30159348738157105,
+          "conj_off_rel_step": 0.3130275343186427,
+          "conj_on_rel_state": 0.21259034576905922,
+          "learned_gap": -0.607257430259909,
+          "additivity_defect": 0.11256986621480228,
+          "assignment": [
+            0,
+            1
+          ],
+          "learned_spec_slow": [
+            -0.010278736772700746,
+            -0.6065847766689552
+          ],
+          "learned_spec_fast": [
+            0.0006726535909538095,
+            -0.18766665280002215
+          ]
+        },
+        {
+          "restart": 4,
+          "fit_quality": 0.029668578878045082,
+          "jac_diag": 0.5496775168248677,
+          "jac_lower": 0.4098284857210664,
+          "jac_upper": 0.04049399745406595,
+          "udep_raw": 0.03615743087192073,
+          "udep_norm": 0.049893426674546944,
+          "block_scale_ratio": 1.0460615158081055,
+          "conj_on_rel_step": 0.28597112932535274,
+          "conj_off_rel_step": 0.31185809122652236,
+          "conj_on_rel_state": 0.2040367136947069,
+          "learned_gap": -0.39045851297976586,
+          "additivity_defect": 0.09181984690230208,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            -0.33253544348132635,
+            -0.32793667899431034
+          ],
+          "learned_spec_fast": [
+            0.057923069498439526,
+            -0.7878280984283436
+          ]
+        },
+        {
+          "restart": 5,
+          "fit_quality": 0.028335966169834137,
+          "jac_diag": 0.539463163836685,
+          "jac_lower": 0.4279282628122286,
+          "jac_upper": 0.032608573351086405,
+          "udep_raw": 0.038580197584247626,
+          "udep_norm": 0.06176808444971748,
+          "block_scale_ratio": 1.0260409116744995,
+          "conj_on_rel_step": 0.2807238598932456,
+          "conj_off_rel_step": 0.29385959865241956,
+          "conj_on_rel_state": 0.19691049488037798,
+          "learned_gap": -0.45379322026796226,
+          "additivity_defect": 0.044488991513544136,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            0.1834396088407636,
+            -0.49501274864585576
+          ],
+          "learned_spec_fast": [
+            -0.04121952837789349,
+            -0.8367082286019331
+          ]
+        },
+        {
+          "restart": 6,
+          "fit_quality": 0.024565286934375763,
+          "jac_diag": 0.5905731471448994,
+          "jac_lower": 0.3865494665140789,
+          "jac_upper": 0.02287738634102166,
+          "udep_raw": 0.00511921423213189,
+          "udep_norm": 0.044772415402336035,
+          "block_scale_ratio": 3.8799307346343994,
+          "conj_on_rel_step": 0.33759388124408996,
+          "conj_off_rel_step": 0.33552203790364743,
+          "conj_on_rel_state": 0.19429246975873754,
+          "learned_gap": -0.6792113276886332,
+          "additivity_defect": 0.09197238072968733,
+          "assignment": [
+            0,
+            1
+          ],
+          "learned_spec_slow": [
+            0.030167773162283616,
+            -0.43291726094761884
+          ],
+          "learned_spec_fast": [
+            0.24629406674101437,
+            -0.22844755226881666
+          ]
+        },
+        {
+          "restart": 7,
+          "fit_quality": 0.02537105232477188,
+          "jac_diag": 0.5740261656462144,
+          "jac_lower": 0.39387637256541275,
+          "jac_upper": 0.0320974617883727,
+          "udep_raw": 0.050782754992724284,
+          "udep_norm": 0.059301540676634,
+          "block_scale_ratio": 1.0149133205413818,
+          "conj_on_rel_step": 0.2757694958053342,
+          "conj_off_rel_step": 0.2908339180479034,
+          "conj_on_rel_state": 0.19059401344832122,
+          "learned_gap": -0.037369940698002375,
+          "additivity_defect": 0.062310289802648904,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            0.39290824817212266,
+            -0.08755621197583473
+          ],
+          "learned_spec_fast": [
+            -0.05018627127783235,
+            -0.5915904801949691
+          ]
+        }
+      ],
+      "fit_quality_median": 0.027008356526494026,
+      "jac_diag_median": 0.5463972819554223,
+      "jac_lower_median": 0.4157199104597138,
+      "jac_upper_median": 0.03235301756972955,
+      "udep_raw_median": 0.04076261769233917,
+      "udep_norm_median": 0.05464526499243952,
+      "block_scale_ratio_median": 1.0204771161079407,
+      "conj_on_rel_step_median": 0.2833474946092992,
+      "conj_off_rel_step_median": 0.30285884493947096,
+      "conj_on_rel_state_median": 0.19560148231955776,
+      "learned_gap_median": -0.32919870029035103,
+      "additivity_defect_median": 0.08377379185361024,
+      "fit_quality_min": 0.024565286934375763,
+      "jac_diag_min": 0.5016583141426177,
+      "jac_lower_min": 0.3865494665140789,
+      "jac_upper_min": 0.011615819566958148,
+      "udep_raw_min": 0.00511921423213189,
+      "udep_norm_min": 0.044772415402336035,
+      "block_scale_ratio_min": 0.6144198179244995,
+      "conj_on_rel_step_min": 0.26328106135629203,
+      "conj_off_rel_step_min": 0.2823990753409685,
+      "conj_on_rel_state_min": 0.18221374267407078,
+      "learned_gap_min": -0.6792113276886332,
+      "additivity_defect_min": 0.044488991513544136,
+      "fit_quality_max": 0.06229982152581215,
+      "jac_diag_max": 0.5905731471448994,
+      "jac_lower_max": 0.4867258662904242,
+      "jac_upper_max": 0.04049399745406595,
+      "udep_raw_max": 0.0573957351952797,
+      "udep_norm_max": 0.06579283389948926,
+      "block_scale_ratio_max": 3.8799307346343994,
+      "conj_on_rel_step_max": 0.3592563284091381,
+      "conj_off_rel_step_max": 0.3607530560897426,
+      "conj_on_rel_state_max": 0.24615127042015314,
+      "learned_gap_max": 0.23209899604070797,
+      "additivity_defect_max": 0.11530866691710631,
+      "fit_quality_sd": 0.011840063788746902,
+      "jac_diag_sd": 0.025136781758863167,
+      "jac_lower_sd": 0.0286628649101953,
+      "jac_upper_sd": 0.008585729016202356,
+      "udep_raw_sd": 0.014738505286210792,
+      "udep_norm_sd": 0.007262296069232785,
+      "block_scale_ratio_sd": 0.9769188919318391,
+      "conj_on_rel_step_sd": 0.03236974175275896,
+      "conj_off_rel_step_sd": 0.025822456324452972,
+      "conj_on_rel_state_sd": 0.019031111353564063,
+      "learned_gap_sd": 0.2807758000485308,
+      "additivity_defect_sd": 0.023984912484667265
+    },
+    {
+      "strength": 1.5,
+      "whiten": true,
+      "w_behavior": 1.0,
+      "obs_nonlinearity": 0.43104798696017227,
+      "udep_floor_true_invariant": 0.1546315285173102,
+      "udep_true_varying": 1.0935937458387999,
+      "n_restarts": 8,
+      "per_restart": [
+        {
+          "restart": 0,
+          "fit_quality": 0.040123455226421356,
+          "jac_diag": 0.840645100329195,
+          "jac_lower": 0.10928811914067674,
+          "jac_upper": 0.05006678053012819,
+          "udep_raw": 0.06870653077115127,
+          "udep_norm": 0.07530368827754993,
+          "block_scale_ratio": 0.8462338447570801,
+          "conj_on_rel_step": 0.3178573939223088,
+          "conj_off_rel_step": 0.320597517147276,
+          "conj_on_rel_state": 0.1285651162612088,
+          "learned_gap": 0.0007441758510101093,
+          "additivity_defect": 0.11034601274054202,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            0.19708232889224817,
+            -0.19713708345008182
+          ],
+          "learned_spec_fast": [
+            -0.19788125930109193,
+            -0.20021369155683086
+          ]
+        },
+        {
+          "restart": 1,
+          "fit_quality": 0.04329904541373253,
+          "jac_diag": 0.9198898603904295,
+          "jac_lower": 0.023522279078361012,
+          "jac_upper": 0.056587860531209386,
+          "udep_raw": 0.07461428946573362,
+          "udep_norm": 0.08260238505873727,
+          "block_scale_ratio": 1.8808852434158325,
+          "conj_on_rel_step": 0.3386113656574604,
+          "conj_off_rel_step": 0.3409312147974973,
+          "conj_on_rel_state": 0.12973661404588763,
+          "learned_gap": 0.018213973727349647,
+          "additivity_defect": 0.121314090608084,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            0.3313847289653195,
+            -0.1717495377281926
+          ],
+          "learned_spec_fast": [
+            -0.18996351145554224,
+            -0.6183722491245817
+          ]
+        },
+        {
+          "restart": 2,
+          "fit_quality": 0.039432380348443985,
+          "jac_diag": 0.906883783044687,
+          "jac_lower": 0.03502067469893182,
+          "jac_upper": 0.05809554225638137,
+          "udep_raw": 0.07316723863221448,
+          "udep_norm": 0.0834019494838187,
+          "block_scale_ratio": 1.816851258277893,
+          "conj_on_rel_step": 0.3381388062568194,
+          "conj_off_rel_step": 0.3456574343614858,
+          "conj_on_rel_state": 0.12396577565894516,
+          "learned_gap": -0.06673222845996907,
+          "additivity_defect": 0.12164866391926804,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            0.43589390775323916,
+            -0.2929580078135047
+          ],
+          "learned_spec_fast": [
+            -0.22678454404821338,
+            -0.2262257793535356
+          ]
+        },
+        {
+          "restart": 3,
+          "fit_quality": 0.04009111225605011,
+          "jac_diag": 0.9006731123743679,
+          "jac_lower": 0.042402220003382896,
+          "jac_upper": 0.056924667622249125,
+          "udep_raw": 0.08214107971912804,
+          "udep_norm": 0.09185695154065976,
+          "block_scale_ratio": 1.576647162437439,
+          "conj_on_rel_step": 0.34152035041463324,
+          "conj_off_rel_step": 0.35850042897957274,
+          "conj_on_rel_state": 0.11658964154252406,
+          "learned_gap": -0.4580535705214151,
+          "additivity_defect": 0.11430390317666358,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            0.06308002233490485,
+            -0.5258205695177488
+          ],
+          "learned_spec_fast": [
+            -0.06776699899633372,
+            -0.5551295690945648
+          ]
+        },
+        {
+          "restart": 4,
+          "fit_quality": 0.04008108377456665,
+          "jac_diag": 0.8381405624653273,
+          "jac_lower": 0.11068419015150134,
+          "jac_upper": 0.051175247383171536,
+          "udep_raw": 0.06870107495862948,
+          "udep_norm": 0.07731511235489333,
+          "block_scale_ratio": 1.0369876623153687,
+          "conj_on_rel_step": 0.3422478961329541,
+          "conj_off_rel_step": 0.34429264071646515,
+          "conj_on_rel_state": 0.12564609700809762,
+          "learned_gap": -0.09119105177694735,
+          "additivity_defect": 0.10935151559581521,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            0.3845798273219039,
+            -0.10229898214398929
+          ],
+          "learned_spec_fast": [
+            -0.011107930367041939,
+            -0.12890448118620457
+          ]
+        },
+        {
+          "restart": 5,
+          "fit_quality": 0.04062672704458237,
+          "jac_diag": 0.8853222573615258,
+          "jac_lower": 0.05574629292418432,
+          "jac_upper": 0.05893144971428998,
+          "udep_raw": 0.0759119863357082,
+          "udep_norm": 0.08560679980964646,
+          "block_scale_ratio": 1.4236047267913818,
+          "conj_on_rel_step": 0.3297419636806279,
+          "conj_off_rel_step": 0.3387857002100654,
+          "conj_on_rel_state": 0.13432266289868283,
+          "learned_gap": -0.11332359080542187,
+          "additivity_defect": 0.13195715339401823,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            -0.0031538223194088467,
+            -0.5330009433489279
+          ],
+          "learned_spec_fast": [
+            -0.419677352543506,
+            -0.4202517768151964
+          ]
+        },
+        {
+          "restart": 6,
+          "fit_quality": 0.05723360925912857,
+          "jac_diag": 0.9129971579242224,
+          "jac_lower": 0.032920695873160766,
+          "jac_upper": 0.054082146202616796,
+          "udep_raw": 0.08024873488347904,
+          "udep_norm": 0.09298025080355693,
+          "block_scale_ratio": 1.7022863626480103,
+          "conj_on_rel_step": 0.3670235958510877,
+          "conj_off_rel_step": 0.39117908222560416,
+          "conj_on_rel_state": 0.14399811537956586,
+          "learned_gap": -0.8428110640387156,
+          "additivity_defect": 0.09352826084467165,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            0.3356018560639466,
+            -0.9169890242074993
+          ],
+          "learned_spec_fast": [
+            -0.0741779601687836,
+            -0.07708103091964898
+          ]
+        },
+        {
+          "restart": 7,
+          "fit_quality": 0.06284910440444946,
+          "jac_diag": 0.5199833656500535,
+          "jac_lower": 0.4382888495468497,
+          "jac_upper": 0.04172778480309655,
+          "udep_raw": 0.0679720051102849,
+          "udep_norm": 0.07769857534633738,
+          "block_scale_ratio": 0.6701779961585999,
+          "conj_on_rel_step": 0.3243562847832969,
+          "conj_off_rel_step": 0.328458507480748,
+          "conj_on_rel_state": 0.2660401573475398,
+          "learned_gap": -0.5603880862897024,
+          "additivity_defect": 0.11546035202093717,
+          "assignment": [
+            0,
+            1
+          ],
+          "learned_spec_slow": [
+            -0.09608595543321441,
+            -0.09412060467479973
+          ],
+          "learned_spec_fast": [
+            0.4643021308564879,
+            -0.015994671032848167
+          ]
+        }
+      ],
+      "fit_quality_median": 0.04037509113550186,
+      "jac_diag_median": 0.8929976848679468,
+      "jac_lower_median": 0.049074256463783605,
+      "jac_upper_median": 0.05533500336691309,
+      "udep_raw_median": 0.07389076404897404,
+      "udep_norm_median": 0.08300216727127799,
+      "block_scale_ratio_median": 1.5001259446144104,
+      "conj_on_rel_step_median": 0.33837508595713994,
+      "conj_off_rel_step_median": 0.34261192775698124,
+      "conj_on_rel_state_median": 0.12915086515354823,
+      "learned_gap_median": -0.10225732129118462,
+      "additivity_defect_median": 0.11488212759880037,
+      "fit_quality_min": 0.039432380348443985,
+      "jac_diag_min": 0.5199833656500535,
+      "jac_lower_min": 0.023522279078361012,
+      "jac_upper_min": 0.04172778480309655,
+      "udep_raw_min": 0.0679720051102849,
+      "udep_norm_min": 0.07530368827754993,
+      "block_scale_ratio_min": 0.6701779961585999,
+      "conj_on_rel_step_min": 0.3178573939223088,
+      "conj_off_rel_step_min": 0.320597517147276,
+      "conj_on_rel_state_min": 0.11658964154252406,
+      "learned_gap_min": -0.8428110640387156,
+      "additivity_defect_min": 0.09352826084467165,
+      "fit_quality_max": 0.06284910440444946,
+      "jac_diag_max": 0.9198898603904295,
+      "jac_lower_max": 0.4382888495468497,
+      "jac_upper_max": 0.05893144971428998,
+      "udep_raw_max": 0.08214107971912804,
+      "udep_norm_max": 0.09298025080355693,
+      "block_scale_ratio_max": 1.8808852434158325,
+      "conj_on_rel_step_max": 0.3670235958510877,
+      "conj_off_rel_step_max": 0.39117908222560416,
+      "conj_on_rel_state_max": 0.2660401573475398,
+      "learned_gap_max": 0.018213973727349647,
+      "additivity_defect_max": 0.13195715339401823,
+      "fit_quality_sd": 0.00859939884549259,
+      "jac_diag_sd": 0.12466540106862609,
+      "jac_lower_sd": 0.12951832271330396,
+      "jac_upper_sd": 0.005338275001601512,
+      "udep_raw_sd": 0.0050305379023114485,
+      "udep_norm_sd": 0.0061630570962385904,
+      "block_scale_ratio_sd": 0.4318050138451685,
+      "conj_on_rel_step_sd": 0.013832644637493018,
+      "conj_off_rel_step_sd": 0.02009711163558607,
+      "conj_on_rel_state_sd": 0.045939014269612284,
+      "learned_gap_sd": 0.2961713458774271,
+      "additivity_defect_sd": 0.010525970955948774
+    },
+    {
+      "strength": 2.0,
+      "whiten": true,
+      "w_behavior": 1.0,
+      "obs_nonlinearity": 0.6029091525298709,
+      "udep_floor_true_invariant": 0.1546315285173102,
+      "udep_true_varying": 1.0935937458387999,
+      "n_restarts": 8,
+      "per_restart": [
+        {
+          "restart": 0,
+          "fit_quality": 0.07712516188621521,
+          "jac_diag": 0.9119742523877934,
+          "jac_lower": 0.02047463899674839,
+          "jac_upper": 0.06755110861545811,
+          "udep_raw": 0.06798198889830771,
+          "udep_norm": 0.07839044573339778,
+          "block_scale_ratio": 1.2328540086746216,
+          "conj_on_rel_step": 0.36599247531723167,
+          "conj_off_rel_step": 0.3975307056790427,
+          "conj_on_rel_state": 0.2318232598608175,
+          "learned_gap": -0.8742353429133494,
+          "additivity_defect": 0.123824622388129,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            -0.549616019508877,
+            -1.4412116160952622
+          ],
+          "learned_spec_fast": [
+            -0.567242022143772,
+            -0.5669762731819128
+          ]
+        },
+        {
+          "restart": 1,
+          "fit_quality": 0.08628593385219574,
+          "jac_diag": 0.5979304791098521,
+          "jac_lower": 0.3625467936193671,
+          "jac_upper": 0.03952272727078089,
+          "udep_raw": 0.06578841250705596,
+          "udep_norm": 0.08130552440284822,
+          "block_scale_ratio": 0.7134484052658081,
+          "conj_on_rel_step": 0.4167235202664392,
+          "conj_off_rel_step": 0.42137293115286195,
+          "conj_on_rel_state": 0.3161515727629821,
+          "learned_gap": -0.10893259672692078,
+          "additivity_defect": 0.14708957094113828,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            -0.10923648587553662,
+            -0.1077593481318606
+          ],
+          "learned_spec_fast": [
+            -0.0003038891486158372,
+            -0.12575527821901603
+          ]
+        },
+        {
+          "restart": 2,
+          "fit_quality": 0.08067099004983902,
+          "jac_diag": 0.7818944483541883,
+          "jac_lower": 0.17081182796987515,
+          "jac_upper": 0.0472937236759365,
+          "udep_raw": 0.07048176203510202,
+          "udep_norm": 0.08350546380570958,
+          "block_scale_ratio": 0.5246821641921997,
+          "conj_on_rel_step": 0.39861250810410215,
+          "conj_off_rel_step": 0.4173090595795999,
+          "conj_on_rel_state": 0.2702466520051394,
+          "learned_gap": -0.03993684884327617,
+          "additivity_defect": 0.11872898234048733,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            -0.007970568197719014,
+            -0.19291827054533536
+          ],
+          "learned_spec_fast": [
+            -0.1529814217020592,
+            -0.15987629471140138
+          ]
+        },
+        {
+          "restart": 3,
+          "fit_quality": 0.07356412708759308,
+          "jac_diag": 0.7366932984355051,
+          "jac_lower": 0.2177228166013511,
+          "jac_upper": 0.04558388496314378,
+          "udep_raw": 0.08157442570642254,
+          "udep_norm": 0.09614001139482746,
+          "block_scale_ratio": 0.45284804701805115,
+          "conj_on_rel_step": 0.4008679141171917,
+          "conj_off_rel_step": 0.42767461370013904,
+          "conj_on_rel_state": 0.3059140334347454,
+          "learned_gap": -0.3614531760743184,
+          "additivity_defect": 0.11432842338836548,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            0.060055574293050175,
+            -0.4324404551237153
+          ],
+          "learned_spec_fast": [
+            -0.07271420708743428,
+            -0.07098727904939688
+          ]
+        },
+        {
+          "restart": 4,
+          "fit_quality": 0.07666628062725067,
+          "jac_diag": 0.909499599525844,
+          "jac_lower": 0.03219072421085451,
+          "jac_upper": 0.058309676263301434,
+          "udep_raw": 0.06124046933644883,
+          "udep_norm": 0.07766089222714234,
+          "block_scale_ratio": 1.0831466913223267,
+          "conj_on_rel_step": 0.3819354461461137,
+          "conj_off_rel_step": 0.41418006814272523,
+          "conj_on_rel_state": 0.26333256844890074,
+          "learned_gap": 0.1489685700744256,
+          "additivity_defect": 0.1343952094890962,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            -0.034124859384396154,
+            -0.03554539485572264
+          ],
+          "learned_spec_fast": [
+            -0.18451396493014824,
+            -0.18453514203570084
+          ]
+        },
+        {
+          "restart": 5,
+          "fit_quality": 0.07518751919269562,
+          "jac_diag": 0.8685433782763953,
+          "jac_lower": 0.05512625873276464,
+          "jac_upper": 0.07633036299084013,
+          "udep_raw": 0.07754974503540957,
+          "udep_norm": 0.0915653332886713,
+          "block_scale_ratio": 0.9332721829414368,
+          "conj_on_rel_step": 0.39266331955293504,
+          "conj_off_rel_step": 0.4141967672706755,
+          "conj_on_rel_state": 0.2295020584834472,
+          "learned_gap": -1.1312197146019278,
+          "additivity_defect": 0.15227556885117138,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            -0.0853222756153106,
+            -1.1314165037156263
+          ],
+          "learned_spec_fast": [
+            -0.00019678911369845536,
+            -0.017986718910725074
+          ]
+        },
+        {
+          "restart": 6,
+          "fit_quality": 0.08723708242177963,
+          "jac_diag": 0.7463364740411366,
+          "jac_lower": 0.20235916062589046,
+          "jac_upper": 0.05130436533297297,
+          "udep_raw": 0.07355056674089105,
+          "udep_norm": 0.08531162994567418,
+          "block_scale_ratio": 0.5941047072410583,
+          "conj_on_rel_step": 0.3950504573390125,
+          "conj_off_rel_step": 0.4186468000541674,
+          "conj_on_rel_state": 0.2727290387929597,
+          "learned_gap": -0.17425690665808657,
+          "additivity_defect": 0.12089275775579944,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            -6.711682895151523e-05,
+            -0.30358907087358117
+          ],
+          "learned_spec_fast": [
+            -0.1293321642154946,
+            -0.13112264615103572
+          ]
+        },
+        {
+          "restart": 7,
+          "fit_quality": 0.07463110983371735,
+          "jac_diag": 0.8479697155350566,
+          "jac_lower": 0.09373387470845997,
+          "jac_upper": 0.058296409756483404,
+          "udep_raw": 0.08125255704265838,
+          "udep_norm": 0.0942468218683775,
+          "block_scale_ratio": 0.7773995399475098,
+          "conj_on_rel_step": 0.39030688516648504,
+          "conj_off_rel_step": 0.4049802269726591,
+          "conj_on_rel_state": 0.2578508566476326,
+          "learned_gap": -0.25692173009024644,
+          "additivity_defect": 0.1185880576943898,
+          "assignment": [
+            1,
+            0
+          ],
+          "learned_spec_slow": [
+            0.09441119525054531,
+            -0.31885233118075257
+          ],
+          "learned_spec_fast": [
+            -0.06623386631278114,
+            -0.06193060109050615
+          ]
+        }
+      ],
+      "fit_quality_median": 0.07689572125673294,
+      "jac_diag_median": 0.8149320819446224,
+      "jac_lower_median": 0.13227285133916755,
+      "jac_upper_median": 0.054800387544728185,
+      "udep_raw_median": 0.07201616438799655,
+      "udep_norm_median": 0.08440854687569188,
+      "block_scale_ratio_median": 0.7454239726066589,
+      "conj_on_rel_step_median": 0.3938568884459738,
+      "conj_off_rel_step_median": 0.4157529134251377,
+      "conj_on_rel_state_median": 0.2667896102270201,
+      "learned_gap_median": -0.2155893183741665,
+      "additivity_defect_median": 0.12235869007196422,
+      "fit_quality_min": 0.07356412708759308,
+      "jac_diag_min": 0.5979304791098521,
+      "jac_lower_min": 0.02047463899674839,
+      "jac_upper_min": 0.03952272727078089,
+      "udep_raw_min": 0.06124046933644883,
+      "udep_norm_min": 0.07766089222714234,
+      "block_scale_ratio_min": 0.45284804701805115,
+      "conj_on_rel_step_min": 0.36599247531723167,
+      "conj_off_rel_step_min": 0.3975307056790427,
+      "conj_on_rel_state_min": 0.2295020584834472,
+      "learned_gap_min": -1.1312197146019278,
+      "additivity_defect_min": 0.11432842338836548,
+      "fit_quality_max": 0.08723708242177963,
+      "jac_diag_max": 0.9119742523877934,
+      "jac_lower_max": 0.3625467936193671,
+      "jac_upper_max": 0.07633036299084013,
+      "udep_raw_max": 0.08157442570642254,
+      "udep_norm_max": 0.09614001139482746,
+      "block_scale_ratio_max": 1.2328540086746216,
+      "conj_on_rel_step_max": 0.4167235202664392,
+      "conj_off_rel_step_max": 0.42767461370013904,
+      "conj_on_rel_state_max": 0.3161515727629821,
+      "learned_gap_max": 0.1489685700744256,
+      "additivity_defect_max": 0.15227556885117138,
+      "fit_quality_sd": 0.00494733338046956,
+      "jac_diag_sd": 0.09973402755375113,
+      "jac_lower_sd": 0.10926251354183407,
+      "jac_upper_sd": 0.011365472447518515,
+      "udep_raw_sd": 0.006908528766867765,
+      "udep_norm_sd": 0.006689371683278285,
+      "block_scale_ratio_sd": 0.2576412126012707,
+      "conj_on_rel_step_sd": 0.013780350261300566,
+      "conj_off_rel_step_sd": 0.008836502768976016,
+      "conj_on_rel_state_sd": 0.028934239776972098,
+      "learned_gap_sd": 0.4074354381484089,
+      "additivity_defect_sd": 0.013319731997190845
+    }
+  ],
+  "udep_floor_true_invariant": 0.1546315285173102,
+  "udep_true_varying": 1.0935937458387999,
+  "corr_conj_diag_within_arm": 0.05206520844516732,
+  "corr_additivity_diag_within_arm": -0.16663860858237176,
+  "corr_learned_gap_diag_within_arm": 0.344070755974354,
+  "all_passed": false,
+  "checks": [
+    {
+      "passed": true,
+      "claim": "under the RAW penalty the pinned block is u-DEPENDENT at every dose and every restart once the gauge is removed: scale-normalised u-dependence [1.08, 0.806, 0.769, 0.798] against a true-invariant floor of 0.155 -- the constraint was never imposed"
+    },
+    {
+      "passed": true,
+      "claim": "and it LOOKED imposed on the raw score [0.0014, 0.0059, 0.0088, 0.0055], which is the trap: the two readings disagree in direction because the block was shrunk (scale ratios [23.9, 10.9, 7.8, 4.5])"
+    },
+    {
+      "passed": true,
+      "claim": "the WHITENED penalty imposes what the raw one only appeared to: scale-normalised u-dependence [0.028, 0.055, 0.083, 0.084] at or below the floor, scale ratios [1.1, 1.0, 1.5, 0.7]"
+    },
+    {
+      "passed": true,
+      "claim": "at the TOP dose, imposing behaviour for real recovers block structure the raw penalty could not: jac_diag 0.567 -> 0.815 -- exp12's headline (B+C degrades to a filtration under nonlinearity) was an artifact of the broken penalty"
+    },
+    {
+      "passed": false,
+      "claim": "and the result is BLOCK-DIAGONAL, not merely triangular: forbidden upper <= 0.081 over all doses and restarts, and the ALLOWED lower mass is only 0.132 at the top dose -- B+C's load-bearing claim, tested here for the first time"
+    },
+    {
+      "passed": true,
+      "claim": "(i) the conjugacy residual rises with dose under the fixed penalty: [0.23, 0.283, 0.338, 0.394] (off-trajectory [0.244, 0.303, 0.343, 0.416])"
+    },
+    {
+      "passed": false,
+      "claim": "(ii) the LEARNED one-sided gap survives at every dose and restart (min -1.169; the true gap is 0.588) -- Lemma C still applies to the fitted model"
+    },
+    {
+      "passed": true,
+      "claim": "(iii) h_B loses additivity with dose: mixed-curvature share [0.001, 0.0838, 0.1149, 0.1224] -- Lemma D's open case (a) is on the critical path"
+    }
+  ]
+}

@@ -1,0 +1,144 @@
+{
+  "experiment": "exp05_cocycle_and_spectra",
+  "utc": "2026-08-04T04:29:07.056076+00:00",
+  "seed": 0,
+  "radii": [
+    0.6,
+    1.0,
+    1.4,
+    1.8,
+    2.2
+  ],
+  "n_max": 400,
+  "spectra_sweep": [
+    {
+      "radius": 0.6,
+      "max_visited_norm": 0.7979946695951955,
+      "pointwise_min_distance": 0.2500000001465099,
+      "pointwise_mean_distance": 0.5508438757127726,
+      "lyapunov_gap": 0.3053816493663737
+    },
+    {
+      "radius": 1.0,
+      "max_visited_norm": 1.3083025552739147,
+      "pointwise_min_distance": 0.2500000000000258,
+      "pointwise_mean_distance": 0.4747901827336068,
+      "lyapunov_gap": 0.3053816492316938
+    },
+    {
+      "radius": 1.4,
+      "max_visited_norm": 1.8854801634422058,
+      "pointwise_min_distance": 0.2500000000963865,
+      "pointwise_mean_distance": 0.47818615398072456,
+      "lyapunov_gap": 0.3053816492296036
+    },
+    {
+      "radius": 1.8,
+      "max_visited_norm": 2.3620170481421594,
+      "pointwise_min_distance": 7.351897583474098e-05,
+      "pointwise_mean_distance": 0.5012411691163715,
+      "lyapunov_gap": 0.305381649227856
+    },
+    {
+      "radius": 2.2,
+      "max_visited_norm": 2.8713520492705156,
+      "pointwise_min_distance": 0.0011821493791392967,
+      "pointwise_mean_distance": 0.5337067288179063,
+      "lyapunov_gap": 0.3053816491891128
+    }
+  ],
+  "sylvester": [
+    {
+      "region": "small region (r=0.6)",
+      "closest_spectra": 0.25000000922145355,
+      "sigma_min_worst": 0.2249862740672261,
+      "sigma_min_typical": 0.5793736898423155,
+      "z1": [
+        0.7450241567096526,
+        0.23325281606662243
+      ],
+      "z2": [
+        -0.12008507299396419,
+        -0.0335625324625859
+      ]
+    },
+    {
+      "region": "large region (r=2.2)",
+      "closest_spectra": 0.0001686300820102904,
+      "sigma_min_worst": 8.30006911700802e-05,
+      "sigma_min_typical": 0.41830915750444897,
+      "z1": [
+        -1.7649252510402946,
+        -0.5780988784384932
+      ],
+      "z2": [
+        1.2973437490045274,
+        1.669625777021262
+      ]
+    }
+  ],
+  "lyapunov_gap_exact": 0.30538164955118186,
+  "cocycle_gap": {
+    "rate": -0.30538164954966823,
+    "predicted": -0.30538164955118186,
+    "log_M_final": -119.36709049613094
+  },
+  "cocycle_no_gap": {
+    "rate": 6.39530830649702e-16,
+    "predicted": 0.0,
+    "log_M_final": 2.2467692728127133
+  },
+  "two_sided_obstruction": [
+    {
+      "s2": 0.3,
+      "rate_M12": -1.152679509501235,
+      "rate_M21": 1.1526795103755225,
+      "both_negative": false
+    },
+    {
+      "s2": 0.5,
+      "rate_M12": -0.6418538857352529,
+      "rate_M21": 0.6418538866095406,
+      "both_negative": false
+    },
+    {
+      "s2": 0.7,
+      "rate_M12": -0.30538164911403454,
+      "rate_M21": 0.30538164998832196,
+      "both_negative": false
+    },
+    {
+      "s2": 0.9,
+      "rate_M12": -0.054067220833130564,
+      "rate_M21": 0.05406722170741837,
+      "both_negative": false
+    }
+  ],
+  "all_passed": true,
+  "checks": [
+    {
+      "passed": true,
+      "claim": "pointwise Jacobian spectra are separated on a small visited region (2.50e-01) and cross on a larger one (7.35e-05) -- Assumption 4 as written is unusable (\u00a73.4)"
+    },
+    {
+      "passed": true,
+      "claim": "the Lyapunov gap is invariant across the same sweep (0.3054 vs exact 0.3054) -- the dichotomy-spectrum replacement is well posed"
+    },
+    {
+      "passed": true,
+      "claim": "the pointwise Sylvester operator is well conditioned on the small region (sigma_min 2.25e-01) and singular on the larger one (8.30e-05), so the draft's pointwise step genuinely fails there (\u00a73.3)"
+    },
+    {
+      "passed": true,
+      "claim": "with a gap the cocycle bound decays at the predicted rate (-0.30538 vs -0.30538), forcing M = 0"
+    },
+    {
+      "passed": true,
+      "claim": "without a gap the bound stalls (rate +0.00000) and M is not forced to zero -- the gap is doing the work, not the algebra"
+    },
+    {
+      "passed": true,
+      "claim": "NEW BLOCKING ISSUE: the two cross-derivative rates are exact negatives, so the cocycle argument can never kill both -- it yields a triangular h, not a block-diagonal one"
+    }
+  ]
+}

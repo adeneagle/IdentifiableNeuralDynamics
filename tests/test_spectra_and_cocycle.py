@@ -1,0 +1,469 @@
+"""Lyapunov spectra (§3.4) and the cocycle argument (§3.3).
+
+The value of these tests is that both modules have *exactly known* answers:
+TwistBlock has Lyapunov spectrum {log s, log s} by construction, so estimator
+error is measurable rather than assumed.
+"""
+
+from __future__ import annotations
+
+import numpy as np
+import pytest
+
+from idyn import cocycle as CC
+from idyn import spectra as SP
+from idyn import systems as S
+
+
+# --------------------------------------------------------------------------
+# Lyapunov spectra
+# --------------------------------------------------------------------------
+
+
+def test_linear_system_lyapunov_spectrum_is_log_of_eigenvalue_moduli():
+    blk = S.LinearBlock(np.diag([0.9, 0.5]))
+    spec = SP.lyapunov_spectrum(blk, np.array([1.0, 1.0]), T=500, warmup=50)
+    assert spec == pytest.approx([np.log(0.9), np.log(0.5)], abs=1e-9)
+
+
+def test_twist_block_lyapunov_spectrum_matches_its_exact_value():
+    blk = S.TwistBlock(s=0.85, omega=0.4, beta=0.9)
+    spec = SP.lyapunov_spectrum(blk, np.array([0.9, 0.3]), T=2000, warmup=200)
+    assert spec == pytest.approx(blk.lyapunov_spectrum_exact(), abs=1e-6)
+
+
+def test_rotation_lyapunov_spectrum_is_degenerate_at_log_s():
+    blk = S.LinearBlock(0.75 * S.rotation(0.37))
+    spec = SP.lyapunov_spectrum(blk, np.array([1.0, 0.0]), T=1000, warmup=100)
+    assert spec == pytest.approx([np.log(0.75)] * 2, abs=1e-9)
+
+
+def test_module_spectra_and_gap_match_the_exact_values():
+    rng = np.random.default_rng(0)
+    sys = S.two_oscillator_system(s=(0.95, 0.70))
+    z0s = S.sample_initial_conditions(4, 6, rng, radius=1.0)
+    ms = SP.module_lyapunov_spectra(sys, z0s, T=800, warmup=150)
+    assert ms.spectra[0] == pytest.approx([np.log(0.95)] * 2, abs=1e-6)
+    assert ms.spectra[1] == pytest.approx([np.log(0.70)] * 2, abs=1e-6)
+    assert ms.gap == pytest.approx(abs(np.log(0.95) - np.log(0.70)), abs=1e-6)
+    assert ms.separated
+
+
+def test_equal_moduli_give_zero_gap():
+    rng = np.random.default_rng(1)
+    sys = S.two_oscillator_system(s=(0.85, 0.85), omega=(0.4, 1.1))
+    z0s = S.sample_initial_conditions(4, 4, rng, radius=1.0)
+    ms = SP.module_lyapunov_spectra(sys, z0s, T=600, warmup=100)
+    assert ms.gap == pytest.approx(0.0, abs=1e-6)
+    assert not ms.separated
+
+
+def test_lyapunov_gap_is_independent_of_the_visited_region():
+    """The §3.4 point: unlike pointwise Jacobian spectra, this does not move."""
+    rng = np.random.default_rng(2)
+    sys = S.two_oscillator_system(s=(0.95, 0.70))
+    gaps = []
+    for radius in (0.5, 1.5, 2.5):
+        z0s = S.sample_initial_conditions(4, 4, rng, radius=radius)
+        gaps.append(SP.module_lyapunov_spectra(sys, z0s, T=600, warmup=150).gap)
+    assert max(gaps) - min(gaps) < 1e-6
+
+
+def test_pointwise_jacobian_spectra_do_move():
+    """Companion to the above: the draft's Assumption 4 is regime-dependent."""
+    sys = S.two_oscillator_system(s=(0.95, 0.70), omega=(0.40, 1.10), beta=(0.60, -0.50))
+    f1, f2 = sys.blocks
+
+    def closest(radius):
+        g = np.linspace(-radius, radius, 40)
+        pts = np.stack(np.meshgrid(g, g), -1).reshape(-1, 2)
+        s1 = np.array([np.linalg.eigvals(f1.jacobian(p)) for p in pts])
+        s2 = np.array([np.linalg.eigvals(f2.jacobian(p)) for p in pts])
+        return np.abs(s1[:, None, :, None] - s2[None, :, None, :]).min()
+
+    assert closest(0.8) > 1e-2
+    assert closest(2.4) < 1e-2
+
+
+def test_jacobian_product_logs_match_a_direct_product_when_it_does_not_underflow():
+    blk = S.TwistBlock(s=0.95, omega=0.4, beta=0.6)
+    z = np.array([0.8, 0.2])
+    smax, smin = SP.jacobian_product_logs(blk, z, 20)
+    P = np.eye(2)
+    zz = z.copy()
+    for n in range(20):
+        P = blk.jacobian(zz) @ P
+        zz = blk.step(zz)
+        sv = np.linalg.svd(P, compute_uv=False)
+        assert smax[n] == pytest.approx(np.log(sv[0]), abs=1e-10)
+        assert smin[n] == pytest.approx(np.log(sv[-1]), abs=1e-10)
+
+
+def test_jacobian_product_logs_survive_far_past_underflow():
+    """A raw product would be ~0.7^800 ~ 1e-124; the log form must stay exact."""
+    blk = S.LinearBlock(np.diag([0.7, 0.7]))
+    smax, smin = SP.jacobian_product_logs(blk, np.array([1.0, 1.0]), 800)
+    assert smax[-1] == pytest.approx(800 * np.log(0.7), rel=1e-12)
+    assert np.isfinite(smin[-1])
+
+
+# --------------------------------------------------------------------------
+# Cocycle
+# --------------------------------------------------------------------------
+
+
+def test_cocycle_rate_matches_the_lyapunov_prediction():
+    f_target = S.TwistBlock(s=0.95, omega=0.4, beta=0.6)
+    f_source = S.TwistBlock(s=0.70, omega=1.1, beta=-0.5)
+    predicted = np.log(0.70) - np.log(0.95)
+    cb = CC.cocycle_bound(f_target, np.array([0.9, 0.1]), f_source, np.array([0.7, 0.3]),
+                          n_max=300, predicted_rate=predicted)
+    assert cb.rate == pytest.approx(predicted, abs=1e-6)
+    assert cb.forces_M_zero
+
+
+def test_cocycle_stalls_without_a_gap():
+    f_target = S.TwistBlock(s=0.85, omega=0.4, beta=0.6)
+    f_source = S.TwistBlock(s=0.85, omega=1.1, beta=-0.5)
+    cb = CC.cocycle_bound(f_target, np.array([0.9, 0.1]), f_source, np.array([0.7, 0.3]), n_max=300)
+    assert cb.rate == pytest.approx(0.0, abs=1e-6)
+    assert not cb.forces_M_zero
+
+
+def test_cocycle_direction_matters():
+    """Swapping target and source flips the sign: the gap is directional."""
+    fast = S.TwistBlock(s=0.95, omega=0.4, beta=0.6)
+    slow = S.TwistBlock(s=0.70, omega=1.1, beta=-0.5)
+    a = CC.cocycle_bound(fast, np.array([0.9, 0.1]), slow, np.array([0.7, 0.3]), n_max=200)
+    b = CC.cocycle_bound(slow, np.array([0.7, 0.3]), fast, np.array([0.9, 0.1]), n_max=200)
+    assert a.rate < 0 < b.rate
+    assert a.rate == pytest.approx(-b.rate, abs=1e-6)
+
+
+def test_propagate_M_decays_at_the_cocycle_rate():
+    """log||M_n|| = rate * n + bounded oscillation.
+
+    The oscillation is real, not estimator error: the two modules rotate at
+    different angles (omega 0.4 vs 1.1), so the alignment of M_0 with the
+    singular directions of the two cocycles is quasi-periodic in n.  It stays
+    bounded, so the rate is exact in the limit, but a finite-window slope
+    inherits an O(1/window) bias -- hence abs=1e-3 rather than 1e-6.
+    """
+    f_target = S.TwistBlock(s=0.95, omega=0.4, beta=0.6)
+    f_source = S.TwistBlock(s=0.70, omega=1.1, beta=-0.5)
+    exact = np.log(0.70) - np.log(0.95)
+    logM = CC.propagate_M(f_target, np.array([0.9, 0.1]), f_source, np.array([0.7, 0.3]),
+                          np.eye(2), n_max=600)
+    n = np.arange(1, 601, dtype=float)
+
+    slope = np.polyfit(n[300:], logM[300:], 1)[0]
+    assert slope == pytest.approx(exact, abs=1e-3)
+
+    residual = logM - exact * n
+    assert np.ptp(residual[300:]) < 2.0, "residual is bounded, so the rate is exact"
+    assert logM[-1] < -100, "M is driven to zero"
+
+
+def test_propagate_M_does_not_decay_without_a_gap():
+    f = S.TwistBlock(s=0.85, omega=0.4, beta=0.6)
+    g = S.TwistBlock(s=0.85, omega=1.1, beta=-0.5)
+    logM = CC.propagate_M(f, np.array([0.9, 0.1]), g, np.array([0.7, 0.3]), np.eye(2), n_max=300)
+    assert logM[-1] > -5.0
+
+
+def test_propagate_M_uses_the_correct_product_order():
+    """Df^(n) = J(z_{n-1}) ... J(z_0); the reversed order is a different matrix."""
+    f = S.TwistBlock(s=0.95, omega=0.4, beta=0.6)
+    g = S.TwistBlock(s=0.70, omega=1.1, beta=-0.5)
+    z_t, z_s, M0 = np.array([0.9, 0.1]), np.array([0.7, 0.3]), np.eye(2)
+    logM = CC.propagate_M(f, z_t, g, z_s, M0, n_max=3)
+
+    Pt, Ps, zt, zs = np.eye(2), np.eye(2), z_t.copy(), z_s.copy()
+    for n in range(3):
+        Pt = f.jacobian(zt) @ Pt
+        Ps = g.jacobian(zs) @ Ps
+        zt, zs = f.step(zt), g.step(zs)
+        expected = np.log(np.linalg.norm(np.linalg.solve(Pt, M0 @ Ps)))
+        assert logM[n] == pytest.approx(expected, abs=1e-9)
+
+
+def test_forces_M_zero_ignores_a_numerically_zero_rate():
+    """A rate of -1e-17 forces nothing; the sign of a rounding error must not decide.
+
+    The no-gap case fits a rate that is zero up to float noise, and which side
+    of zero it lands on is arbitrary.  Testing ``rate < 0`` would let that decide
+    whether the block-separation step reports as closing.
+    """
+    cb = CC.CocycleBound(n=np.arange(1.0), log_bound=np.zeros(1), rate=-1e-17)
+    assert not cb.forces_M_zero
+    assert not CC.CocycleBound(n=np.arange(1.0), log_bound=np.zeros(1), rate=0.0).forces_M_zero
+    assert CC.CocycleBound(n=np.arange(1.0), log_bound=np.zeros(1), rate=-0.3).forces_M_zero
+
+
+# --------------------------------------------------------------------------
+# Conditioning: sigma_min of an accumulated product is not measurable
+# --------------------------------------------------------------------------
+
+
+def test_resolvable_horizon_predicts_where_sigma_min_dies():
+    """cond(Df^n) = exp(n*spread) outruns float64 at n ~ 36/spread."""
+    blk = S.LimitCycleBlock(a=0.3, rho=1.0, omega=0.5, beta=0.6)
+    spread = float(np.ptp(blk.lyapunov_spectrum_exact()))
+    horizon = SP.resolvable_horizon(spread)
+    assert horizon == pytest.approx(36.04 / spread, rel=1e-3)
+    assert 30.0 < horizon < 45.0
+
+    # below the horizon sigma_min is signal, above it is not
+    z = np.array([1.0, 0.0])
+    smax, smin = SP.jacobian_product_logs(blk, z, 120)
+    n = np.arange(1, 121, dtype=float)
+    below = np.polyfit(n[5:20], smin[5:20], 1)[0]
+    above = np.polyfit(n[60:120], smin[60:120], 1)[0]
+    lmin = float(blk.lyapunov_spectrum_exact().min())
+    assert below == pytest.approx(lmin, abs=1e-3)
+    assert abs(above - lmin) > 0.5, "past the horizon the slope is noise, not lambda_min"
+
+
+def test_resolvable_horizon_is_infinite_for_a_flat_spectrum():
+    """Why every exp05 measurement is sound: a TwistBlock has spread exactly 0."""
+    assert SP.resolvable_horizon(0.0) == float("inf")
+    blk = S.TwistBlock(s=0.95, omega=0.4, beta=0.6)
+    assert SP.resolvable_horizon(float(np.ptp(blk.lyapunov_spectrum_exact()))) == float("inf")
+    smax, smin = SP.jacobian_product_logs(blk, np.array([0.9, 0.1]), 400)
+    assert smax[-1] - smin[-1] < 10.0, "condition number stays O(1) at n=400"
+
+
+def test_inverse_product_agrees_with_sigma_min_while_sigma_min_is_still_accurate():
+    """Equal in exact arithmetic; in float64 they part company at rate cond*eps.
+
+    The horizon is where sigma_min becomes pure noise, but accuracy decays
+    smoothly long before that: the absolute error in ``log sigma_min`` tracks the
+    relative error in ``sigma_min``, which is ``cond(Df^n) * eps = exp(n*spread)*eps``.
+    So the two routes agree to ~1e-11 at n = 12 and to only ~1e-7 by n = 25.
+    """
+    blk = S.LimitCycleBlock(a=0.3, rho=1.0, omega=0.5, beta=0.6)
+    z = np.array([1.0, 0.0])
+    spread = float(np.ptp(blk.lyapunov_spectrum_exact()))
+    eps = float(np.finfo(float).eps)
+
+    inv = SP.inverse_jacobian_product_logs(blk, z, 25)
+    _, smin = SP.jacobian_product_logs(blk, z, 25)
+    assert inv[:12] == pytest.approx(-smin[:12], abs=1e-9)
+
+    err = np.abs(inv + smin)
+    budget = np.exp(np.arange(1, 26) * spread) * eps
+    assert np.all(err <= 100.0 * budget), "discrepancy is bounded by cond * eps"
+    assert err[24] > 100.0 * err[11], "and it grows exponentially, as that predicts"
+
+
+@pytest.mark.parametrize("beta", [0.0, 0.6, 1.5])
+def test_inverse_product_recovers_lambda_min_on_a_limit_cycle(beta):
+    """Sound at n = 400, where the naive route is off by O(1) -- for any beta."""
+    blk = S.LimitCycleBlock(a=0.3, rho=1.0, omega=0.5, beta=beta)
+    lmin = float(blk.lyapunov_spectrum_exact().min())
+    y = SP.inverse_jacobian_product_logs(blk, np.array([1.0, 0.0]), 400)
+    n = np.arange(1, 401, dtype=float)
+    assert np.polyfit(n[200:], y[200:], 1)[0] == pytest.approx(-lmin, abs=1e-9)
+
+
+def test_beta_shifts_the_intercept_not_the_rate():
+    """The shear is non-normal, but on the cycle it contributes a constant.
+
+    In the polar frame J = [[1-2a, 0], [beta, 1]], so
+    J^n = [[(1-2a)^n, 0], [beta(1-(1-2a)^n)/2a, 1]] and sigma_max(J^n) tends to
+    sqrt((beta/2a)^2 + 1) -- a constant.  At rho = 1 the polar frame is
+    orthogonal, so the Cartesian singular values agree with it exactly.
+    """
+    a = 0.3
+    for beta in (0.0, 0.6, 1.5):
+        blk = S.LimitCycleBlock(a=a, rho=1.0, omega=0.5, beta=beta)
+        smax, _ = SP.jacobian_product_logs(blk, np.array([1.0, 0.0]), 60)
+        plateau = float(np.log(np.sqrt((beta / (2 * a)) ** 2 + 1.0)))
+        assert smax[-1] == pytest.approx(plateau, abs=1e-9)
+
+
+def test_naive_sigma_min_route_is_noise_on_a_limit_cycle():
+    """The sound rate is exact; the naive one reads the wrong exponent.
+
+    Past the resolvable horizon the SVD returns its noise floor, whose slope is
+    lambda_max, not lambda_min -- so the naive rate lands on
+    log s - lambda_max(cycle) instead of log s - lambda_min(cycle), an error of
+    exactly the cycle's spread (CLAUDE.md 3.9).
+
+    We assert that *wrongness*, not the n_max-instability an earlier revision of
+    this test used as its proxy.  Whether the noise floor wanders or sits still
+    is a property of the BLAS: on the environment this test was written for it
+    wandered by units, on numpy 2.5 / scipy 1.18 it converges cleanly to the
+    wrong answer.  The convergent version is if anything the more dangerous one
+    -- a stable wrong number looks like a measurement -- so the defect, and not
+    its variance, is what the regression must pin.
+    """
+    cyc = S.LimitCycleBlock(a=0.3, rho=1.0, omega=0.5, beta=0.6)
+    fast = S.TwistBlock(s=0.30, omega=1.1, beta=-0.5)
+    z_c, z_f = np.array([1.0, 0.0]), np.array([0.7, 0.3])
+    lyap = cyc.lyapunov_spectrum_exact()
+    predicted = float(np.log(0.30)) - float(lyap.min())
+    wrong_limit = float(np.log(0.30)) - float(lyap.max())
+    spread = float(lyap.max() - lyap.min())
+
+    sound, naive = [], []
+    for n_max in (100, 200, 400, 800):
+        cb = CC.cocycle_bound(cyc, z_c, fast, z_f, n_max=n_max, predicted_rate=predicted)
+        sound.append(cb.rate)
+        naive.append(cb.naive_rate)
+        assert not cb.naive_route_valid, "the fit window is past the horizon here"
+
+    assert np.ptp(sound) < 1e-9, "the sound rate does not depend on n_max"
+    assert all(r == pytest.approx(predicted, abs=1e-9) for r in sound)
+
+    # the naive route reads lambda_max, missing the truth by the whole spread
+    assert all(abs(r - predicted) > 0.5 * spread for r in naive)
+    assert all(abs(r - wrong_limit) < 0.2 * spread for r in naive)
+
+
+def test_the_naive_route_can_invent_a_gap_that_is_not_there():
+    """The failure that matters: a false positive on Lemma C's conclusion.
+
+    With s = 0.45 the source contracts *slower* than the cycle's slowest mode,
+    so there is no oriented gap and M is not forced to zero.  The naive route
+    reports a decisively negative rate anyway.
+    """
+    cyc = S.LimitCycleBlock(a=0.3, rho=1.0, omega=0.5, beta=0.6)
+    slow = S.TwistBlock(s=0.45, omega=1.1, beta=-0.5)
+    predicted = float(np.log(0.45)) - float(cyc.lyapunov_spectrum_exact().min())
+    assert predicted > 0.0
+
+    cb = CC.cocycle_bound(cyc, np.array([1.0, 0.0]), slow, np.array([0.7, 0.3]),
+                          n_max=400, predicted_rate=predicted)
+    assert cb.rate == pytest.approx(predicted, abs=1e-9)
+    assert not cb.forces_M_zero
+    assert cb.naive_rate < -0.5, "the discarded route claims a gap that does not exist"
+
+
+# --------------------------------------------------------------------------
+# Lemma C on a genuine attractor (CLAUDE.md task 22)
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("s_fast", [0.20, 0.25, 0.30, 0.35])
+def test_lemma_C_rate_holds_on_a_limit_cycle_attractor(s_fast):
+    """The cocycle argument never used the fixed point, and indeed does not need it.
+
+    A LimitCycleBlock is a genuine attractor with no fixed point on it.  The
+    predicted rate lambda_max(source) - lambda_min(target) holds to ~1e-9.
+    """
+    cyc = S.LimitCycleBlock(a=0.3, rho=1.0, omega=0.5, beta=0.6)
+    fast = S.TwistBlock(s=s_fast, omega=1.1, beta=-0.5)
+    predicted = float(np.log(s_fast)) - float(cyc.lyapunov_spectrum_exact().min())
+    cb = CC.cocycle_bound(cyc, np.array([1.0, 0.0]), fast, np.array([0.7, 0.3]),
+                          n_max=400, predicted_rate=predicted)
+    assert cb.rate == pytest.approx(predicted, abs=1e-9)
+    assert cb.forces_M_zero
+
+
+def test_limit_cycle_gap_threshold_sits_exactly_at_the_radial_multiplier():
+    """M is forced to zero iff s < |1 - 2a|; the crossing is at the predicted point."""
+    a = 0.3
+    cyc = S.LimitCycleBlock(a=a, rho=1.0, omega=0.5, beta=0.6)
+    threshold = abs(1.0 - 2.0 * a)
+    for s_fast in (0.30, 0.38, 0.42, 0.50):
+        cb = CC.cocycle_bound(cyc, np.array([1.0, 0.0]),
+                              S.TwistBlock(s=s_fast, omega=1.1, beta=-0.5),
+                              np.array([0.7, 0.3]), n_max=300)
+        assert cb.forces_M_zero == (s_fast < threshold)
+
+
+def test_a_limit_cycle_can_only_ever_be_the_dominant_module():
+    """Its neutral phase exponent is 0, and no contraction has lambda_min > 0.
+
+    So the oriented gap lambda_max(cycle) < lambda_min(other) is unavailable for
+    every contracting partner: an oscillatory module sits at the top of the
+    filtration or is not separated at all.
+    """
+    cyc = S.LimitCycleBlock(a=0.3, rho=1.0, omega=0.5, beta=0.6)
+    assert float(cyc.lyapunov_spectrum_exact().max()) == pytest.approx(0.0, abs=1e-12)
+    for s_other in (0.20, 0.50, 0.90):
+        other = S.TwistBlock(s=s_other, omega=1.1, beta=-0.5)
+        # cycle as the *source* (dominated): rate = lambda_max(cycle) - lambda_min(other)
+        cb = CC.cocycle_bound(other, np.array([0.7, 0.3]), cyc, np.array([1.0, 0.0]), n_max=300)
+        assert not cb.forces_M_zero
+        assert cb.rate == pytest.approx(-float(np.log(s_other)), abs=1e-9)
+
+
+def test_limit_cycle_exponents_are_uniform_over_the_whole_basin():
+    """Lemma C' concludes on all of Omega, and this is why.
+
+    Oseledets alone gives the rate only mu-a.e., and for a limit cycle supp mu is
+    the cycle -- which would leave the basin untouched, the same weakness that
+    makes Route 2 of identifiability.md §5.1 useless.  A normally hyperbolic
+    attracting circle has the *same* exponents at every basin point, so the
+    cocycle bound decays at every z and M vanishes on the whole basin.
+    """
+    cyc = S.LimitCycleBlock(a=0.3, rho=1.0, omega=0.5, beta=0.6)
+    fast = S.TwistBlock(s=0.30, omega=1.1, beta=-0.5)
+    predicted = float(np.log(0.30)) - float(cyc.lyapunov_spectrum_exact().min())
+
+    # basin is r < rho * sqrt((1+a)/a) = 2.0817; sweep 100x of radius inside it
+    rates = [
+        CC.cocycle_bound(cyc, np.array([r0, 0.0]), fast, np.array([0.7, 0.3]),
+                         n_max=400, predicted_rate=predicted).rate
+        for r0 in (0.02, 0.2, 0.9, 1.0, 1.5, 2.05)
+    ]
+    assert np.ptp(rates) < 1e-12, "the rate must not depend on where in the basin we start"
+    assert all(r == pytest.approx(predicted, abs=1e-9) for r in rates)
+
+
+def test_limit_cycle_basin_is_bounded():
+    """Outside r = rho sqrt((1+a)/a) the radial map goes negative and escapes."""
+    a, rho = 0.3, 1.0
+    cyc = S.LimitCycleBlock(a=a, rho=rho, omega=0.5, beta=0.6)
+    boundary = rho * np.sqrt((1.0 + a) / a)
+    assert boundary == pytest.approx(2.0817, abs=1e-3)
+
+    assert float(cyc._g(np.array(0.95 * boundary))) > 0.0
+    assert float(cyc._g(np.array(1.05 * boundary))) < 0.0
+
+    # and the guard fires rather than returning a plausible wrong number
+    with pytest.raises(np.linalg.LinAlgError):
+        SP.inverse_jacobian_product_logs(cyc, np.array([3.0, 0.0]), 400)
+
+
+def test_propagate_M_is_sound_on_a_limit_cycle():
+    """The sharper check must survive the attractor too.
+
+    Solving against the accumulated target product (the obvious implementation)
+    projects onto its dominant singular direction once it is numerically
+    rank-deficient, and then measures lambda_max(source) - lambda_MAX(target).
+    Here that would be -1.204 instead of -0.288.
+    """
+    cyc = S.LimitCycleBlock(a=0.3, rho=1.0, omega=0.5, beta=0.6)
+    fast = S.TwistBlock(s=0.30, omega=1.1, beta=-0.5)
+    exact = float(np.log(0.30)) - float(cyc.lyapunov_spectrum_exact().min())
+    wrong = float(np.log(0.30)) - float(cyc.lyapunov_spectrum_exact().max())
+
+    logM = CC.propagate_M(cyc, np.array([1.0, 0.0]), fast, np.array([0.7, 0.3]),
+                          np.eye(2), n_max=400)
+    n = np.arange(1, 401, dtype=float)
+    slope = float(np.polyfit(n[200:], logM[200:], 1)[0])
+    assert slope == pytest.approx(exact, abs=1e-3)
+    assert abs(slope - wrong) > 0.5
+    assert logM[-1] < -100, "M is driven to zero on the attractor"
+
+
+def test_two_limit_cycles_can_never_be_separated():
+    """Each contributes a 0 exponent, so the modules share one and (B4) fails."""
+    c1 = S.LimitCycleBlock(a=0.30, rho=1.0, omega=0.50, beta=0.6)
+    c2 = S.LimitCycleBlock(a=0.45, rho=1.0, omega=0.90, beta=-0.4)
+    s1, s2 = c1.lyapunov_spectrum_exact(), c2.lyapunov_spectrum_exact()
+    assert SP.spectral_gap([s1, s2]) == pytest.approx(0.0, abs=1e-15)
+
+    z = np.array([1.0, 0.0])
+    for target, source in ((c1, c2), (c2, c1)):
+        predicted = float(source.lyapunov_spectrum_exact().max()) - float(
+            target.lyapunov_spectrum_exact().min()
+        )
+        cb = CC.cocycle_bound(target, z, source, np.array([1.0, 0.2]), n_max=300,
+                              predicted_rate=predicted)
+        assert predicted > 0.0
+        assert cb.rate == pytest.approx(predicted, abs=1e-9)
+        assert not cb.forces_M_zero

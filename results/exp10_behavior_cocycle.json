@@ -1,0 +1,138 @@
+{
+  "experiment": "exp10_behavior_cocycle",
+  "utc": "2026-08-04T02:48:16.071841+00:00",
+  "seed": 0,
+  "u_levels": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "n_per_u": 12000,
+  "n_max": 300,
+  "modules": {
+    "A_varying_dominant_s": 0.9,
+    "B_invariant_dominated_s": 0.5,
+    "lambda_A": -0.10536051565782628,
+    "lambda_B": -0.6931471805599453
+  },
+  "behaviour_leak_sweep": [
+    {
+      "eps": 0.0,
+      "net_u_dependence": 0.0
+    },
+    {
+      "eps": 0.05,
+      "net_u_dependence": -0.0005913796753026918
+    },
+    {
+      "eps": 0.1,
+      "net_u_dependence": 0.0012407548793272327
+    },
+    {
+      "eps": 0.2,
+      "net_u_dependence": 0.03049877371242346
+    },
+    {
+      "eps": 0.3,
+      "net_u_dependence": 0.09059081550199735
+    },
+    {
+      "eps": 0.5,
+      "net_u_dependence": 0.2872401455748314
+    }
+  ],
+  "cocycle": {
+    "rate_M_AB": -0.5877866649021223,
+    "predicted_M_AB": -0.5877866649021191,
+    "rate_M_BA": 0.5877866649021223,
+    "predicted_M_BA": 0.5877866649021191,
+    "complementary": true
+  },
+  "truth_table": [
+    {
+      "candidate": "block-diagonal",
+      "eps_BA": 0.0,
+      "eps_AB": 0.0,
+      "behaviour_rejects": false,
+      "dynamics_rejects": false,
+      "valid": true
+    },
+    {
+      "candidate": "leak M_BA only",
+      "eps_BA": 0.3,
+      "eps_AB": 0.0,
+      "behaviour_rejects": true,
+      "dynamics_rejects": false,
+      "valid": false
+    },
+    {
+      "candidate": "leak M_AB only",
+      "eps_BA": 0.0,
+      "eps_AB": 0.3,
+      "behaviour_rejects": false,
+      "dynamics_rejects": true,
+      "valid": false
+    },
+    {
+      "candidate": "both (full mix)",
+      "eps_BA": 0.3,
+      "eps_AB": 0.3,
+      "behaviour_rejects": true,
+      "dynamics_rejects": true,
+      "valid": false
+    }
+  ],
+  "alignment": {
+    "rate_M_AB_misaligned": 0.5877866649021223,
+    "M_AB_survives": true,
+    "rate_M_BA_misaligned": -0.5877866649021221,
+    "only_triangular": true
+  },
+  "prop1": {
+    "mean_sweep": [
+      {
+        "eps": 0.0,
+        "net_mean_dependence": 0.0
+      },
+      {
+        "eps": 0.02,
+        "net_mean_dependence": 0.0027636130406773866
+      },
+      {
+        "eps": 0.05,
+        "net_mean_dependence": 0.016466121903257153
+      },
+      {
+        "eps": 0.1,
+        "net_mean_dependence": 0.0448162801625476
+      }
+    ],
+    "variance_leak_full": 0.09059081550199735,
+    "variance_leak_mean_only": -0.0006646924337432025
+  },
+  "all_passed": true,
+  "checks": [
+    {
+      "passed": true,
+      "claim": "behaviour detects a M_BA leak: net u-dependence of h_B is ~0 at eps=0 (+0.0000) and rises monotonically to +0.2872 at eps=0.5 -- the invariant subspace is canonical, so a valid h has M_BA = 0"
+    },
+    {
+      "passed": true,
+      "claim": "the cocycle kills M_AB (rate -0.5878) and cannot kill M_BA (rate +0.5878 > 0) -- dynamics and behaviour are complementary, each supplying the cross-derivative the other cannot"
+    },
+    {
+      "passed": true,
+      "claim": "only the block-diagonal h passes both tests; the M_BA leak is caught by behaviour alone and the M_AB leak by dynamics alone -- neither ingredient suffices, both together certify block-diagonality"
+    },
+    {
+      "passed": true,
+      "claim": "alignment matters: when the varying block is the dominated one, both tools kill M_BA and M_AB survives -- only triangular. Block-diagonal needs varying = dominant"
+    },
+    {
+      "passed": true,
+      "claim": "Prop. 1: mean modulation gives O(eps) detection but a mean-only detector misses a variance leak -- variance modulation (or >=2 statistics) is required for permutation-level structure"
+    }
+  ]
+}

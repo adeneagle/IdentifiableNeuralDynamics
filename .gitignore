@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+
+# Editor / tooling caches
+.codegraph/
+.vscode/
+.idea/
+
+# NOT ignored, deliberately: results/*.json
+#
+# CLAUDE.md 8 makes the JSON record the artifact of an experiment -- it carries
+# the seed and every parameter, and a result that contradicts a theory claim is
+# committed rather than tuned away.  Tracking them is the point: the history of
+# results/ is the record of what was actually measured and when, which is the
+# only thing that makes a retraction like 3.12 auditable after the fact.

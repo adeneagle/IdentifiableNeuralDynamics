@@ -1,0 +1,138 @@
+{
+  "experiment": "exp06_partition_lattice",
+  "utc": "2026-08-04T02:48:04.346535+00:00",
+  "seed": 0,
+  "n_restarts": 5,
+  "steps": 2500,
+  "fit_tol": 40.0,
+  "oscillators": {
+    "expected": [
+      2,
+      2
+    ],
+    "fit_only_selected": [
+      2,
+      2
+    ],
+    "combined_selected": [
+      2,
+      2
+    ],
+    "uniqueness_alone_selected": [
+      2,
+      1,
+      1
+    ],
+    "combined_correct": true,
+    "fit_only_correct": true,
+    "scores": {
+      "(4,)": 0.0003273793263360858,
+      "(3, 1)": 0.05895419791340828,
+      "(2, 2)": 0.00042238866444677114,
+      "(2, 1, 1)": 0.05898340046405792,
+      "(1, 1, 1, 1)": 0.10480440407991409
+    },
+    "fit_ratios": {
+      "(4,)": 1.0,
+      "(3, 1)": 180.07917168503863,
+      "(2, 2)": 1.2902117832973645,
+      "(2, 1, 1)": 180.16837264643246,
+      "(1, 1, 1, 1)": 320.13140613626433
+    },
+    "uniqueness": {
+      "(4,)": true,
+      "(3, 1)": false,
+      "(2, 2)": true,
+      "(2, 1, 1)": true,
+      "(1, 1, 1, 1)": false
+    },
+    "selected_all_indecomposable": true,
+    "selected_block_summands": [
+      1,
+      1
+    ],
+    "unique_at_2_2": true
+  },
+  "regrouping": {
+    "expected": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "fit_only_selected": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "combined_selected": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "uniqueness_alone_selected": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "combined_correct": true,
+    "fit_only_correct": true,
+    "scores": {
+      "(4,)": 0.00015843729488551617,
+      "(3, 1)": 0.0027531045489013195,
+      "(2, 2)": 0.0025143567472696304,
+      "(2, 1, 1)": 0.0007301003788597882,
+      "(1, 1, 1, 1)": 0.0025659059174358845
+    },
+    "fit_ratios": {
+      "(4,)": 1.0,
+      "(3, 1)": 17.376619254264984,
+      "(2, 2)": 15.869727825676762,
+      "(2, 1, 1)": 4.608134589695848,
+      "(1, 1, 1, 1)": 16.195087900799873
+    },
+    "uniqueness": {
+      "(4,)": true,
+      "(3, 1)": false,
+      "(2, 2)": false,
+      "(2, 1, 1)": false,
+      "(1, 1, 1, 1)": true
+    },
+    "selected_all_indecomposable": true,
+    "selected_block_summands": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "unique_at_2_2": false
+  },
+  "regrouping_fit_degeneracy_spread": 1.094953829400282,
+  "oscillators_uniqueness_alone": [
+    2,
+    1,
+    1
+  ],
+  "all_passed": true,
+  "checks": [
+    {
+      "passed": true,
+      "claim": "oscillators: the criterion selects [2,2] = true finest and it certifies as block-indecomposable (summands [1, 1]) -- over-splitting an indecomposable rotation costs 180x+, so fit rejects it. First indecomposability check in the repo run on a FITTED model, not ground truth"
+    },
+    {
+      "passed": true,
+      "claim": "oscillators: uniqueness ALONE would fail -- finest unique = [2, 1, 1] (a forced over-split is also 'unique'), so FIT is the necessary signal here"
+    },
+    {
+      "passed": true,
+      "claim": "regrouping: fit-quality is DEGENERATE among modular partitions -- the true finest [1,1,1,1] and the decomposable regroupings [2,2],[3,1] all fit within 1.09x (exp02: regroupings fit equally), so fit alone cannot separate them"
+    },
+    {
+      "passed": true,
+      "claim": "regrouping: UNIQUENESS resolves the degeneracy ([1,1,1,1] unique, [2,2]/[3,1] not); the criterion selects [1,1,1,1] = true finest and it certifies as indecomposable"
+    }
+  ]
+}

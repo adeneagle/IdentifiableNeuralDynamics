@@ -1,0 +1,321 @@
+{
+  "experiment": "exp08_attractor_cocycle",
+  "utc": "2026-08-04T02:48:15.621127+00:00",
+  "seed": 0,
+  "n_max": 400,
+  "a_cycle": 0.3,
+  "cycle_spectrum": [
+    -0.916290731874155,
+    0.0
+  ],
+  "cycle_spread": 0.916290731874155,
+  "resolvable_horizon": 39.336481463033564,
+  "conditioning": [
+    {
+      "n": 10,
+      "sigma_ratio": 5.243429770220562e-05,
+      "resolvable": true
+    },
+    {
+      "n": 20,
+      "sigma_ratio": 5.497558062771548e-09,
+      "resolvable": true
+    },
+    {
+      "n": 30,
+      "sigma_ratio": 5.762980318839377e-13,
+      "resolvable": true
+    },
+    {
+      "n": 40,
+      "sigma_ratio": 7.809213242992163e-17,
+      "resolvable": false
+    },
+    {
+      "n": 60,
+      "sigma_ratio": 9.548410743653253e-18,
+      "resolvable": false
+    },
+    {
+      "n": 100,
+      "sigma_ratio": 1.035231561211482e-17,
+      "resolvable": false
+    },
+    {
+      "n": 120,
+      "sigma_ratio": 9.9448109029675e-17,
+      "resolvable": false
+    }
+  ],
+  "rate_vs_n_max": [
+    {
+      "n_max": 100,
+      "naive_rate": -1.1935815203576055,
+      "sound_rate": -0.28768207245178345
+    },
+    {
+      "n_max": 200,
+      "naive_rate": -1.1931580718182362,
+      "sound_rate": -0.28768207245178246
+    },
+    {
+      "n_max": 400,
+      "naive_rate": -1.204557440750138,
+      "sound_rate": -0.2876820724517869
+    },
+    {
+      "n_max": 800,
+      "naive_rate": -1.204298371717856,
+      "sound_rate": -0.28768207245184285
+    }
+  ],
+  "rate_vs_initial_condition": [
+    {
+      "theta": 4.002148315014479,
+      "naive_rate": -1.2041194291781336,
+      "sound_rate": -0.2876820724517869
+    },
+    {
+      "theta": 1.6951199159934145,
+      "naive_rate": -1.2012827760938285,
+      "sound_rate": -0.2876820724517869
+    },
+    {
+      "theta": 0.25744424357926954,
+      "naive_rate": -1.2025440026105683,
+      "sound_rate": -0.2876820724517869
+    },
+    {
+      "theta": 0.10384619671527331,
+      "naive_rate": -1.206631446675188,
+      "sound_rate": -0.2876820724517869
+    },
+    {
+      "theta": 5.109927617709579,
+      "naive_rate": -1.2044979529649846,
+      "sound_rate": -0.2876820724517869
+    }
+  ],
+  "naive_rate_spread_n_max": 0.011399368931901854,
+  "naive_rate_spread_ic": 0.00534867058135946,
+  "sound_rate_spread_n_max": 6.039613253960852e-14,
+  "sound_rate_spread_ic": 0.0,
+  "naive_rate_error_n_max": 0.9168753682983569,
+  "naive_rate_error_ic": 0.9189493742234068,
+  "naive_wrong_limit": -1.2039728043259361,
+  "naive_dist_to_wrong_limit": 0.010814732507699931,
+  "beta_invariance": [
+    {
+      "beta": 0.0,
+      "plateau_predicted": 0.0,
+      "plateau_measured": 1.856527451385091e-15,
+      "sound_rate": 0.9162907318741418
+    },
+    {
+      "beta": 0.6,
+      "plateau_predicted": 0.3465735902799727,
+      "plateau_measured": 0.34657359027997375,
+      "sound_rate": 0.9162907318741422
+    },
+    {
+      "beta": 1.5,
+      "plateau_predicted": 0.9905007344332917,
+      "plateau_measured": 0.9905007344332912,
+      "sound_rate": 0.916290731874142
+    }
+  ],
+  "threshold": 0.4,
+  "gap_sweep": [
+    {
+      "s_fast": 0.2,
+      "lambda_max_source": -1.6094379124341003,
+      "predicted": -0.6931471805599453,
+      "measured": -0.6931471805599676,
+      "error": 2.2315482794965646e-14,
+      "forces_M_zero": true,
+      "expected": true
+    },
+    {
+      "s_fast": 0.25,
+      "lambda_max_source": -1.3862943611198906,
+      "predicted": -0.4700036292457356,
+      "measured": -0.4700036292457522,
+      "error": 1.659783421814609e-14,
+      "forces_M_zero": true,
+      "expected": true
+    },
+    {
+      "s_fast": 0.3,
+      "lambda_max_source": -1.2039728043259361,
+      "predicted": -0.2876820724517811,
+      "measured": -0.2876820724517869,
+      "error": 5.773159728050814e-15,
+      "forces_M_zero": true,
+      "expected": true
+    },
+    {
+      "s_fast": 0.35,
+      "lambda_max_source": -1.0498221244986778,
+      "predicted": -0.13353139262452285,
+      "measured": -0.13353139262454727,
+      "error": 2.4424906541753444e-14,
+      "forces_M_zero": true,
+      "expected": true
+    },
+    {
+      "s_fast": 0.38,
+      "lambda_max_source": -0.9675840262617056,
+      "predicted": -0.05129329438755059,
+      "measured": -0.05129329438756221,
+      "error": 1.16157083951407e-14,
+      "forces_M_zero": true,
+      "expected": true
+    },
+    {
+      "s_fast": 0.42,
+      "lambda_max_source": -0.8675005677047231,
+      "predicted": 0.04879016416943194,
+      "measured": 0.04879016416941794,
+      "error": 1.399574900418088e-14,
+      "forces_M_zero": false,
+      "expected": false
+    },
+    {
+      "s_fast": 0.5,
+      "lambda_max_source": -0.6931471805599453,
+      "predicted": 0.2231435513142097,
+      "measured": 0.22314355131419486,
+      "error": 1.484923295436147e-14,
+      "forces_M_zero": false,
+      "expected": false
+    }
+  ],
+  "max_rate_error": 2.4424906541753444e-14,
+  "basin_boundary": 2.081665999466133,
+  "basin_uniformity": [
+    {
+      "r0": 0.02,
+      "rate": -0.28768207245178684,
+      "error": 5.717648576819556e-15
+    },
+    {
+      "r0": 0.05,
+      "rate": -0.2876820724517868,
+      "error": 5.662137425588298e-15
+    },
+    {
+      "r0": 0.2,
+      "rate": -0.2876820724517869,
+      "error": 5.773159728050814e-15
+    },
+    {
+      "r0": 0.5,
+      "rate": -0.28768207245178695,
+      "error": 5.828670879282072e-15
+    },
+    {
+      "r0": 0.9,
+      "rate": -0.2876820724517871,
+      "error": 5.995204332975845e-15
+    },
+    {
+      "r0": 1.0,
+      "rate": -0.2876820724517869,
+      "error": 5.773159728050814e-15
+    },
+    {
+      "r0": 1.5,
+      "rate": -0.2876820724517869,
+      "error": 5.773159728050814e-15
+    },
+    {
+      "r0": 1.9,
+      "rate": -0.2876820724517869,
+      "error": 5.773159728050814e-15
+    },
+    {
+      "r0": 2.05,
+      "rate": -0.2876820724517872,
+      "error": 6.050715484207103e-15
+    }
+  ],
+  "basin_rate_spread": 3.885780586188048e-16,
+  "outside_basin_guarded": true,
+  "cycle_as_dominated": [
+    {
+      "s_other": 0.2,
+      "rate": 1.6094379124341103,
+      "forces_M_zero": false
+    },
+    {
+      "s_other": 0.5,
+      "rate": 0.6931471805599473,
+      "forces_M_zero": false
+    },
+    {
+      "s_other": 0.9,
+      "rate": 0.105360515657827,
+      "forces_M_zero": false
+    }
+  ],
+  "two_cycles": {
+    "spectral_gap": 0.0,
+    "directions": [
+      {
+        "direction": "M_12  (cycle1 <- cycle2)",
+        "predicted": 0.916290731874155,
+        "measured": 0.9162907318741426,
+        "error": 1.2434497875801753e-14,
+        "forces_M_zero": false
+      },
+      {
+        "direction": "M_21  (cycle2 <- cycle1)",
+        "predicted": 2.302585092994046,
+        "measured": 2.302585092994037,
+        "error": 8.881784197001252e-15,
+        "forces_M_zero": false
+      }
+    ]
+  },
+  "exp05_recheck": {
+    "predicted": -0.30538164955118186,
+    "sound": -0.30538164954966823,
+    "naive": -0.3053816495496684,
+    "n_resolvable": Infinity
+  },
+  "all_passed": true,
+  "checks": [
+    {
+      "passed": true,
+      "claim": "the naive sigma_min bound is not a measurement off a fixed point: it reads lambda_MAX, missing the true rate by 0.92 across n_max and 0.92 across initial conditions on the same cycle (the block's spread is 0.92), while the sound bound is stable to 6.0e-14"
+    },
+    {
+      "passed": true,
+      "claim": "the shear beta shifts the intercept by exactly sqrt((beta/2a)^2+1) and leaves the rate invariant -- non-normality was not the problem, conditioning was"
+    },
+    {
+      "passed": true,
+      "claim": "Lemma C's predicted rate lambda_max(f_j) - lambda_min(f~_i) holds on a genuine limit-cycle attractor to 2.4e-14 across the sweep -- the argument does not need the fixed point"
+    },
+    {
+      "passed": true,
+      "claim": "and the threshold sits exactly at the radial multiplier |1-2a| = 0.40: M is forced to zero for every s below it and for none above"
+    },
+    {
+      "passed": true,
+      "claim": "the cycle's exponents are uniform over its whole basin (rate constant to 3.9e-16 across a 100x range of starting radius), which is the hypothesis Lemma C' needs to conclude on all of Omega and not merely on supp mu -- and outside the basin the guard raises instead of guessing"
+    },
+    {
+      "passed": true,
+      "claim": "a limit cycle's neutral exponent 0 makes it undominatable, so an oscillatory module sits at the TOP of the filtration or is not separated at all"
+    },
+    {
+      "passed": true,
+      "claim": "two limit cycles share the exponent 0, so (B4) fails and neither cross-derivative is forced to zero -- the case that produced irreconcilable numbers is outside Lemma C's hypotheses, not a counterexample to it"
+    },
+    {
+      "passed": true,
+      "claim": "exp05's fixed-point measurements are untouched: TwistBlock spread is 0, the horizon is infinite, and both routes give -0.3053816"
+    }
+  ]
+}

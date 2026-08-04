@@ -1,0 +1,253 @@
+{
+  "experiment": "exp02_regrouping_negative_control",
+  "utc": "2026-08-04T04:27:44.395447+00:00",
+  "seed": 0,
+  "part_a_linear": {
+    "rows": [
+      {
+        "grouping": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "observations_identical": true,
+        "F_tilde_is_block_diagonal": true,
+        "spectra": [
+          [
+            0.9,
+            0.75
+          ],
+          [
+            0.6,
+            0.45
+          ]
+        ],
+        "certificate_canonical": false
+      },
+      {
+        "grouping": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            3
+          ]
+        ],
+        "observations_identical": true,
+        "F_tilde_is_block_diagonal": true,
+        "spectra": [
+          [
+            0.9,
+            0.6
+          ],
+          [
+            0.75,
+            0.45
+          ]
+        ],
+        "certificate_canonical": false
+      },
+      {
+        "grouping": [
+          [
+            0,
+            3
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "observations_identical": true,
+        "F_tilde_is_block_diagonal": true,
+        "spectra": [
+          [
+            0.9,
+            0.45
+          ],
+          [
+            0.75,
+            0.6
+          ]
+        ],
+        "certificate_canonical": false
+      }
+    ],
+    "all_valid": true
+  },
+  "part_a_nonlinear": {
+    "rows": [
+      {
+        "grouping": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "max_obs_error": 0.0,
+        "identical": true
+      },
+      {
+        "grouping": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            3
+          ]
+        ],
+        "max_obs_error": 2.220446049250313e-16,
+        "identical": true
+      },
+      {
+        "grouping": [
+          [
+            0,
+            3
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "max_obs_error": 2.220446049250313e-16,
+        "identical": true
+      }
+    ],
+    "all_valid": true
+  },
+  "part_b_fitting": {
+    "n_restarts": 12,
+    "assignments": [
+      [
+        1,
+        0,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        1,
+        1
+      ],
+      [
+        0,
+        1,
+        1,
+        0
+      ],
+      [
+        0,
+        1,
+        1,
+        0
+      ],
+      [
+        1,
+        1,
+        0,
+        0
+      ],
+      [
+        1,
+        1,
+        0,
+        0
+      ],
+      [
+        1,
+        1,
+        0,
+        1
+      ],
+      [
+        0,
+        1,
+        1,
+        0
+      ],
+      [
+        1,
+        0,
+        1,
+        0
+      ],
+      [
+        1,
+        1,
+        0,
+        0
+      ],
+      [
+        1,
+        1,
+        0,
+        0
+      ],
+      [
+        1,
+        1,
+        0,
+        0
+      ]
+    ],
+    "fit_quality": [
+      0.007059394847601652,
+      0.004355825483798981,
+      0.004052191507071257,
+      0.01079022791236639,
+      0.00344489561393857,
+      0.008694317191839218,
+      0.011440656147897243,
+      0.004373383242636919,
+      0.011374266818165779,
+      0.00416125264018774,
+      0.0070589324459433556,
+      0.008199883624911308
+    ],
+    "distinct_groupings": 3,
+    "grouping_counts": {
+      "02|13": 1,
+      "01|23": 6,
+      "03|12": 2
+    },
+    "grouping_counts_all_restarts": {
+      "02|13": 2,
+      "01|23": 6,
+      "03|12": 3,
+      "013|2": 1
+    },
+    "n_near_optimal": 9,
+    "best_loss": 0.00344489561393857,
+    "non_unique": true
+  },
+  "all_passed": true,
+  "checks": [
+    {
+      "passed": true,
+      "claim": "all 3 linear groupings reproduce the observations exactly and stay modular"
+    },
+    {
+      "passed": true,
+      "claim": "all 3 nonlinear groupings reproduce the observations exactly -- \u00a73.1 is not a linear artifact"
+    },
+    {
+      "passed": true,
+      "claim": "fitting is NON-UNIQUE: 3 distinct groupings among 9 near-optimal restarts {'02|13': 1, '01|23': 6, '03|12': 2}"
+    }
+  ]
+}

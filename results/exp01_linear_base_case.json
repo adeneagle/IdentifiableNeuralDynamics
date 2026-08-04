@@ -1,0 +1,165 @@
+{
+  "experiment": "exp01_linear_base_case",
+  "utc": "2026-08-04T04:26:47.706498+00:00",
+  "seed": 0,
+  "cases": [
+    {
+      "name": "A1+A2 hold (scaled rotations, distinct moduli)",
+      "partition": [
+        2,
+        2
+      ],
+      "A1": true,
+      "A2": true,
+      "canonical": true,
+      "separation": 0.6125845989833815,
+      "reasons": [
+        "(A1) ok; (A2) ok with separation 6.126e-01"
+      ],
+      "dim_hom": 4,
+      "predicted_dim": 4,
+      "block_energy_normalised": [
+        [
+          6.214335554361055e-32,
+          0.4999999999999998
+        ],
+        [
+          0.5000000000000003,
+          3.9741863186554615e-32
+        ]
+      ],
+      "space_confined_to_matched_blocks": true,
+      "n_invertible_samples": 400,
+      "n_module_mixing": 0,
+      "worst_on_block_fraction": 1.0
+    },
+    {
+      "name": "(A1) FAILS -- \u00a73.1 regrouping counterexample",
+      "partition": [
+        2,
+        2
+      ],
+      "A1": false,
+      "A2": true,
+      "canonical": false,
+      "separation": 0.15000000000000002,
+      "reasons": [
+        "(A1) fails: block 0 splits into 2 summands",
+        "(A1) fails: block 1 splits into 2 summands"
+      ],
+      "dim_hom": 4,
+      "predicted_dim": 4,
+      "block_energy_normalised": [
+        [
+          0.25,
+          0.25
+        ],
+        [
+          0.25,
+          0.25
+        ]
+      ],
+      "space_confined_to_matched_blocks": true,
+      "n_invertible_samples": 400,
+      "n_module_mixing": 400,
+      "worst_on_block_fraction": 0.5007880876595727
+    },
+    {
+      "name": "(A1) holds, (A2) FAILS -- J2(0.8) (+) J2(0.8)",
+      "partition": [
+        2,
+        2
+      ],
+      "A1": true,
+      "A2": false,
+      "canonical": false,
+      "separation": 0.0,
+      "reasons": [
+        "(A2) fails: block spectra separated by only 0.000e+00"
+      ],
+      "dim_hom": 8,
+      "predicted_dim": 4,
+      "block_energy_normalised": [
+        [
+          0.25,
+          0.25
+        ],
+        [
+          0.25,
+          0.25
+        ]
+      ],
+      "space_confined_to_matched_blocks": true,
+      "n_invertible_samples": 400,
+      "n_module_mixing": 400,
+      "worst_on_block_fraction": 0.5000898671008097
+    },
+    {
+      "name": "\u00a73.1 system under its FINEST partition [1,1,1,1]",
+      "partition": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "A1": true,
+      "A2": true,
+      "canonical": true,
+      "separation": 0.14999999999999997,
+      "reasons": [
+        "(A1) ok; (A2) ok with separation 1.500e-01"
+      ],
+      "dim_hom": 4,
+      "predicted_dim": 4,
+      "block_energy_normalised": [
+        [
+          0.25,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.25,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.25,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.25
+        ]
+      ],
+      "space_confined_to_matched_blocks": true,
+      "n_invertible_samples": 400,
+      "n_module_mixing": 0,
+      "worst_on_block_fraction": 0.9999999999999998
+    }
+  ],
+  "all_passed": true,
+  "checks": [
+    {
+      "passed": true,
+      "claim": "under (A1)+(A2): every invertible intertwiner is a block permutation, dim Hom = 4 = sum_i dim End(f_i)"
+    },
+    {
+      "passed": true,
+      "claim": "with (A1) violated the intertwiner space contains invertible maps that mix modules (400/400) -- the conjecture is false as originally stated"
+    },
+    {
+      "passed": true,
+      "claim": "indecomposability alone is insufficient: shared spectra let invertible intertwiners mix modules (400/400)"
+    },
+    {
+      "passed": true,
+      "claim": "refining to the indecomposable partition [1,1,1,1] restores uniqueness -- this is the \u00a73.1 fix, working"
+    }
+  ]
+}

@@ -1,0 +1,345 @@
+{
+  "experiment": "exp12_decoder_strength_sweep",
+  "utc": "2026-08-04T01:39:15.844966+00:00",
+  "seed": 0,
+  "n_obs": 12,
+  "steps": 4000,
+  "n_restarts": 8,
+  "strengths": [
+    0.0,
+    0.5,
+    1.5,
+    2.0
+  ],
+  "w_behavior": 5.0,
+  "u_levels": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "n_per_u": 250,
+  "T": 15,
+  "arms": [
+    {
+      "strength": 0.0,
+      "obs_nonlinearity": 1.6108285545599155e-15,
+      "decoder_cond": 1.0000000000091376,
+      "n_restarts": 8,
+      "per_restart": [
+        {
+          "fit_quality": 0.010443848557770252,
+          "jac_diag": 0.997973985486953,
+          "jac_lower": 6.036092521068197e-05,
+          "jac_upper": 0.0019656535878362184
+        },
+        {
+          "fit_quality": 0.008485302329063416,
+          "jac_diag": 0.9903583098632482,
+          "jac_lower": 0.00043499522509391777,
+          "jac_upper": 0.0092066949116578
+        },
+        {
+          "fit_quality": 0.006964815780520439,
+          "jac_diag": 0.9859228025371269,
+          "jac_lower": 8.701224235067916e-05,
+          "jac_upper": 0.013990185220522275
+        },
+        {
+          "fit_quality": 0.005813695956021547,
+          "jac_diag": 0.9980300962184652,
+          "jac_lower": 0.00011223546951453589,
+          "jac_upper": 0.0018576683120203243
+        },
+        {
+          "fit_quality": 0.008476989343762398,
+          "jac_diag": 0.9955098619389268,
+          "jac_lower": 0.0001419752155978663,
+          "jac_upper": 0.004348162845475409
+        },
+        {
+          "fit_quality": 0.007366479840129614,
+          "jac_diag": 0.9701845960397432,
+          "jac_lower": 0.00016094028472001193,
+          "jac_upper": 0.029654463675536872
+        },
+        {
+          "fit_quality": 0.007805383764207363,
+          "jac_diag": 0.9917847556951953,
+          "jac_lower": 0.00016316937537773818,
+          "jac_upper": 0.008052074929426925
+        },
+        {
+          "fit_quality": 0.006419280543923378,
+          "jac_diag": 0.9977365139961111,
+          "jac_lower": 0.00014787384297386394,
+          "jac_upper": 0.002115612160914943
+        }
+      ],
+      "fit_quality_median": 0.0075859318021684885,
+      "jac_diag_median": 0.993647308817061,
+      "jac_lower_median": 0.00014492452928586513,
+      "jac_upper_median": 0.006200118887451167,
+      "fit_quality_min": 0.005813695956021547,
+      "jac_diag_min": 0.9701845960397432,
+      "jac_lower_min": 6.036092521068197e-05,
+      "jac_upper_min": 0.0018576683120203243,
+      "fit_quality_max": 0.010443848557770252,
+      "jac_diag_max": 0.9980300962184652,
+      "jac_lower_max": 0.00043499522509391777,
+      "jac_upper_max": 0.029654463675536872,
+      "fit_quality_sd": 0.0013512252127666352,
+      "jac_diag_sd": 0.008830583579917579,
+      "jac_lower_sd": 0.00010813178890425742,
+      "jac_upper_sd": 0.008816869562720842
+    },
+    {
+      "strength": 0.5,
+      "obs_nonlinearity": 0.3120733745449904,
+      "decoder_cond": 7.776330398660645,
+      "n_restarts": 8,
+      "per_restart": [
+        {
+          "fit_quality": 0.01761903613805771,
+          "jac_diag": 0.651714622247235,
+          "jac_lower": 0.2850101550978491,
+          "jac_upper": 0.06327522265491584
+        },
+        {
+          "fit_quality": 0.015976686030626297,
+          "jac_diag": 0.9220286591953262,
+          "jac_lower": 0.06973417572976343,
+          "jac_upper": 0.008237165074910402
+        },
+        {
+          "fit_quality": 0.020129378885030746,
+          "jac_diag": 0.8357875622736327,
+          "jac_lower": 0.154828880612796,
+          "jac_upper": 0.009383557113571242
+        },
+        {
+          "fit_quality": 0.01286895852535963,
+          "jac_diag": 0.6636263445881072,
+          "jac_lower": 0.2654536192450013,
+          "jac_upper": 0.07092003616689145
+        },
+        {
+          "fit_quality": 0.014559676870703697,
+          "jac_diag": 0.7195390783873841,
+          "jac_lower": 0.24368905696705426,
+          "jac_upper": 0.03677186464556144
+        },
+        {
+          "fit_quality": 0.019046809524297714,
+          "jac_diag": 0.7866539880923599,
+          "jac_lower": 0.20501777451942055,
+          "jac_upper": 0.008328237388219566
+        },
+        {
+          "fit_quality": 0.010334093123674393,
+          "jac_diag": 0.7406059367330846,
+          "jac_lower": 0.2550821532050113,
+          "jac_upper": 0.004311910061903988
+        },
+        {
+          "fit_quality": 0.02211853116750717,
+          "jac_diag": 0.5130791156168253,
+          "jac_lower": 0.47824897402917155,
+          "jac_upper": 0.008671910354003146
+        }
+      ],
+      "fit_quality_median": 0.016797861084342003,
+      "jac_diag_median": 0.7300725075602343,
+      "jac_lower_median": 0.2493856050860328,
+      "jac_upper_median": 0.009027733733787194,
+      "fit_quality_min": 0.010334093123674393,
+      "jac_diag_min": 0.5130791156168253,
+      "jac_lower_min": 0.06973417572976343,
+      "jac_upper_min": 0.004311910061903988,
+      "fit_quality_max": 0.02211853116750717,
+      "jac_diag_max": 0.9220286591953262,
+      "jac_lower_max": 0.47824897402917155,
+      "jac_upper_max": 0.07092003616689145,
+      "fit_quality_sd": 0.003668566076019415,
+      "jac_diag_sd": 0.11676914973665017,
+      "jac_lower_sd": 0.11009885142004912,
+      "jac_upper_sd": 0.025488687062915107
+    },
+    {
+      "strength": 1.5,
+      "obs_nonlinearity": 0.43104798696017227,
+      "decoder_cond": 9.939358580543075,
+      "n_restarts": 8,
+      "per_restart": [
+        {
+          "fit_quality": 0.04680352658033371,
+          "jac_diag": 0.6279405279678955,
+          "jac_lower": 0.2643485071445207,
+          "jac_upper": 0.10771096488758382
+        },
+        {
+          "fit_quality": 0.02706427127122879,
+          "jac_diag": 0.7165087398890326,
+          "jac_lower": 0.21794260269693985,
+          "jac_upper": 0.06554865741402746
+        },
+        {
+          "fit_quality": 0.028267240151762962,
+          "jac_diag": 0.6913049944160228,
+          "jac_lower": 0.21521974437830835,
+          "jac_upper": 0.09347526120566883
+        },
+        {
+          "fit_quality": 0.024100851267576218,
+          "jac_diag": 0.7120890433802367,
+          "jac_lower": 0.1863803847527208,
+          "jac_upper": 0.1015305718670424
+        },
+        {
+          "fit_quality": 0.02744767814874649,
+          "jac_diag": 0.522165894186423,
+          "jac_lower": 0.3352281779950773,
+          "jac_upper": 0.14260592781849957
+        },
+        {
+          "fit_quality": 0.030754329636693,
+          "jac_diag": 0.6630368407723621,
+          "jac_lower": 0.16821347890089305,
+          "jac_upper": 0.16874968032674487
+        },
+        {
+          "fit_quality": 0.018344225361943245,
+          "jac_diag": 0.8349342863355886,
+          "jac_lower": 0.1503837096662917,
+          "jac_upper": 0.014682003998119668
+        },
+        {
+          "fit_quality": 0.034862492233514786,
+          "jac_diag": 0.8525065266121835,
+          "jac_lower": 0.06236155141934258,
+          "jac_upper": 0.085131921968474
+        }
+      ],
+      "fit_quality_median": 0.027857459150254726,
+      "jac_diag_median": 0.7016970188981297,
+      "jac_lower_median": 0.20080006456551458,
+      "jac_upper_median": 0.09750291653635562,
+      "fit_quality_min": 0.018344225361943245,
+      "jac_diag_min": 0.522165894186423,
+      "jac_lower_min": 0.06236155141934258,
+      "jac_upper_min": 0.014682003998119668,
+      "fit_quality_max": 0.04680352658033371,
+      "jac_diag_max": 0.8525065266121835,
+      "jac_lower_max": 0.3352281779950773,
+      "jac_upper_max": 0.16874968032674487,
+      "fit_quality_sd": 0.007863445605409383,
+      "jac_diag_sd": 0.10005694429732014,
+      "jac_lower_sd": 0.07548423923223256,
+      "jac_upper_sd": 0.04370412982674228
+    },
+    {
+      "strength": 2.0,
+      "obs_nonlinearity": 0.6029091525298709,
+      "decoder_cond": 12.188834114026537,
+      "n_restarts": 8,
+      "per_restart": [
+        {
+          "fit_quality": 0.0022419258020818233,
+          "jac_diag": 0.5179110211956548,
+          "jac_lower": 0.16650532593726702,
+          "jac_upper": 0.31558365286707807
+        },
+        {
+          "fit_quality": 0.021308522671461105,
+          "jac_diag": 0.5339480228228163,
+          "jac_lower": 0.33882294480466857,
+          "jac_upper": 0.12722903237251518
+        },
+        {
+          "fit_quality": 0.020774617791175842,
+          "jac_diag": 0.5131624075164445,
+          "jac_lower": 0.30669097648109483,
+          "jac_upper": 0.18014661600246065
+        },
+        {
+          "fit_quality": 0.025895334780216217,
+          "jac_diag": 0.8272381774288976,
+          "jac_lower": 0.059913313695926534,
+          "jac_upper": 0.11284850887517578
+        },
+        {
+          "fit_quality": 0.0025782964657992125,
+          "jac_diag": 0.7311927425040042,
+          "jac_lower": 0.1255366120440892,
+          "jac_upper": 0.14327064545190646
+        },
+        {
+          "fit_quality": 0.021074414253234863,
+          "jac_diag": 0.5411016619383662,
+          "jac_lower": 0.35568099992848307,
+          "jac_upper": 0.10321733813315082
+        },
+        {
+          "fit_quality": 0.03310179337859154,
+          "jac_diag": 0.5931504871018609,
+          "jac_lower": 0.2612745811747234,
+          "jac_upper": 0.14557493172341554
+        },
+        {
+          "fit_quality": 0.0253459382802248,
+          "jac_diag": 0.6441906075419851,
+          "jac_lower": 0.19650540567501673,
+          "jac_upper": 0.15930398678299823
+        }
+      ],
+      "fit_quality_median": 0.021191468462347984,
+      "jac_diag_median": 0.5671260745201135,
+      "jac_lower_median": 0.22888999342487007,
+      "jac_upper_median": 0.144422788587661,
+      "fit_quality_min": 0.0022419258020818233,
+      "jac_diag_min": 0.5131624075164445,
+      "jac_lower_min": 0.059913313695926534,
+      "jac_upper_min": 0.10321733813315082,
+      "fit_quality_max": 0.03310179337859154,
+      "jac_diag_max": 0.8272381774288976,
+      "jac_lower_max": 0.35568099992848307,
+      "jac_upper_max": 0.31558365286707807,
+      "fit_quality_sd": 0.010307469505345215,
+      "jac_diag_sd": 0.10704080371152695,
+      "jac_lower_sd": 0.0996165537028945,
+      "jac_upper_sd": 0.06286456978090231
+    }
+  ],
+  "diag_medians": [
+    0.993647308817061,
+    0.7300725075602343,
+    0.7016970188981297,
+    0.5671260745201135
+  ],
+  "lower_medians": [
+    0.00014492452928586513,
+    0.2493856050860328,
+    0.20080006456551458,
+    0.22888999342487007
+  ],
+  "upper_max": 0.31558365286707807,
+  "all_passed": false,
+  "checks": [
+    {
+      "passed": true,
+      "claim": "the linear control arm (strength 0) reproduces exp11's linear-decoder result: jac_diag 0.994 -- without this the sweep measures nothing, since every other arm is compared against it"
+    },
+    {
+      "passed": true,
+      "claim": "jac_diag falls monotonically with observation nonlinearity: [0.994, 0.73, 0.702, 0.567] -- a dose-response, not a seed effect"
+    },
+    {
+      "passed": false,
+      "claim": "and the ALLOWED cross-block rises to absorb it: [0.0, 0.249, 0.201, 0.229] -- the map is becoming triangular, not merely worse"
+    },
+    {
+      "passed": false,
+      "claim": "the FORBIDDEN cross-block stays suppressed at every strength and in every restart (max 0.316) -- Lemma C's half of the composition survives nonlinearity; it is behaviour's half that does not"
+    }
+  ]
+}
