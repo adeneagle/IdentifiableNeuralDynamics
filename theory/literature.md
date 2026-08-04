@@ -242,6 +242,78 @@ end for open problem 4 (it is stated free of the mixing model).
 
 ---
 
+### 1.3 BLOCK-IDENTIFIABILITY — the "partial iVAE lemma" is published (2026-08-04)
+
+**This section is the single most consequential literature finding in the file.**
+Route B's standing open obligation (CLAUDE.md task 27: "the $u$-invariant
+complement identified as a *subspace* — not a corollary of Khemakhem et al.")
+has a name in the literature, **block-identifiability**, and at least two
+published theorems in settings that match ours.
+
+**The notion.** von Kügelgen et al., *Self-Supervised Learning with Data
+Augmentations Provably Isolates Content from Style*, NeurIPS 2021, arXiv
+2106.04619, **Definition 4.1**: the content partition $c$ is *block-identified*
+by $g$ if the inferred $\hat c$ contains **all and only** information about $c$,
+i.e. $\hat c = h(c)$ for some invertible $h$. Not component recovery — the block
+as a unit, up to an arbitrary invertible transformation inside it. **That is
+verbatim our target for the invariant block, and verbatim §7's scope note.**
+Their Theorem 4.4 needs (i) $f$ a diffeomorphism, (ii) $p_z$ smooth and
+positive, (iii) each style variable actually changes with full local support;
+content and style **may be dependent**. *Setting mismatch:* their data is paired
+views $(x,\tilde x)$ sharing content, ours is $(x,u)$ with $u$ indexing a law —
+so this one is the right *notion*, not directly the right *theorem*.
+
+**The matching setting is domain adaptation**, where $u$ is a domain index —
+formally the same object as our behaviour label.
+
+* **Kong et al., *Partial Identifiability for Domain Adaptation*, arXiv
+  2306.06510.** Latents split $z=[z_c,z_s]$ with $p(z_c)$ constant across
+  domains and $p(z_s\mid u)$ varying; $x=g(z_c,z_s)$ with $g$ invertible and
+  smooth. **Theorem 4.2: $z_c$ is block-wise identifiable** — $\hat z_c =
+  h'_c(z_c)$, invertible $h'_c$, no mixing in of the changing part.
+  Assumptions: **A1** smooth positive $p_{z\mid u}$; **A2** conditional
+  independence given $u$, factorising *componentwise*; **A3** $2n_s+1$ values of
+  $u$ giving linearly independent gradient/Hessian vectors; **A4** domain
+  variability — any measurable set not of the form $B_{z_c}\times\mathcal Z_s$
+  has $u$-varying probability. $z_c$ and $z_s$ need not be marginally
+  independent. Their domain action $z_s=f_u(\tilde z_s)$ is componentwise
+  monotonic — **and our variance modulation $z_A=s(u)\tilde z_A$ is exactly of
+  that form.**
+* **Sun et al., *Latent Covariate Shift*, arXiv 2208.14161, Proposition 4.2.**
+  Same conclusion (content block-identifiable up to invertible $h$), needs
+  $2\ell+1$ distinct domains, bijective mixing, and explicitly **allows
+  $z_c\to z_s$ causal dependence**.
+
+**What this does and does not do to Lemma D.**
+
+*Does not make it redundant.* Lemma D (identifiability.md §4.5) reaches the same
+conclusion from **two** behaviour levels, where Kong needs $2n_s+1$ and Sun
+$2\ell+1$. That economy is bought with the dynamics: the one-sided gap forces
+every surviving coupling degree to be $\ge2$, so variance modulation detects it
+with two levels instead of spanning a parameter simplex. **That is a real and
+quantifiable improvement over the published results, and it is the defensible
+novelty of the behavioural half.**
+
+*Does change what is open.* Lemma D is proved only for additive $h_B$ with
+linear modules; Kong/Sun are purely distributional and carry no such
+restriction, so they are **more general in the mixing and less economical in the
+auxiliary**. Route B's open obligation is therefore no longer "does a partial
+iVAE theorem exist" — it does — but "can Lemma D's two-level economy be extended
+to the generality Kong/Sun already have".
+
+> **`TODO(gap)` — the one thing to verify before relying on this.** Kong's **A2
+> is componentwise** conditional independence, and our within-module coordinates
+> are *not* independent (a `TwistBlock` rotates, coupling its two coordinates).
+> Read from the paper's summary, A2/A3 appear to serve the *finer* componentwise
+> conclusion about $z_s$, while the **block** conclusion about $z_c$ looks to
+> rest on A1 + A4 — and A4 is a cylinder-set condition, not a factorisation.
+> **If that reading is right the theorem applies to us directly; if A2 is load-
+> bearing for Theorem 4.2, our block structure breaks it and the gap survives.**
+> This has been read from fetched summaries, *not* from the proof. Check it
+> against the actual proof before citing. Same check applies to Sun Prop. 4.2.
+
+---
+
 ## 2. Step 9 — when does a triangular conjugacy upgrade to a product?
 
 The question from §3.7: Lemma C plus the two-sided obstruction leaves $h$
