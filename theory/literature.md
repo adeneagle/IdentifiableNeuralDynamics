@@ -112,6 +112,50 @@ of the coordinates and a bijective transformation of each coordinate**
 
 ### 1.2 Does any of them cover the autonomous, stationary, no-auxiliary case?
 
+> ## ⚠ CORRECTION (2026-08-04) — the question is mis-posed, and the answer below is wrong for TCL and iVAE
+>
+> **Our setting is not stationary.** This section, and the §8 positioning built
+> on it, rest on "autonomous = one transition kernel, ever ⟹ no variability of
+> conditional distributions" (point 3 below). That conflates the **transition
+> kernel** with the **marginal law**. A single fixed kernel applied to a
+> non-invariant $p_0$ produces genuinely time-varying marginals
+> $p_t = (F^t)_*p_0$ — and `train.make_dataset` deliberately spreads initial
+> conditions over an annulus, precisely so trajectories do not collapse onto a
+> single orbit. Every dataset in this repo is non-stationary **by construction**.
+>
+> Measured (CLAUDE.md task 35): conditioning on $u=t$, the blocks' scale-
+> normalised $t$-dependence is $1.32$ and $4.20$ in the contracting system. On
+> two limit cycles with concentrated initial phase it is $1.489$ early and
+> $1.493$ late — *persistent*, not transient. With uniform initial phase (i.e.
+> $p_0$ **is** the invariant measure) it collapses to $0.057$, which is the only
+> configuration where the "no variability" claim holds.
+>
+> **What survives and what does not:**
+>
+> * **Point 1 survives for PCL and SNICA only.** Their hypotheses are on the
+>   *joint* density of consecutive samples within a trajectory, which for
+>   deterministic $z_{t+1}=f_i(z_t)$ is supported on a graph. That objection is
+>   correct and structural. It does **not** touch TCL or iVAE, which condition
+>   on the time index across an **ensemble** of trajectories: at fixed $t$,
+>   $p(z_t)$ is a pushforward of a smooth $p_0$ by a diffeomorphism, hence a
+>   perfectly good smooth density.
+> * **Point 3 is false as applied to TCL/HMM-NLICA/iVAE.** The variability they
+>   consume is exactly what relaxation toward an attractor supplies for free.
+> * **Point 2 survives, and is now the whole gap.** All five conclude
+>   coordinatewise identification for *statistically independent scalar*
+>   components; our modules are multidimensional with arbitrary internal
+>   dependence. The delta between us and the literature is **granularity, not
+>   applicability**.
+>
+> So the honest positioning is *not* "no existing result covers us". It is: TCL
+> and iVAE **do** cover a setting we are in, at the wrong granularity, using an
+> auxiliary variable ($u=t$) that is free and that we wrongly believed we did
+> not have. Note also that point 2 below already flags the "dependent source
+> subspaces" extensions as read *from the abstract only and never chased* —
+> that is now the most relevant citation in this file.
+>
+> Do not cite §8 positioning from this section until it is rewritten.
+
 **No.** PCL and SNICA are the only stationary, no-auxiliary results in the
 list, and both fail to apply to our setting for the same three structural
 reasons, each verified against their stated hypotheses:
@@ -156,17 +200,33 @@ noise-free process distributions" under tail conditions — exactly the reductio
 open problem 4 needs before our geometric machinery takes over. Verified from
 the paper that it is stated free of the mixing model.
 
-**What this means for us.** The positioning claim for §8 of
-`identifiability.md` survives contact with the actual theorems: no existing
-temporal-structure result covers autonomous stationary deterministic dynamics,
-because all of them consume statistical variability (across regimes or across
-consecutive-sample dependencies) that autonomy and determinism remove. What
-modular *dynamics* adds is identification from **invariant geometric structure**
-(foliations + spectra) instead of distributional variability — with the price
-already recorded in §4.2/§3.7: the geometric route currently pins down a
-filtration, not a partition, pending open problem 1. Cite PCL as the nearest
-neighbor and the Gaussian/autocorrelation dichotomy as the conceptual bridge;
-use SNICA Theorem 1 as the front end for open problem 4.
+**What this means for us.** ~~The positioning claim for §8 survives contact with
+the actual theorems: no existing temporal-structure result covers autonomous
+stationary deterministic dynamics...~~ **Retracted 2026-08-04 — see the
+correction box at the head of §1.2.** The premise ("we have no auxiliary
+variable and no non-stationarity") is false: $u=t$ is both, and it is free.
+
+**Revised positioning, to be written into §8.** Split the five results by *what
+they condition on*, not by whether they use an auxiliary variable:
+
+* **Ensemble-conditioning (TCL, HMM-NLICA, iVAE)** — consume variability of
+  $p(z\mid u)$ across values of $u$. With $u=t$ this setting **applies to us**.
+  Their conclusion is coordinatewise, ours is block-level, so the gap is
+  granularity: we need a *subspace/ISA* version. Chase the "dependent source
+  subspaces" line (Hyvärinen–Khemakhem–Morioka 2023 review, arXiv 2303.16535,
+  §1.2 point 2) — it may already be written.
+* **Path-conditioning (PCL, SNICA)** — consume non-Gaussian dependence between
+  consecutive samples. Genuinely inapplicable **while the dynamics are
+  deterministic**, because the pair $(z_t, z_{t-1})$ lives on a graph. That is a
+  consequence of a modelling choice, not of the science: real latent dynamics
+  are stochastic, and adding process noise would restore densities and make this
+  entire family available. See CLAUDE.md task 36.
+
+What modular *dynamics* adds is then not "identifiability where none was
+available" but **the block granularity and the dynamical invariants** (Lyapunov
+spectrum, rotation number) that coordinatewise results do not deliver. That is a
+smaller claim, and an honest one. SNICA Theorem 1 remains reusable as the front
+end for open problem 4 (it is stated free of the mixing model).
 
 ---
 

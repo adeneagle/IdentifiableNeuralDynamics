@@ -515,3 +515,55 @@ def test_additivity_defect_is_invariant_to_rescaling_a_block():
     scaled[:, :2] *= 20.0
     h_s = lambda zz: h(np.hstack([zz[:, :2] / 20.0, zz[:, 2:]]))
     assert MT.additivity_defect(h_s, scaled, part, out) == pytest.approx(plain, rel=1e-6)
+
+
+def _coupled(psi):
+    """h(z) = (z_A, z_B + psi(z_A)) on R^4, blocks of 2."""
+    return lambda z: np.hstack([z[:, :2], z[:, 2:] + psi(z[:, :2])])
+
+
+@pytest.mark.parametrize(
+    "name, psi, expected",
+    [
+        ("degree 2", lambda a: 0.7 * (a ** 2), 2.0),
+        ("degree 1", lambda a: a @ np.array([[0.4, -0.9], [1.1, 0.3]]).T, 1.0),
+        ("degree 3", lambda a: 0.5 * (a ** 3), 3.0),
+        # the escape: direction only, so psi(sigma a) = psi(a) exactly
+        ("degree 0", lambda a: 0.8 * a / np.linalg.norm(a, axis=1, keepdims=True), 0.0),
+    ],
+)
+def test_coupling_homogeneity_degree_recovers_known_degrees(name, psi, expected):
+    """Lemma D turns on this exponent, so it had better be measurable."""
+    p, resid = MT.coupling_homogeneity_degree(
+        _coupled(psi), slice(2, 4), slice(0, 2), np.array([0.3, -0.2])
+    )
+    assert p == pytest.approx(expected, abs=0.02), name
+    assert resid < 1e-6, "a genuinely homogeneous psi is an exact power law"
+
+
+def test_coupling_degree_flags_a_non_homogeneous_coupling_via_the_residual():
+    """The escape is p = 0, but a *saturating* psi also defeats variance modulation.
+
+    Its fitted slope is some small positive number that describes nothing, which
+    is why the residual is returned alongside and must be read with it.
+    """
+    sat = lambda a: 0.8 * np.tanh(6.0 * a)  # linear at 0, flat by sigma ~ 1
+    p, resid = MT.coupling_homogeneity_degree(
+        _coupled(sat), slice(2, 4), slice(0, 2), np.array([0.3, -0.2])
+    )
+    assert 0.0 < p < 1.0, "saturation drags the apparent degree below the true small-z one"
+    assert resid > 0.05, "and it is not a power law at all -- the residual says so"
+
+
+def test_coupling_degree_works_in_either_block_orientation():
+    """z_other holds the complementary coordinates, whichever side in_slice is."""
+    h = lambda z: np.hstack([z[:, :2] + 0.6 * z[:, 2:] ** 2, z[:, 2:]])
+    p, resid = MT.coupling_homogeneity_degree(h, slice(0, 2), slice(2, 4), np.array([0.1, 0.4]))
+    assert p == pytest.approx(2.0, abs=0.02)
+    assert resid < 1e-6
+
+
+def test_coupling_degree_rejects_degenerate_sigmas():
+    h = _coupled(lambda a: a)
+    with pytest.raises(ValueError, match="positive scale factors"):
+        MT.coupling_homogeneity_degree(h, slice(2, 4), slice(0, 2), np.zeros(2), sigmas=[1.0, -1.0])

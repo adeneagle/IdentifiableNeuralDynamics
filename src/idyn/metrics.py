@@ -40,6 +40,7 @@ __all__ = [
     "conjugacy_residual",
     "hessian_of",
     "additivity_defect",
+    "coupling_homogeneity_degree",
 ]
 
 
@@ -812,3 +813,72 @@ def additivity_defect(
     if total <= 0:
         return 0.0
     return float(E[~same].sum() / total)
+
+
+def coupling_homogeneity_degree(
+    h,
+    out_slice: slice,
+    in_slice: slice,
+    z_other: np.ndarray,
+    sigmas: Sequence[float] | None = None,
+    n_dirs: int = 3000,
+    seed: int = 0,
+) -> tuple[float, float]:
+    """Homogeneity degree ``p`` of the coupling ``psi(z_A) = h_out(z_A, z_other) - h_out(0, z_other)``.
+
+    ``z_other`` holds only the *complementary* coordinates (everything outside
+    ``in_slice``), held fixed while ``in_slice`` is swept radially.  Returns
+    ``(p, max_residual)``: ``p`` is the log-log slope against ``sigma`` of the
+    **spread across directions** of ``h_out(sigma d, z_other)``, and
+    ``max_residual`` is the largest deviation from that straight line.
+
+    Spread across directions, rather than displacement from ``h_out(0, .)``:
+    for ``psi`` homogeneous of degree ``p`` the two agree up to a constant, since
+    ``psi(sigma d) = sigma^p psi(d)`` makes the directional spread exactly
+    ``sigma^p`` times its value at ``sigma = 1``.  But the reference form needs
+    ``psi(0)`` to exist, and **the one case this function is here to detect --
+    degree 0 -- is precisely the case where it does not** (``z_A/||z_A||`` has no
+    limit at the origin).  Constant offsets drop out of a spread anyway.
+
+    **This is Lemma D's Step-3/Step-4 quantity, made measurable on any ``h``.**
+    The proof (identifiability.md §4.5) turns entirely on ``p``: a homogeneous
+    coupling of degree ``p`` scales as ``sigma^p`` under variance modulation, so
+    behaviour detects it for every ``p >= 1``; the one escape is ``p = 0``, a
+    scale-invariant (direction-only) coupling, which (D1) forbids by requiring
+    ``rho(f~_B) < 1``.  A fitted model need not respect (D1) -- so before reading
+    any behavioural result off a fit, check whether it found the escape.
+
+    ``max_residual`` is not decoration.  ``p`` is only meaningful if ``psi``
+    really is close to homogeneous; a coupling that saturates, or that is large
+    at small ``sigma`` and flattens, produces a fitted slope that describes
+    nothing.  Read the pair, never the slope alone.
+
+    Scope (§3.8): ``sigmas`` must stay inside the visited region.  For the
+    contracting systems here an annulus of initial conditions sweeps a wide range
+    of radii as it decays, so a decade around the data scale is legitimate --
+    but off the support ``h`` is unconstrained and ``p`` is meaningless.
+    """
+    sig = np.asarray(list(sigmas) if sigmas is not None else np.logspace(-0.8, 0.15, 9), float)
+    if sig.ndim != 1 or sig.size < 3 or np.any(sig <= 0):
+        raise ValueError("sigmas must be at least 3 positive scale factors")
+    rng = np.random.default_rng(seed)
+    d_in = in_slice.stop - in_slice.start
+    dirs = rng.normal(size=(n_dirs, d_in))
+    dirs /= np.maximum(np.linalg.norm(dirs, axis=1, keepdims=True), 1e-300)
+
+    other = np.asarray(z_other, dtype=float).ravel()
+    d_total = len(other) + d_in
+
+    def spread_at(scale: float) -> float:
+        Z = np.tile(other, (n_dirs, 1))
+        Z = np.insert(Z, [in_slice.start] * d_in, 0.0, axis=1)[:, :d_total]
+        Z[:, in_slice] = scale * dirs
+        out = np.asarray(h(Z), dtype=float)[:, out_slice]
+        return float(np.sqrt(np.mean(np.sum((out - out.mean(0)) ** 2, axis=1))))
+
+    mags = np.array([spread_at(s) for s in sig])
+    if np.any(mags <= 0):
+        return 0.0, float("inf")
+    slope, icpt = np.polyfit(np.log(sig), np.log(mags), 1)
+    resid = np.log(mags) - (slope * np.log(sig) + icpt)
+    return float(slope), float(np.abs(resid).max())
