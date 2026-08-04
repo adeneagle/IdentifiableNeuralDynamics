@@ -37,6 +37,7 @@ certified numerically.
 
 | | status |
 |---|---|
+| **Global conjugacy (Tier 1)** | **Free.** Injective decoders + exact fit force $\hat F = h F h^{-1}$, so latent dimension, fixed points and their stability, Lyapunov spectrum, rotation number and attractor topology are identified with *no theorem and no auxiliary variable*. The **decomposition** is what costs — that is Tier 2, and every open obligation lives there |
 | **Linear decoder (Theorem A)** | **Proved and numerically certified.** Sharp: two independent hypotheses, neither removable |
 | Perturbation, linear case | **Measured.** $O(\epsilon/\mathrm{gap})$ confirmed; log-log slope $1.0000$ |
 | **Nonlinear decoder (Theorem B)** | Stated form (weak hypotheses) is **false**; **block-diagonal recovered under $C^\infty$ + cross-module non-resonance**, assembled and reduced to a classical estimate (fixed-point regime) — see below |
@@ -44,6 +45,7 @@ certified numerically.
 | **Behavioural route (Lemma D)** | **Proved** for additive $h_B$ + linear modules: a behavioural auxiliary kills the cross-derivative the spectral gap provably cannot. Two behaviour levels suffice |
 | **Does learning recover it?** | **Partly — and the earlier "no" is retracted.** That penalty was gauge-dependent and the optimiser paid it by shrinking the block instead of making it $u$-invariant, so no arm ever imposed the hypothesis (§3.12). Fixed, `exp13` kills the forbidden cross-block at every dose and recovers block-diagonality at 3 of 4 — the exception is consistent across all 8 restarts, and is the front line |
 | Literature positioning | Drafted in `theory/literature.md`, provenance-tagged |
+| **Real data** | **None — everything here is synthetic** (`make_dataset`). The empirical program is specified and unbuilt: co-smoothing over a nested model ladder as the adequacy gate, and *invariant agreement across disjoint neuron splits* as the identifiability test that needs no ground truth. `CLAUDE.md` §6, tasks 39/40 |
 
 ### The main finding
 
