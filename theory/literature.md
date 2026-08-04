@@ -216,11 +216,23 @@ they condition on*, not by whether they use an auxiliary variable:
   subspaces" line (Hyvärinen–Khemakhem–Morioka 2023 review, arXiv 2303.16535,
   §1.2 point 2) — it may already be written.
 * **Path-conditioning (PCL, SNICA)** — consume non-Gaussian dependence between
-  consecutive samples. Genuinely inapplicable **while the dynamics are
-  deterministic**, because the pair $(z_t, z_{t-1})$ lives on a graph. That is a
-  consequence of a modelling choice, not of the science: real latent dynamics
-  are stochastic, and adding process noise would restore densities and make this
-  entire family available. See CLAUDE.md task 36.
+  consecutive samples. Inapplicable while the dynamics are deterministic,
+  because the pair $(z_t, z_{t-1})$ lives on a graph. **This is a property of
+  the target, not an incidental modelling choice** (corrected 2026-08-04): in an
+  autonomous LFADS model one samples the initial condition $g_0$ from the prior
+  and then simulates a *deterministic* generator forward, so within a trial
+  consecutive latent states are deterministically related. Adding process noise
+  would open this family, but that is *changing the model class*, not modelling
+  LFADS more faithfully. See CLAUDE.md task 36.
+
+**Which family the science is in.** Autonomous LFADS puts *all* trial-to-trial
+randomness in $g_0$. At fixed $t$, across trials, that is an ensemble with a
+genuinely $t$-varying law — the ensemble-conditioning family's exact input, and
+what `train.make_dataset` already generates. So the positioning is not "we
+happen to violate PCL's assumptions"; it is that **the target model class lives
+in the ensemble-conditioning family and structurally cannot live in the
+path-conditioning one.** That makes the subspace/ISA gap (point 2) the only real
+obstacle between this project and existing theory.
 
 What modular *dynamics* adds is then not "identifiability where none was
 available" but **the block granularity and the dynamical invariants** (Lyapunov
