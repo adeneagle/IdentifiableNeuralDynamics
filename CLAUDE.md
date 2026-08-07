@@ -859,6 +859,21 @@ cross-split pairs that agree together with the median, never a max. Per-restart
 reliability is the binding constraint, and no amount of data or training removes
 it.
 
+**Measured effect of the screen, with the control that makes it a fix** (`exp14`
+check 12, at 32 neurons/side):
+
+| arm | flagged | raw median $\rho$ error | screened |
+|---|---|---|---|
+| linear | 0/8 | $0.00022$ | $0.00022$ (unchanged) |
+| nonlinear | **1/8** | $0.0633$ | **$0.0032$** — $20\times$ better, 67% of pairs agree |
+| negative control | 0/8 | $0.0636$ | $0.0636$ (**still rejecting**) |
+
+Same discipline as (d): a screen that improved the negative control too would be
+a filter flattering everything, not a defect being removed. The residual 33% is
+the *other* failure mode — a fit that misses a factor outright rather than
+duplicating one — which nothing here detects without ground truth. That is the
+honest boundary of the method as it stands.
+
 ---
 
 ## 4. Resources
@@ -912,6 +927,11 @@ some past machine, not an instruction.** Treat it the way §4.3 already treats t
 literature table.
 
 ### 4.2 Sibling project (prior art, same author)
+
+> **Separate repo — check it exists before relying on it.** It does not travel
+> with this one, so after a machine move the path below may be as stale as the
+> §4.3 table. Nothing here depends on it: it is prior art to position against,
+> not a dependency.
 
 `C:\AdenCode\IdentifiableCommunication` — implementation of Hälvä et al.,
 *Disentangling Identifiable Features from Noisy Data with Structured Nonlinear
@@ -1048,7 +1068,7 @@ negative control comes back unique, stop and re-examine assumptions.
 | **34** | **NEW (ACTIVE): why does the dose-$0.31$ arm land triangular in every restart?** | open — **the current front line.** It is the one arm where imposing behaviour *lowers* `jac_diag` (whitened $0.546$ vs raw $0.730$), and the tightness (sd $0.025$/$0.029$ over 8 restarts) rules out optimiser noise: it is a property of the objective at that dose, not of the seed. Leading hypothesis, and it is my error to check first: **`W_WHITENED = 1.0` was calibrated on the endpoint doses only** ($0.00$ and $0.60$), so the interior was never tuned — sweep $w$ at `strength=0.5` before looking for anything deeper. Note the decoders form a *one-parameter family* (same rng draw, scaled), so this is not a decoder-draw artifact. Second hypothesis: `obs-nl` is non-monotone in `strength` in a way that makes $0.31$ special beyond its dose |
 | **30** | **NEW: `exp11` methodology — report distributions, not best-of-$N$** | open, unambiguous (§3.11). Selection by `fit_quality` carries no structural information ($\mathrm{corr}=-0.044$ / $+0.279$); with sd $0.104$ the current point estimate is near a coin flip. Also raise `STEPS` — 1200 was tuned for the linear decoder and undertrains the nonlinear one into a *reversed* result. Do this before re-running exp11 as a gate |
 | **39** | **NEW: co-smoothing adequacy gate on real data** | open — §6 "empirical program". Nested ladder unconstrained ⊃ triangular ⊃ block-diagonal, scored by held-out-**neuron** co-smoothing (fit ~80% of the population, refit a *fresh* decoder to the remaining ~20%). Target: Neural Latents Benchmark maze/RTT — standardised, and carries LFADS baselines. **This would be the first real data in the repo**; everything so far is `make_dataset`. Answers *is the structure there*, i.e. it settles diagonal-vs-triangular empirically instead of by §7's genericity argument. **It cannot answer identifiability** — the metric is constant on gauge orbits, by construction |
-| **40** | **invariant agreement across disjoint neuron splits** | **METRIC BUILT AND VALIDATED (`exp14`); works under a linear observation map, open under a strong nonlinear one.** The test: fit independently on disjoint neuron subsets, then compare the *fits to each other* — identifiable dynamics give different coordinates and the same invariants. Varies the **data**, not the seed, so unlike restarts it excludes "artifact of this sample of neurons". Machinery: `metrics.dynamical_fingerprint` + `invariant_agreement`, plus `spectra.rotation_number` for the invariant spectra provably cannot see. **Validated on exact systems** — blind to a within-module gauge change *and* to the §3.7 triangular conjugacy, not blind to the §3.1 regrouping ($0.223$) or a frequency change; both directions are required and passing only one is easy. **Linear decoder: works** — 16/16 cross-split comparisons agree, rotation error median $2.5\times10^{-4}$ (max $5.1\times10^{-4}$), with signs *and* module order differing freely between fits, i.e. the gauge correctly quotiented out. **Negative control: works** — a frequency change is detected at $0.0638$ against a true separation of $0.06366$, 0/16 below threshold. **Transverse Lyapunov exponent does NOT agree** (median $0.052$, $208\times$ worse than $\rho$ on the same fits) — §3.13(b). **Nonlinear decoder (dose $0.574$, 8 neurons/side): fails, and not from undertraining** — $3\times$ the budget improves `fit_quality` $2.1\times$ and makes recovery *worse* ($0.080\to0.125$); it is **population size** up to $\approx32$ neurons/side, after which it plateaus. **What then remains is per-restart mode collapse** — 2 of 12 fits put both modules on one factor — and neither `coherence` ($r=-0.48$) nor `fit_quality` ($r=+0.24$, wrong sign) flags it. `DynamicalFingerprint.duplicate_modules` does, with no ground truth. **Protocol for real data: many restarts, screen on duplicate invariants, report the *fraction* of agreeing splits plus the median, never a max.** Full numbers in §3.13(e). **Still open: any real data at all** |
+| **40** | **invariant agreement across disjoint neuron splits** | **METRIC BUILT AND VALIDATED (`exp14`); works under a linear observation map, open under a strong nonlinear one.** The test: fit independently on disjoint neuron subsets, then compare the *fits to each other* — identifiable dynamics give different coordinates and the same invariants. Varies the **data**, not the seed, so unlike restarts it excludes "artifact of this sample of neurons". Machinery: `metrics.dynamical_fingerprint` + `invariant_agreement`, plus `spectra.rotation_number` for the invariant spectra provably cannot see. **Validated on exact systems** — blind to a within-module gauge change *and* to the §3.7 triangular conjugacy, not blind to the §3.1 regrouping ($0.223$) or a frequency change; both directions are required and passing only one is easy. **Linear decoder: works** — 16/16 cross-split comparisons agree, rotation error median $2.5\times10^{-4}$ (max $5.1\times10^{-4}$), with signs *and* module order differing freely between fits, i.e. the gauge correctly quotiented out. **Negative control: works** — a frequency change is detected at $0.0638$ against a true separation of $0.06366$, 0/16 below threshold. **Transverse Lyapunov exponent does NOT agree** (median $0.052$, $208\times$ worse than $\rho$ on the same fits) — §3.13(b). **Nonlinear decoder (dose $0.574$, 8 neurons/side): fails, and not from undertraining** — $3\times$ the budget improves `fit_quality` $2.1\times$ and makes recovery *worse* ($0.080\to0.125$); it is **population size** up to $\approx32$ neurons/side, after which it plateaus. **What then remains is per-restart mode collapse** — 2 of 12 fits put both modules on one factor — and neither `coherence` ($r=-0.48$) nor `fit_quality` ($r=+0.24$, wrong sign) flags it. `DynamicalFingerprint.duplicate_modules` does, with no ground truth — screening on it takes the nonlinear arm's median $\rho$ error $0.0633 \to 0.0032$ ($20\times$) while leaving the negative control at $0.0636$, which is what makes it a fix rather than a filter. **Protocol for real data: many restarts, screen on duplicate invariants, report the *fraction* of agreeing splits plus the median, never a max.** `exp14` is **11/11** with that protocol. Full numbers in §3.13(e). **Still open: the residual 33% (a fit that misses a factor rather than duplicating one — undetectable without truth), and any real data at all** |
 
 ### Which route
 
