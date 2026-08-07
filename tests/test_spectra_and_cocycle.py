@@ -467,3 +467,127 @@ def test_two_limit_cycles_can_never_be_separated():
         assert predicted > 0.0
         assert cb.rate == pytest.approx(predicted, abs=1e-9)
         assert not cb.forces_M_zero
+
+
+# --------------------------------------------------------------------------
+# Rotation number -- the invariant the Lyapunov spectrum cannot see (task 23)
+# --------------------------------------------------------------------------
+
+
+def _annulus(rng, n=6, lo=0.6, hi=1.1):
+    th = rng.uniform(-np.pi, np.pi, n)
+    r = rng.uniform(lo, hi, n)
+    return np.stack([r * np.cos(th), r * np.sin(th)], axis=-1)
+
+
+@pytest.mark.parametrize("omega", [0.2, 0.4, 1.1])
+def test_twist_block_rotation_number_is_omega_over_two_pi(omega):
+    blk = S.TwistBlock(s=0.9, omega=omega, beta=0.6)
+    r = SP.rotation_number_averaged(blk, _annulus(np.random.default_rng(0)), T=1200)
+    assert abs(r.rho) == pytest.approx(omega / (2 * np.pi), abs=1e-9)
+    assert r.coherence == pytest.approx(1.0, abs=1e-9)
+    assert r.well_defined
+
+
+@pytest.mark.parametrize("beta", [0.0, 0.4])
+def test_limit_cycle_rotation_number_is_omega_and_does_not_depend_on_beta(beta):
+    """On the cycle r = rho the shear term beta (r - rho) vanishes identically."""
+    blk = S.LimitCycleBlock(a=0.3, omega=0.5, beta=beta)
+    r = SP.rotation_number_averaged(blk, _annulus(np.random.default_rng(0)), T=1200)
+    assert abs(r.rho) == pytest.approx(0.5 / (2 * np.pi), abs=1e-9)
+
+
+def test_the_spectrum_is_blind_to_frequency_and_the_rotation_number_is_not():
+    """Task 23 in one assertion: this is why the rotation number exists here.
+
+    Two limit cycles with different omega have *identical* Lyapunov spectra, so
+    ``spectral_gap`` is exactly 0 and Lemma C has nothing to work with.  Their
+    rotation numbers differ by a wide margin.
+    """
+    rng = np.random.default_rng(0)
+    z0 = _annulus(rng, lo=0.9, hi=1.1)
+    a, b = S.LimitCycleBlock(a=0.3, omega=0.5), S.LimitCycleBlock(a=0.3, omega=1.3)
+    sa = SP.lyapunov_spectrum_averaged(a, z0, T=800)
+    sb = SP.lyapunov_spectrum_averaged(b, z0, T=800)
+    assert np.abs(sa - sb).max() < 1e-9
+    assert SP.spectral_gap([sa, sb]) == pytest.approx(0.0, abs=1e-9)
+
+    ra = SP.rotation_number_averaged(a, z0, T=1200)
+    rb = SP.rotation_number_averaged(b, z0, T=1200)
+    assert abs(abs(ra.rho) - abs(rb.rho)) == pytest.approx(0.8 / (2 * np.pi), abs=1e-9)
+
+
+def test_a_non_rotating_block_has_rotation_number_zero():
+    blk = S.LinearBlock(np.diag([0.9, 0.5]))
+    r = SP.rotation_number_averaged(blk, _annulus(np.random.default_rng(0)), T=1200)
+    assert r.rho == pytest.approx(0.0, abs=1e-12)
+
+
+def test_a_negative_eigenvalue_reads_as_half_a_turn():
+    """A period-2 flip *is* a rotation number of 1/2, not an estimator failure."""
+    blk = S.LinearBlock(np.diag([-0.8, 0.5]))
+    r = SP.rotation_number_averaged(blk, _annulus(np.random.default_rng(0)), T=1200)
+    assert abs(r.rho) == pytest.approx(0.5, abs=1e-12)
+
+
+def test_rotation_number_survives_a_nonlinear_change_of_coordinates():
+    """It is a conjugacy invariant, which is the whole reason it is usable.
+
+    h(x, y) = (x + c y^3, y) is a within-module gauge change -- exactly the
+    freedom §7 grants and never identifies.
+    """
+
+    class Sheared:
+        def __init__(self, blk, c=0.7):
+            self.blk, self.c, self.dim = blk, c, blk.dim
+
+        def _h(self, z):
+            z = np.asarray(z, float)
+            return np.stack([z[..., 0] + self.c * z[..., 1] ** 3, z[..., 1]], axis=-1)
+
+        def _hinv(self, w):
+            w = np.asarray(w, float)
+            return np.stack([w[..., 0] - self.c * w[..., 1] ** 3, w[..., 1]], axis=-1)
+
+        def step(self, w):
+            return self._h(self.blk.step(self._hinv(w)))
+
+    z0 = _annulus(np.random.default_rng(0))
+    for blk in (S.TwistBlock(s=0.9, omega=0.4, beta=0.6), S.LimitCycleBlock(a=0.3, omega=0.5)):
+        raw = SP.rotation_number_averaged(blk, z0, T=1500, warmup=300)
+        con = SP.rotation_number_averaged(Sheared(blk), z0, T=1500, warmup=300)
+        # Exact for a rigid rotation; O(1/T) once h distorts the cycle, because
+        # the window then covers a partial period.  Never worse than that.
+        assert abs(raw.rho - con.rho) < 1e-3
+
+
+@pytest.mark.parametrize("s,min_n", [(0.9, 2000), (0.5, 200), (0.2, 80)])
+def test_a_contracting_orbit_reports_its_horizon_and_still_gets_the_answer(s, min_n):
+    """§3.9 discipline: stop at the underflow, report n_used, do not average noise.
+
+    The angle accumulates linearly in t, so a short clean window is worth more
+    than a long dirty one -- unlike a Lyapunov average, truncation costs nothing
+    here.  The answer is exact at every contraction rate; only ``n_used`` moves.
+    """
+    blk = S.TwistBlock(s=s, omega=0.7, beta=0.6)
+    r = SP.rotation_number_averaged(blk, _annulus(np.random.default_rng(0)), T=4000, warmup=100)
+    assert abs(r.rho) == pytest.approx(0.7 / (2 * np.pi), abs=1e-9)
+    assert r.n_used >= min_n
+    assert r.n_used < 4002
+
+
+def test_a_one_dimensional_block_has_no_rotation_number():
+    r = SP.rotation_number(S.LinearBlock([[0.7]]), np.array([1.0]), T=200)
+    assert np.isnan(r.rho)
+    assert not r.well_defined
+
+
+def test_module_rotation_numbers_matches_the_per_block_answers():
+    sysm = S.ModularSystem([S.TwistBlock(s=0.90, omega=0.40, beta=0.6),
+                            S.LimitCycleBlock(a=0.3, omega=1.30)])
+    rng = np.random.default_rng(0)
+    z0 = np.concatenate([_annulus(rng), _annulus(rng, lo=0.9, hi=1.1)], axis=-1)
+    rot = SP.module_rotation_numbers(sysm, z0, T=1200)
+    assert [abs(r.rho) for r in rot] == pytest.approx(
+        [0.40 / (2 * np.pi), 1.30 / (2 * np.pi)], abs=1e-9
+    )

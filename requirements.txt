@@ -1,0 +1,13 @@
+# Pure-pip alternative to environment.yml (Python 3.13).
+#   python -m venv .venv && .venv/Scripts/activate   # Windows
+#   pip install -r requirements.txt
+#   python -m pytest -q                              # expect 268 passing
+#
+# See environment.yml for why these are pinned and why torch is CPU-only.
+--extra-index-url https://download.pytorch.org/whl/cpu
+numpy==2.5.1
+scipy==1.18.0
+matplotlib==3.11.1
+scikit-learn==1.9.0
+pytest==9.1.1
+torch==2.13.0+cpu

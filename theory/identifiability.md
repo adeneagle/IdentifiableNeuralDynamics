@@ -297,7 +297,22 @@ an oscillatory module while $\lambda_{\min} < 0$ for any contracting one. Hence:
 > two cycles needs an invariant finer than the exponent multiset — the rotation
 > number is the obvious candidate, and it is a genuine conjugacy invariant that
 > the Lyapunov spectrum discards. That is a different argument, not a
-> strengthening of this one. `TODO(gap)`
+> strengthening of this one.
+>
+> **UPDATE (2026-08-04).** The rotation number is now *built and measured* —
+> `spectra.rotation_number`, certified in `exp14` part 1 to machine precision on
+> known-answer blocks and invariant under a nonlinear change of coordinates. Two
+> limit cycles with $\omega = 0.5$ and $1.3$ have Lyapunov spectra agreeing to
+> $3.2\times10^{-18}$ (so `spectral_gap` is exactly $0$ and this lemma has
+> nothing to work with) while their rotation numbers differ by $0.0637$
+> turns/step. So the *invariant* that separates them exists and is estimable
+> from data, including from a fitted model.
+>
+> `TODO(gap)` — what is still missing is the **theorem**: an argument that a
+> conjugacy must preserve the per-module rotation numbers *and* that they pin
+> down the decomposition. Rotation number being a conjugacy invariant of a
+> single circle map is classical; using it to force a *splitting* is not, and
+> nothing here proves it. The measurement is a prerequisite, not the result.
 
 Point 2 is the resolution of a case that previously produced numbers that could
 not be reconciled with the rate formula: it is outside Lemma C's hypotheses, not

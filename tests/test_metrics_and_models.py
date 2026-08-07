@@ -567,3 +567,238 @@ def test_coupling_degree_rejects_degenerate_sigmas():
     h = _coupled(lambda a: a)
     with pytest.raises(ValueError, match="positive scale factors"):
         MT.coupling_homogeneity_degree(h, slice(2, 4), slice(0, 2), np.zeros(2), sigmas=[1.0, -1.0])
+
+
+# --------------------------------------------------------------------------
+# Fit-to-fit invariant agreement (task 40) -- no ground truth anywhere
+# --------------------------------------------------------------------------
+
+
+class _Sheared:
+    """h(x, y) = (x + c y^3, y) on one module: a §7 gauge change, nothing more."""
+
+    def __init__(self, blk, c=0.7):
+        self.blk, self.c, self.dim = blk, c, blk.dim
+
+    def _h(self, z):
+        z = np.asarray(z, float)
+        return np.stack([z[..., 0] + self.c * z[..., 1] ** 3, z[..., 1]], axis=-1)
+
+    def _hinv(self, w):
+        w = np.asarray(w, float)
+        return np.stack([w[..., 0] - self.c * w[..., 1] ** 3, w[..., 1]], axis=-1)
+
+    def step(self, w):
+        return self._h(self.blk.step(self._hinv(w)))
+
+    def jacobian(self, w):
+        w = np.asarray(w, float).reshape(2)
+        z = self._hinv(w)
+        Dh = np.array([[1.0, 3 * self.c * float(self.blk.step(z)[1]) ** 2], [0.0, 1.0]])
+        Dhi = np.array([[1.0, -3 * self.c * float(w[1]) ** 2], [0.0, 1.0]])
+        return Dh @ self.blk.jacobian(z) @ Dhi
+
+
+def _ann(rng, n=6, lo=0.6, hi=1.1, k=2):
+    out = []
+    for _ in range(k):
+        th, r = rng.uniform(-np.pi, np.pi, n), rng.uniform(lo, hi, n)
+        out.append(np.stack([r * np.cos(th), r * np.sin(th)], axis=-1))
+    return np.concatenate(out, axis=-1)
+
+
+def _twin_twists():
+    return S.ModularSystem([S.TwistBlock(s=0.90, omega=0.40, beta=0.6),
+                            S.TwistBlock(s=0.55, omega=1.10, beta=0.3)])
+
+
+def _fp(system, z0, T=800):
+    return MT.dynamical_fingerprint(system, z0, T=T, warmup=200, T_rotation=1200)
+
+
+def test_fingerprint_is_blind_to_a_within_module_change_of_coordinates():
+    sysm = _twin_twists()
+    z0 = _ann(np.random.default_rng(0))
+    gauged = S.ModularSystem([_Sheared(b) for b in sysm.blocks])
+    r = MT.invariant_agreement(_fp(sysm, z0), _fp(gauged, z0))
+    assert r.agree
+    assert r.spectrum_error < 1e-9
+    assert r.rotation_error < 1e-9
+
+
+def test_fingerprint_is_blind_to_module_relabelling():
+    sysm = _twin_twists()
+    z0 = _ann(np.random.default_rng(0))
+    swapped = S.ModularSystem([sysm.blocks[1], sysm.blocks[0]])
+    r = MT.invariant_agreement(_fp(sysm, z0), _fp(swapped, z0[:, [2, 3, 0, 1]]))
+    assert r.agree
+    assert r.order_agrees
+
+
+def test_the_regrouping_counterexample_is_caught():
+    """§3.1: three decompositions fit the same observations to 2.2e-16.
+
+    Fit quality cannot separate them -- the tie is exact -- so this is precisely
+    the case the invariants have to catch, and the negative control for the whole
+    method.
+    """
+    rg = S.regrouping_counterexample()
+    z0 = np.random.default_rng(0).uniform(0.5, 1.0, (6, 4))
+    r = MT.invariant_agreement(_fp(rg["system"], z0), _fp(rg["system_tilde"], z0))
+    assert not r.agree
+    assert r.spectrum_error > 0.2
+
+
+def test_rotation_catches_what_the_spectrum_provably_cannot():
+    """Task 23: identical spectra, different frequencies."""
+    a = S.ModularSystem([S.LimitCycleBlock(a=0.3, omega=0.5),
+                         S.LimitCycleBlock(a=0.3, omega=1.3)])
+    b = S.ModularSystem([S.LimitCycleBlock(a=0.3, omega=0.5),
+                         S.LimitCycleBlock(a=0.3, omega=0.9)])
+    z0 = _ann(np.random.default_rng(0), lo=0.9, hi=1.1)
+    r = MT.invariant_agreement(_fp(a, z0), _fp(b, z0))
+    assert not r.agree
+    assert r.spectrum_error < 1e-6      # a spectrum-only test would say AGREE
+    assert r.rotation_error == pytest.approx(0.4 / (2 * np.pi), abs=1e-6)
+
+
+def test_two_oscillatory_modules_report_a_zero_order_margin():
+    """Both lead with a neutral exponent, so the spectrum cannot order them.
+
+    The margin is what makes that visible instead of letting an arbitrary
+    tie-break read as a filtration.
+    """
+    sysm = S.ModularSystem([S.LimitCycleBlock(a=0.3, omega=0.5),
+                            S.LimitCycleBlock(a=0.3, omega=1.3)])
+    fp = _fp(sysm, _ann(np.random.default_rng(0), lo=0.9, hi=1.1))
+    assert fp.order_margin < 1e-6
+    assert _fp(_twin_twists(), _ann(np.random.default_rng(0))).order_margin > 0.4
+
+
+def test_a_different_module_count_disagrees_without_crashing():
+    z0 = _ann(np.random.default_rng(0))
+    two = _fp(_twin_twists(), z0)
+    one = MT.DynamicalFingerprint(partition=[4], spectra=[np.zeros(4)],
+                                  rotations=[0.0], coherences=[1.0])
+    r = MT.invariant_agreement(two, one)
+    assert not r.agree and not r.same_K
+    assert any("module count" in n for n in r.notes)
+
+
+def test_unmeasurable_rotation_is_a_disagreement_not_a_silent_match():
+    """NaN means two different things and conflating them hides a null result.
+
+    A 1-D block *cannot* rotate, so two of them agree.  A 2-D module whose
+    rotation could not be measured has an *unknown* one, and scoring that as a
+    match would let the metric report agreement where it has no information --
+    the §3.10 failure mode wearing a different hat.
+    """
+    flat = MT.DynamicalFingerprint(partition=[1, 1], spectra=[np.array([-0.3]),
+                                                             np.array([-0.7])],
+                                   rotations=[float("nan")] * 2, coherences=[0.0] * 2)
+    assert MT.invariant_agreement(flat, flat).agree          # structural: fine
+
+    known = MT.DynamicalFingerprint(partition=[2], spectra=[np.array([-0.1, -0.1])],
+                                    rotations=[0.0636], coherences=[1.0])
+    unknown = MT.DynamicalFingerprint(partition=[2], spectra=[np.array([-0.1, -0.1])],
+                                      rotations=[float("nan")], coherences=[0.0])
+    r = MT.invariant_agreement(known, unknown)
+    assert not r.agree
+    assert np.isinf(r.rotation_error)
+    assert any("no measurable rotation" in n for n in r.notes)
+
+
+def test_modules_are_paired_by_rotation_when_the_spectra_are_degenerate():
+    """Regression: matching on spectra alone fails exactly where rho is needed.
+
+    Two fitted limit cycles have near-identical spectra, so a spectrum-only cost
+    matrix is flat and the pairing is decided by nothing.  `exp14` part 4a hit
+    this in 5 of 16 comparisons, each returning a rotation error of 0.1274 --
+    which is |rho_1 - rho_2|, the signature of a swap, not of a bad fit.
+
+    Here module 0 of `a` (rho 0.207) must pair with module 1 of `b` (rho 0.207),
+    against a spectral difference that mildly favours the wrong pairing.
+    """
+    a = MT.DynamicalFingerprint(
+        partition=[2, 2],
+        spectra=[np.array([0.0000, -0.60]), np.array([0.0000, -0.62])],
+        rotations=[0.20690, 0.07958], coherences=[1.0, 1.0])
+    b = MT.DynamicalFingerprint(
+        partition=[2, 2],
+        spectra=[np.array([0.0005, -0.62]), np.array([-0.0005, -0.60])],
+        rotations=[0.07958, 0.20690], coherences=[1.0, 1.0])
+    r = MT.invariant_agreement(a, b, spec_tol=0.05, rot_tol=0.01)
+    assert r.rotation_error < 1e-4, "modules were paired by spectrum and swapped"
+    assert r.agree
+
+
+def test_an_undetermined_filtration_order_is_not_scored_as_a_disagreement():
+    """When the spectrum cannot order the modules, there is no order to agree on.
+
+    Two limit cycles both lead with a neutral exponent, so `order_margin` is ~0.
+    Demanding that two fits list them in the same sequence scores an
+    *undetermined* quantity as a disagreement -- `exp14` part 4a matched on
+    rotation to 5e-4 in all 16 comparisons while `order_agrees` held in only 10.
+    `agree` therefore drops the requirement when the margin is below tolerance,
+    and says so in the notes; `order_agrees` is still reported for the caller.
+    """
+    a = MT.DynamicalFingerprint(
+        partition=[2, 2], spectra=[np.array([0.0005, -0.6]), np.array([-0.0005, -0.6])],
+        rotations=[0.07958, 0.20690], coherences=[1.0, 1.0])
+    b = MT.DynamicalFingerprint(
+        partition=[2, 2], spectra=[np.array([-0.0004, -0.6]), np.array([0.0004, -0.6])],
+        rotations=[0.07958, 0.20690], coherences=[1.0, 1.0])
+    r = MT.invariant_agreement(a, b, spec_tol=0.05, rot_tol=0.01)
+    assert r.order_margin < 0.05
+    assert r.agree
+    assert any("does not\n" not in n and "determine the ordering" in n for n in r.notes)
+
+    # ... but a REAL disagreement is still caught, margin or no margin.
+    c = MT.DynamicalFingerprint(
+        partition=[2, 2], spectra=[np.array([0.0005, -0.6]), np.array([-0.0005, -0.6])],
+        rotations=[0.07958, 0.14324], coherences=[1.0, 1.0])
+    assert not MT.invariant_agreement(a, c, spec_tol=0.05, rot_tol=0.01).agree
+
+
+def test_near_tied_spectra_do_not_let_noise_decide_the_filtration_order():
+    """Leading exponents 5e-4 apart are a tie; |rho| breaks it, not the noise."""
+    fp = MT.DynamicalFingerprint(
+        partition=[2, 2],
+        spectra=[np.array([-0.0005, -0.60]), np.array([0.0005, -0.62])],
+        rotations=[0.20690, 0.07958], coherences=[1.0, 1.0])
+    assert fp.order == [0, 1]          # by |rho|, despite module 1 leading on lambda
+    assert fp.order_margin == pytest.approx(1e-3, abs=1e-9)
+
+
+def test_mode_collapse_is_detectable_without_ground_truth():
+    """Two modules on one factor -- the failure neither coherence nor fit finds.
+
+    Measured at 32 neurons/side: 2 of 12 restarts collapsed both modules onto the
+    slower cycle.  `coherence` correlated with recovery error at only -0.48 (a
+    collapsed fit scored 0.961, above several good ones) and `fit_quality` at
+    +0.24 -- no information, wrong sign.  Duplicate invariants are a property of
+    the fitted model alone, so they are checkable on real data.
+    """
+    collapsed = MT.DynamicalFingerprint(
+        partition=[2, 2], spectra=[np.array([0.0, -0.9]), np.array([0.0, -0.9])],
+        rotations=[0.07958, 0.07960], coherences=[0.96, 0.95])
+    healthy = MT.DynamicalFingerprint(
+        partition=[2, 2], spectra=[np.array([0.0, -0.9]), np.array([0.0, -0.9])],
+        rotations=[0.07958, 0.20690], coherences=[0.96, 0.95])
+    assert collapsed.duplicate_modules() == [(0, 1)]
+    assert healthy.duplicate_modules() == []
+
+    r = MT.invariant_agreement(healthy, collapsed, spec_tol=0.05, rot_tol=0.01)
+    assert not r.agree
+    assert any("mode collapse" in n for n in r.notes)
+    # ...and a genuinely duplicated system is flagged, not rejected: the flag is
+    # a thing to check, not a verdict.
+    assert MT.invariant_agreement(collapsed, collapsed, spec_tol=0.05, rot_tol=0.01).agree
+
+
+def test_canonical_order_puts_the_autonomous_module_first():
+    """Lemma C's direction: the module with the LARGER exponents is the driver."""
+    fp = _fp(_twin_twists(), _ann(np.random.default_rng(0))).reordered()
+    assert fp.spectra[0][0] > fp.spectra[1][0]
+    assert fp.spectra[0][0] == pytest.approx(np.log(0.90), abs=1e-6)
+    assert fp.spectra[1][0] == pytest.approx(np.log(0.55), abs=1e-6)

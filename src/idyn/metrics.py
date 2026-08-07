@@ -17,6 +17,7 @@ import numpy as np
 from scipy.optimize import linear_sum_assignment
 
 from idyn.linear import block_energy_matrix, block_permutation_report, slices_of
+from idyn.spectra import module_lyapunov_spectra, module_rotation_numbers
 
 __all__ = [
     "fit_linear_relation",
@@ -41,6 +42,10 @@ __all__ = [
     "hessian_of",
     "additivity_defect",
     "coupling_homogeneity_degree",
+    "DynamicalFingerprint",
+    "dynamical_fingerprint",
+    "AgreementReport",
+    "invariant_agreement",
 ]
 
 
@@ -882,3 +887,372 @@ def coupling_homogeneity_degree(
     slope, icpt = np.polyfit(np.log(sig), np.log(mags), 1)
     resid = np.log(mags) - (slope * np.log(sig) + icpt)
     return float(slope), float(np.abs(resid).max())
+
+
+# ---------------------------------------------------------------------------
+# Fit-to-fit invariant agreement -- CLAUDE.md task 40
+#
+# Everything above this line compares a fit to the GROUND TRUTH, which is
+# exactly what real data does not have.  These two objects compare two fits to
+# EACH OTHER.  If the dynamics are identifiable, independent fits recover
+# different coordinates and the same invariants; agreement confirms, and
+# disagreement falsifies.  Nothing here ever refers to a true latent.
+# ---------------------------------------------------------------------------
+
+
+#: Two modules whose exponents differ by less than this per step are not ordered
+#: by the spectrum at any usable horizon, so the sort must fall through to the
+#: next invariant rather than let estimator noise decide.  See ``_module_sort_key``.
+ORDER_TOL = 1e-2
+
+
+def _module_sort_key(spectrum: np.ndarray, dim: int, rho: float, tol: float = ORDER_TOL) -> tuple:
+    """Canonical order: slowest module first, i.e. descending leading exponent.
+
+    That direction is forced by Lemma C, not chosen.  ``M_ij = d h_i / d z_j``
+    vanishes iff ``lambda_max(f_j) < lambda_min(f_i)``, so the module with the
+    *larger* exponents is the one that does not see the other -- the autonomous
+    factor at the top of the filtration.  Sorting descending therefore lists the
+    driver before the driven.
+
+    **The spectral keys are quantised, and that is load-bearing.**  Two fitted
+    limit cycles both lead with an exponent near 0; the fitted values differ by
+    estimator noise of order 1e-3, which is enough for an exact comparison to
+    order them -- by noise.  Quantising lets the ``|rho|`` tie-break actually
+    fire, which is the whole reason the rotation number is in the fingerprint.
+    Read ``order_margin`` alongside: it reports how far the leading exponents
+    actually are apart, so a quantised tie is visible rather than implied.
+    """
+    s = np.sort(np.asarray(spectrum, dtype=float).ravel())[::-1]
+    r = abs(float(rho))
+    return (
+        -round(float(s[0]) / tol),
+        -round(float(s[-1]) / tol),
+        int(dim),
+        0.0 if np.isnan(r) else -r,
+    )
+
+
+@dataclass
+class DynamicalFingerprint:
+    """What §1.2 Tier 2 claims is identified, read off one fitted model.
+
+    Deliberately *not* coordinates: module count, module dimensions, per-module
+    Lyapunov spectra, per-module rotation numbers.  §7 says these are what
+    survives the reparameterisation, so these are what two fits must agree on.
+
+    Modules are stored in the caller's order; ``order`` gives the canonical
+    filtration order and every comparison applies it first, because module
+    labels carry no meaning (§3.10 trap 2 is the same point for a different
+    metric).
+    """
+
+    partition: list[int]
+    spectra: list[np.ndarray]
+    rotations: list[float]
+    coherences: list[float]
+
+    def __post_init__(self) -> None:
+        self.partition = [int(d) for d in self.partition]
+        self.spectra = [
+            np.sort(np.asarray(s, dtype=float).ravel())[::-1] for s in self.spectra
+        ]
+        self.rotations = [float(r) for r in self.rotations]
+        self.coherences = [float(c) for c in self.coherences]
+        n = len(self.partition)
+        if not (len(self.spectra) == len(self.rotations) == len(self.coherences) == n):
+            raise ValueError("partition, spectra, rotations and coherences must agree in length")
+
+    @property
+    def K(self) -> int:
+        return len(self.partition)
+
+    @property
+    def order(self) -> list[int]:
+        """Indices of the modules in canonical (slowest-first) filtration order."""
+        return sorted(
+            range(self.K),
+            key=lambda i: _module_sort_key(self.spectra[i], self.partition[i], self.rotations[i]),
+        )
+
+    @property
+    def order_margin(self) -> float:
+        """Smallest separation between adjacent modules' leading exponents.
+
+        How robustly the filtration *order* is determined by the spectrum.  Zero
+        means two modules lead at the same rate and the ordering is not decided
+        by the spectrum at all -- which is precisely task 23's two-oscillator
+        case, where both modules carry a neutral exponent 0.  Read the order
+        with this number next to it.
+        """
+        if self.K < 2:
+            return float("inf")
+        lead = sorted((float(self.spectra[i][0]) for i in range(self.K)), reverse=True)
+        return float(min(lead[i] - lead[i + 1] for i in range(len(lead) - 1)))
+
+    def duplicate_modules(
+        self, spec_tol: float = 0.05, rot_tol: float = 0.01
+    ) -> list[tuple[int, int]]:
+        """Module pairs whose invariants coincide -- the mode-collapse signature.
+
+        A fit can satisfy a modular constraint by putting **two modules on the
+        same factor**, duplicating one and missing another entirely.  Measured at
+        32 neurons/side: 2 of 12 restarts did exactly this, each erring against
+        the truth by $|rho_1 - rho_2|$ to three digits.
+
+        It matters that this is checkable **without ground truth**, because
+        nothing else here is: coherence correlates with recovery error at only
+        $-0.48$ (one collapsed fit scored $0.961$, above several good ones) and
+        fit quality at $+0.24$ -- no information and the wrong sign, which is
+        §3.11's result arriving in a new regime.  Duplicate invariants are a
+        property of the fitted model alone.
+
+        Not proof of failure: a system genuinely *can* carry two identical
+        factors, and then the duplication is the right answer.  It is a flag to
+        check, not a verdict -- but an unflagged fit is one fewer thing to worry
+        about, and a flagged one explains a disagreement that would otherwise be
+        unattributable.
+
+        **Keyed on the well-determined invariants only** -- the rotation number
+        and the *leading* exponent, never the full spectrum.  That is not a
+        convenience: 3.13(b) established that the transverse exponent is the one
+        quantity the data does not constrain, and an earlier version of this
+        detector compared whole spectra and therefore **missed a textbook
+        collapse** -- a fit reporting rotation numbers 0.0793 and 0.0804 (the same
+        cycle twice) went unflagged because its two badly-estimated transverse
+        exponents happened to differ by more than the tolerance.  A detector must
+        not depend on a number that was never measured.
+        """
+        out = []
+        for i in range(self.K):
+            for j in range(i + 1, self.K):
+                if self.partition[i] != self.partition[j]:
+                    continue
+                ri, rj = abs(self.rotations[i]), abs(self.rotations[j])
+                rot_same = (np.isnan(ri) and np.isnan(rj)) or (
+                    not np.isnan(ri) and not np.isnan(rj) and abs(ri - rj) <= rot_tol
+                )
+                lead_same = abs(float(self.spectra[i][0] - self.spectra[j][0])) <= spec_tol
+                if lead_same and rot_same:
+                    out.append((i, j))
+        return out
+
+    def reordered(self) -> "DynamicalFingerprint":
+        o = self.order
+        return DynamicalFingerprint(
+            partition=[self.partition[i] for i in o],
+            spectra=[self.spectra[i] for i in o],
+            rotations=[self.rotations[i] for i in o],
+            coherences=[self.coherences[i] for i in o],
+        )
+
+    def summary(self) -> str:
+        f = self.reordered()
+        parts = [
+            f"d={f.partition[i]} lam={np.array2string(f.spectra[i], precision=4)} "
+            f"rho={f.rotations[i]:+.5f}(coh {f.coherences[i]:.2f})"
+            for i in range(f.K)
+        ]
+        return f"K={f.K} margin={f.order_margin:+.4f} | " + " || ".join(parts)
+
+
+def dynamical_fingerprint(
+    system, z0s: np.ndarray, T: int = 2000, warmup: int = 200, T_rotation: int | None = None
+) -> DynamicalFingerprint:
+    """Fingerprint of any modular system exposing ``partition`` and ``blocks``.
+
+    Works equally on a ground-truth ``ModularSystem`` and on a fitted model
+    wrapped to the ``spectra.HasJacobian`` protocol -- which is the point, since
+    task 40 compares two *fits*.
+    """
+    ms = module_lyapunov_spectra(system, z0s, T=T, warmup=warmup)
+    rot = module_rotation_numbers(system, z0s, T=T_rotation or T, warmup=warmup)
+    return DynamicalFingerprint(
+        partition=list(ms.partition),
+        spectra=list(ms.spectra),
+        rotations=[r.rho for r in rot],
+        coherences=[r.coherence for r in rot],
+    )
+
+
+@dataclass
+class AgreementReport:
+    """Do two independent fits describe the same dynamics?
+
+    ``order_agrees`` and the errors answer different questions on purpose.  Two
+    fits can recover the same *set* of modules and disagree about which drives
+    which; §3.7 says the ordering is the part the theory actually delivers, so
+    it is reported separately rather than folded into a single score.
+    """
+
+    same_K: bool
+    same_dims: bool
+    order_agrees: bool
+    order_margin: float
+    spectrum_error: float
+    rotation_error: float
+    min_coherence: float
+    matching: list[tuple[int, int]]
+    agree: bool
+    notes: list[str] = field(default_factory=list)
+
+    def summary(self) -> str:
+        head = "AGREE" if self.agree else "DISAGREE"
+        return (
+            f"{head}  K={self.same_K} dims={self.same_dims} order={self.order_agrees} "
+            f"(margin {self.order_margin:+.4f})  spec_err={self.spectrum_error:.4g} "
+            f"rot_err={self.rotation_error:.4g}  min_coh={self.min_coherence:.3f}"
+        )
+
+
+def invariant_agreement(
+    a: DynamicalFingerprint,
+    b: DynamicalFingerprint,
+    spec_tol: float = 0.05,
+    rot_tol: float = 0.01,
+    coherence_floor: float = 0.5,
+) -> AgreementReport:
+    """Compare two fingerprints, with module labels treated as meaningless.
+
+    Both are put in canonical filtration order, then modules are paired by
+    Hungarian matching on spectral distance -- *not* by position.  The
+    difference between those two things is the content of ``order_agrees``: if
+    the nearest-spectrum pairing is the identity, the two fits ranked their
+    modules the same way; if it is a permutation, they found the same factors
+    and disagreed about the hierarchy.
+
+    ``rot_tol`` is in turns per step and compares ``abs(rho)``: rotation number
+    flips sign under an orientation-reversing conjugacy, which is a gauge
+    freedom §7 grants, so the sign carries no cross-fit meaning.
+    """
+    notes: list[str] = []
+    fa, fb = a.reordered(), b.reordered()
+    margin = min(fa.order_margin, fb.order_margin)
+    # Only over modules that actually have a rotation number: a 1-D block scores
+    # coherence 0 because it cannot rotate, which is not a measurement problem.
+    rotating = [
+        c
+        for f in (fa, fb)
+        for c, r in zip(f.coherences, f.rotations)
+        if not np.isnan(r)
+    ]
+    min_coh = float(min(rotating)) if rotating else float("nan")
+
+    same_K = fa.K == fb.K
+    if not same_K:
+        notes.append(f"module count differs: {fa.K} vs {fb.K}")
+        return AgreementReport(
+            False, False, False, margin, float("inf"), float("inf"), min_coh, [], False, notes
+        )
+
+    # Pair modules on the FULL invariant vector, not on spectra alone.  Matching
+    # by spectrum is degenerate in exactly the case the rotation number exists to
+    # handle: two limit cycles have identical spectra, so the cost matrix is flat
+    # and the pairing is decided by nothing.  Measured before this was fixed --
+    # `exp14` part 4a paired the wrong modules in 5 of 16 comparisons, each time
+    # producing a rotation error of 0.1274, which is exactly |rho_1 - rho_2|
+    # rather than any recovery failure.  The cost is only used to PAIR; the
+    # reported spectrum_error and rotation_error stay separate.
+    BIG = 1e6
+    cost = np.full((fa.K, fb.K), BIG)
+    for i in range(fa.K):
+        for j in range(fb.K):
+            if fa.partition[i] != fb.partition[j]:
+                continue
+            c = float(np.abs(fa.spectra[i] - fb.spectra[j]).max())
+            ra, rb = abs(float(fa.rotations[i])), abs(float(fb.rotations[j]))
+            if not (np.isnan(ra) or np.isnan(rb)):
+                c += abs(ra - rb)
+            cost[i, j] = c
+    rows, cols = linear_sum_assignment(cost)
+    matching = [(int(i), int(j)) for i, j in zip(rows, cols)]
+
+    same_dims = all(cost[i, j] < BIG for i, j in matching)
+    if not same_dims:
+        notes.append(
+            f"no dimension-compatible pairing: {fa.partition} vs {fb.partition}"
+        )
+        return AgreementReport(
+            True, False, False, margin, float("inf"), float("inf"), min_coh, matching, False, notes
+        )
+
+    order_agrees = all(i == j for i, j in matching)
+    # Recomputed from the spectra, NOT read off `cost` -- the cost now carries a
+    # rotation term and would silently inflate the reported spectral error.
+    spec_err = float(
+        max(np.abs(fa.spectra[i] - fb.spectra[j]).max() for i, j in matching)
+    )
+
+    def rot_diff(x: float, y: float, dx: int, dy: int) -> float:
+        """|rho| difference, distinguishing "cannot rotate" from "could not measure".
+
+        Both report NaN, and conflating them is a silent-agreement bug: a 1-D
+        block has no rotation number *structurally*, so two of them agree; a
+        module whose orbit underflowed has an *unknown* one, and calling that
+        agreement would let the metric report a match where it has no
+        information at all -- the §3.10 failure mode in a new place.
+        """
+        ax, ay = abs(float(x)), abs(float(y))
+        if dx < 2 and dy < 2:
+            return 0.0
+        if np.isnan(ax) or np.isnan(ay):
+            return float("inf")
+        return abs(ax - ay)
+
+    rot_err = float(
+        max(
+            rot_diff(fa.rotations[i], fb.rotations[j], fa.partition[i], fb.partition[j])
+            for i, j in matching
+        )
+    )
+    if np.isinf(rot_err):
+        notes.append(
+            "a module of dimension >= 2 has no measurable rotation number "
+            "(orbit underflowed, or fewer than 3 usable points); scored as "
+            "disagreement rather than as a match"
+        )
+
+    # The filtration order is only a claim when the spectrum actually determines
+    # it.  Two limit cycles both lead with a neutral exponent, so `order_margin`
+    # is ~0 and there is no ordering to agree about -- demanding one would score
+    # an UNDETERMINED quantity as a disagreement.  Measured: `exp14` part 4a has
+    # every one of 16 comparisons matching on rotation to 5e-4 while
+    # `order_agrees` holds in only 10 of them, at a median margin of 0.0011.
+    order_determined = margin > spec_tol
+    order_ok = order_agrees or not order_determined
+    if not order_agrees:
+        notes.append(f"same modules, different filtration order: pairing {matching}")
+    if not order_determined:
+        notes.append(
+            f"order margin {margin:.4g} <= spec_tol: the spectrum does not "
+            "determine the ordering here (cf. task 23), so `agree` does not "
+            "require the orders to match -- read `order_agrees` yourself if the "
+            "hierarchy is the claim"
+        )
+    for tag, f in (("A", fa), ("B", fb)):
+        dup = f.duplicate_modules(spec_tol=spec_tol, rot_tol=rot_tol)
+        if dup:
+            notes.append(
+                f"fingerprint {tag} has modules with identical invariants {dup}: "
+                "possible mode collapse (two modules on one factor). Check before "
+                "attributing any disagreement to the data"
+            )
+    if not np.isnan(min_coh) and min_coh < coherence_floor:
+        notes.append(
+            f"min rotation coherence {min_coh:.3f} < {coherence_floor}: "
+            "rotation_error is not meaningful for at least one module"
+        )
+
+    agree = bool(same_dims and order_ok and spec_err <= spec_tol and rot_err <= rot_tol)
+    return AgreementReport(
+        same_K=True,
+        same_dims=True,
+        order_agrees=order_agrees,
+        order_margin=margin,
+        spectrum_error=spec_err,
+        rotation_error=rot_err,
+        min_coherence=min_coh,
+        matching=matching,
+        agree=agree,
+        notes=notes,
+    )

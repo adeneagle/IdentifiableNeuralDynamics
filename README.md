@@ -45,7 +45,8 @@ certified numerically.
 | **Behavioural route (Lemma D)** | **Proved** for additive $h_B$ + linear modules: a behavioural auxiliary kills the cross-derivative the spectral gap provably cannot. Two behaviour levels suffice |
 | **Does learning recover it?** | **Partly — and the earlier "no" is retracted.** That penalty was gauge-dependent and the optimiser paid it by shrinking the block instead of making it $u$-invariant, so no arm ever imposed the hypothesis (§3.12). Fixed, `exp13` kills the forbidden cross-block at every dose and recovers block-diagonality at 3 of 4 — the exception is consistent across all 8 restarts, and is the front line |
 | Literature positioning | Drafted in `theory/literature.md`, provenance-tagged |
-| **Real data** | **None — everything here is synthetic** (`make_dataset`). The empirical program is specified and unbuilt: co-smoothing over a nested model ladder as the adequacy gate, and *invariant agreement across disjoint neuron splits* as the identifiability test that needs no ground truth. `CLAUDE.md` §6, tasks 39/40 |
+| **Identifiability test (no ground truth)** | **Built and validated on synthetic systems** (`exp14`, task 40). Compares two fits *to each other* — module count, dimensions, filtration order, per-module Lyapunov spectra, and **rotation numbers**, the invariant the spectrum provably cannot see. Blind to a within-module gauge change and to the §3.7 triangular conjugacy; catches the §3.1 regrouping and a frequency change. Under a **linear** observation map, disjoint neuron splits agree to $2.5\times10^{-4}$ in 16/16 comparisons, with signs and module order differing freely — the gauge quotiented out. Under a **strong nonlinear** map it is limited by **per-restart reliability**, not by data or training: $3\times$ the budget makes recovery *worse*, population size helps only to ~32 neurons/side, and what remains is fits that put two modules on one factor. That failure is invisible to `fit_quality` ($r=+0.24$, wrong sign) and to `coherence` ($r=-0.48$) but visible as duplicate invariants, which needs no ground truth |
+| **Real data** | **None — everything here is synthetic** (`make_dataset`). The adequacy half of the empirical program is still unbuilt: co-smoothing over a nested model ladder (task 39). `CLAUDE.md` §6 |
 
 ### The main finding
 
@@ -140,19 +141,33 @@ the route comparison is [theory/approaches.md](theory/approaches.md).
 
 ## Quick start
 
-Uses the conda `torch` env; nothing needs installing.
+Create the pinned environment (CPU-only torch — deliberate, see
+[`environment.yml`](environment.yml)):
 
 ```bash
-C:/Users/adene/miniconda3/envs/torch/python.exe -m pytest -q
+conda env create -f environment.yml && conda activate idyn
+```
+
+Then the acceptance test — **expect 268 passing**:
+
+```bash
+python -m pytest -q
 ```
 
 ```bash
-C:/Users/adene/miniconda3/envs/torch/python.exe experiments/run_all.py
+python experiments/run_all.py
 ```
 
 Each experiment writes a JSON record — seed, every parameter, every measured
 number — to `results/`. The JSON is the artifact; console output is a summary.
-Everything runs on CPU in a few minutes.
+Everything runs on CPU. `run_all.py` covers exp01–exp10 and takes ~30 minutes,
+dominated by exp06; exp11–exp14 are unregistered and run individually (reasons
+in that file).
+
+> On the machine this was developed on the interpreter is
+> `C:/Users/adene/miniconda3/envs/torch/python.exe`, which is not on `PATH`.
+> If you have moved the repo, see CLAUDE.md §4.1 "Moving this repo to another
+> machine" — the checklist is four steps and the test suite is the real gate.
 
 ---
 
@@ -173,6 +188,7 @@ Everything runs on CPU in a few minutes.
 | `exp11_learned_behavior_cocycle` | Does B∘C survive *learning*? Fits encoder/decoder/transition from data and ablates behaviour and modularity. **Behavioural conclusions superseded (§3.12)** — the penalty was gauge-dependent, so the behaviour arm never differed from the ablation in the way it claims. What stands is the tooling it forced: a Jacobian block metric (the linear probe is blind here, §3.10) and distributions over restarts rather than best-of-$N$ (§3.11) |
 | `exp12_decoder_strength_sweep` | CLAUDE.md task 29. Sweeps observation nonlinearity and finds a **confirmed dose-response**: `jac_diag` falls monotonically $0.994 \to 0.730 \to 0.702 \to 0.567$ across doses $(0.00, 0.31, 0.43, 0.60)$, the forbidden cross-block violated in $0/8$ restarts at low dose but $8/8$ at high. Not fit failure — better fits are *more* coupled. **But the B∘C reading is retracted (§3.12)**: no arm imposed the behavioural hypothesis, so this measures *dynamics-only* fitting. Two checks fail **by design** |
 | `exp13_conjugacy_residual` | CLAUDE.md tasks 32–33. Asks which Lemma D hypothesis a fitted $h$ breaks and finds the answer is none of them — the behavioural one was never imposed (§3.12). Re-runs the exp12 dose sweep under both the old and the whitened penalty, reporting the other three candidates alongside: the conjugacy residual $\lVert h\circ F-\tilde F\circ h\rVert$, the *learned* spectral gap, and the additivity defect of $h_B$ |
+| `exp14_invariant_agreement` | CLAUDE.md task 40 — the identifiability test that needs **no ground truth**: fit on disjoint neuron subsets and compare the fits to each other. Validates the new machinery (`spectra.rotation_number`, `metrics.invariant_agreement`) on exact systems first, where the answer is known: blind to a within-module gauge change *and* to the §3.7 triangular conjugacy, not blind to the §3.1 regrouping or a frequency change. Then measures learned models, and the useful part is what it found there — a fitted map iterated past its data converges to a **spurious attractor**, and recoverability is **per-invariant** (§3.13). Checks are per-invariant rather than one boolean, for that reason |
 
 Read `exp02` and `exp03` together. `exp02` shows the method reports
 non-uniqueness when the truth is non-unique, so `exp03`'s positive result is not
@@ -201,20 +217,25 @@ src/idyn/
                          LinearDecoder (Thm A) + MLPDecoder (Thm B, coupling
                          flow) -- the *data* decoders
   linear.py            indecomposability, primary decomposition, intertwiners
-  spectra.py           Lyapunov / dichotomy spectra, module gaps
+  spectra.py           Lyapunov / dichotomy spectra, module gaps, rotation
+                         number (the invariant the spectrum cannot see)
   cocycle.py           the corrected §3.3 argument, measurable
   normalform.py        Poincaré–Dulac: homological operator, resonant monomials
   behavior.py          Route B: u-conditioned sampling, invariant-subspace detector
   models.py            torch: modular vs unconstrained, 2 decoder settings
   train.py             fitting, restarts, datasets
   metrics.py           partition recovery, non-uniqueness diagnostics,
-                         Jacobian + distance-correlation block structure
+                         Jacobian + distance-correlation block structure,
+                         dynamical_fingerprint + invariant_agreement (fit-to-fit,
+                         the only metric here needing no ground truth)
   selection.py         partition-lattice search, fitted-model certification
-experiments/           exp01..exp13, each writing results/<name>.json
+experiments/           exp01..exp14, each writing results/<name>.json
                          (exp11/exp12 report failing checks by design, and their
                           behavioural readings are superseded -- see CLAUDE.md 3.12;
-                          run_all.py covers exp01..exp10 only)
-tests/                 236 tests
+                          run_all.py covers exp01..exp10 only, exp13/exp14 are
+                          excluded on cost -- their machinery is covered by tests/)
+environment.yml        pinned env; requirements.txt is the pure-pip equivalent
+tests/                 268 tests
 ```
 
 ## Conventions

@@ -31,6 +31,10 @@ __all__ = [
     "module_lyapunov_spectra",
     "ModuleSpectra",
     "spectral_gap",
+    "RotationNumber",
+    "rotation_number",
+    "rotation_number_averaged",
+    "module_rotation_numbers",
     "jacobian_product_logs",
     "inverse_jacobian_product_logs",
     "resolvable_horizon",
@@ -151,6 +155,180 @@ def spectral_gap(spectra: Sequence[np.ndarray]) -> float:
             b = np.asarray(spectra[j]).ravel()
             best = min(best, float(np.abs(a[:, None] - b[None, :]).min()))
     return float(best) if np.isfinite(best) else 0.0
+
+
+# ---------------------------------------------------------------------------
+# Rotation number -- the conjugacy invariant the Lyapunov spectrum cannot see
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class RotationNumber:
+    """Average turns per step on the attractor, with how well-defined it is.
+
+    CLAUDE.md task 23: two oscillatory modules are never separated by their
+    Lyapunov spectra.  A limit cycle carries a neutral exponent 0, so
+    ``spectral_gap`` returns exactly 0.0 for any pair of them, and
+    ``LimitCycleBlock(a=0.3)`` has spectrum ``{0, log|1-2a|}`` for *every*
+    ``omega``.  The rotation number is a genuine conjugacy invariant that the
+    spectrum discards, which is what makes it the missing coordinate of the
+    task-37 fingerprint.
+
+    ``rho`` is signed, in **turns per step** -- multiply by the sampling rate for
+    Hz.  It is invariant under orientation-*preserving* conjugacy and flips sign
+    under an orientation-reversing one, so cross-fit comparisons should use
+    ``abs``.
+
+    ``coherence`` is the resultant length of the per-step angle increments: 1.0
+    for a rigid rotation, near 0 when the module is not rotating in any plane.
+    **A rho with low coherence describes nothing** -- read the pair together, the
+    same way §3.9 insists a fitted rate be read with its horizon.
+    """
+
+    rho: float
+    coherence: float
+    n_used: int
+    plane: np.ndarray = field(default_factory=lambda: np.zeros((0, 2)))
+
+    @property
+    def well_defined(self) -> bool:
+        return bool(self.n_used >= 32 and self.coherence >= 0.95)
+
+    def summary(self) -> str:
+        return (
+            f"rho={self.rho:+.6f} turns/step  coherence={self.coherence:.4f}  n={self.n_used}"
+        )
+
+
+def rotation_number(
+    system: HasJacobian,
+    z0: np.ndarray,
+    T: int = 2000,
+    warmup: int = 200,
+    min_norm: float = 1e-150,
+    center: bool = False,
+    plane: np.ndarray | None = None,
+) -> RotationNumber:
+    """Rotation number of ``system`` along the orbit of ``z0``.
+
+    Method: iterate past the transient, normalise each state onto the unit
+    sphere -- which removes the radial decay of a contraction without touching
+    the angle -- take the dominant 2-D plane of the resulting direction curve,
+    and average the per-step angle increment in it.
+
+    **Numerical horizon, cf. §3.9.** A contracting module underflows: at
+    ``s = 0.5`` the state passes ``1e-300`` after about a thousand steps and the
+    direction becomes 0/0.  The loop stops once ``||z||`` drops below
+    ``min_norm`` and reports ``n_used`` rather than averaging noise.  Truncation
+    is cheap here in a way it is not for a Lyapunov average: the angle
+    accumulates linearly in t, so a short clean window is worth more than a long
+    dirty one.
+
+    **Nyquist.** Increments beyond pi per step alias, so a rotation faster than
+    half a turn per step reads as a slower one in the other direction.  That is
+    a property of the sampling, not of the estimator, and nothing here can
+    detect it.
+
+    ``center=True`` subtracts the orbit mean before normalising, for an
+    attractor not centred at the origin.  Off by default: for a contraction *to*
+    the origin the mean is dominated by the largest early points, and centring
+    would move the origin off the fixed point.
+
+    Pass ``plane`` (a ``(d, 2)`` orthonormal basis) to measure several orbits in
+    one fixed frame -- for ``d > 2`` the plane's orientation, hence the sign of
+    ``rho``, is otherwise arbitrary per orbit.
+    """
+    d = int(np.asarray(z0).size)
+    z = np.asarray(z0, dtype=float).reshape(d).copy()
+
+    def alive(v: np.ndarray) -> bool:
+        return bool(np.all(np.isfinite(v)) and np.linalg.norm(v) > min_norm)
+
+    for _ in range(int(warmup)):
+        if not alive(z):
+            break
+        z = np.asarray(system.step(z), dtype=float).reshape(d)
+
+    pts: list[np.ndarray] = []
+    for _ in range(int(T) + 1):
+        if not alive(z):
+            break
+        pts.append(z.copy())
+        z = np.asarray(system.step(z), dtype=float).reshape(d)
+
+    empty = np.zeros((d, 2))
+    if d < 2 or len(pts) < 3:
+        return RotationNumber(float("nan"), 0.0, len(pts), empty)
+
+    P = np.stack(pts)
+    if center:
+        P = P - P.mean(axis=0, keepdims=True)
+    nrm = np.linalg.norm(P, axis=1)
+    P = P[nrm > min_norm]
+    if P.shape[0] < 3:
+        return RotationNumber(float("nan"), 0.0, int(P.shape[0]), empty)
+    U = P / np.linalg.norm(P, axis=1)[:, None]
+
+    if plane is not None:
+        V = np.asarray(plane, dtype=float).reshape(d, 2)
+    elif d == 2:
+        V = np.eye(2)  # keep the caller's own orientation, so the sign is meaningful
+    else:
+        V = np.linalg.svd(U - U.mean(axis=0, keepdims=True), full_matrices=False)[2][:2].T
+
+    proj = U @ V
+    th = np.arctan2(proj[:, 1], proj[:, 0])
+    resultant = np.mean(np.exp(1j * np.diff(th)))  # wraps the increments for free
+    return RotationNumber(
+        rho=float(np.angle(resultant) / (2.0 * np.pi)),
+        coherence=float(np.abs(resultant)),
+        n_used=int(P.shape[0]),
+        plane=V,
+    )
+
+
+def rotation_number_averaged(
+    system: HasJacobian, z0s: np.ndarray, T: int = 2000, warmup: int = 200, **kw
+) -> RotationNumber:
+    """Median rotation number over several initial conditions, in one fixed plane.
+
+    Median rather than mean, and a shared plane taken from the first orbit:
+    without both, a single orbit whose SVD basis came out reflected would flip
+    the sign of its ``rho`` and drag the average toward zero.
+    """
+    z0s = np.atleast_2d(np.asarray(z0s, dtype=float))
+    first = rotation_number(system, z0s[0], T=T, warmup=warmup, **kw)
+    if z0s.shape[0] == 1 or not np.isfinite(first.rho):
+        return first
+    rest = [
+        rotation_number(system, z, T=T, warmup=warmup, plane=first.plane, **kw)
+        for z in z0s[1:]
+    ]
+    fin = [r for r in [first, *rest] if np.isfinite(r.rho)]
+    if not fin:
+        return RotationNumber(float("nan"), 0.0, 0, first.plane)
+    return RotationNumber(
+        rho=float(np.median([r.rho for r in fin])),
+        coherence=float(np.median([r.coherence for r in fin])),
+        n_used=int(min(r.n_used for r in fin)),
+        plane=first.plane,
+    )
+
+
+def module_rotation_numbers(
+    system, z0s: np.ndarray, T: int = 2000, warmup: int = 200
+) -> list[RotationNumber]:
+    """Rotation number of each module of a ModularSystem.
+
+    Same shape as ``module_lyapunov_spectra``, and meaningful for the same
+    reason: a modular system's blocks iterate on their own coordinates.
+    """
+    sls = slices_of(list(system.partition))
+    z0s = np.atleast_2d(np.asarray(z0s, dtype=float))
+    return [
+        rotation_number_averaged(blk, z0s[:, sl], T=T, warmup=warmup)
+        for blk, sl in zip(system.blocks, sls)
+    ]
 
 
 @dataclass(frozen=True)

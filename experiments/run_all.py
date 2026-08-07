@@ -39,7 +39,14 @@ EXPERIMENTS = [
     # checks 6-8 are exploratory besides -- a FAIL there is a finding, not a
     # regression.
     #
-    # Run all three directly and read results/<name>.json.
+    # exp14 is excluded on cost too (25 fits, ~25 min), and it loses nothing:
+    # its parts 1-2 ARE the metric validation, they run in seconds, and every
+    # one of their claims is asserted in tests/ -- 16 tests across
+    # test_spectra_and_cocycle.py and test_metrics_and_models.py.  The regression
+    # gate for the rotation number and for invariant_agreement is the test suite.
+    # Parts 3-4 are measurements of learned models, where a FAIL is a finding.
+    #
+    # Run all four directly and read results/<name>.json.
 ]
 
 

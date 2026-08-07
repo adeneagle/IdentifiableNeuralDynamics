@@ -1,0 +1,31 @@
+# Environment for IdentifiableDynamics.
+#
+#   conda env create -f environment.yml
+#   conda activate idyn
+#   python -m pytest -q          # expect 268 passing
+#
+# The pins are not decoration.  Every JSON in results/ was produced under these
+# versions, and CLAUDE.md 3.9 records two tests whose *symptom* changed across a
+# numpy/scipy move -- the noise floor of an ill-conditioned SVD went from
+# wandering to converging cleanly on the wrong answer, which is the more
+# dangerous failure.  Those tests are now written against the invariant rather
+# than the symptom, but if you relax these pins, re-run the suite and read 3.9
+# before believing a green result.
+#
+# CPU-only torch is deliberate and is not a gap to fix: every experiment here is
+# small (d <= 16, T <= 1e4), CPU is the tested path, and `--device cuda` exists
+# but is untested.
+name: idyn
+channels:
+  - conda-forge
+dependencies:
+  - python=3.13
+  - numpy=2.5.1
+  - scipy=1.18.0
+  - matplotlib=3.11.1
+  - scikit-learn=1.9.0
+  - pytest=9.1.1
+  - pip
+  - pip:
+      - --extra-index-url https://download.pytorch.org/whl/cpu
+      - torch==2.13.0+cpu

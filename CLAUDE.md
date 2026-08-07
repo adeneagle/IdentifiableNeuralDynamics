@@ -173,14 +173,16 @@ Current state of this repo:
 | Matching lemma (§3.2) | `theory/identifiability.md` §6 | `TODO(gap)` — open (proved for linear); route in `literature.md` §3.3 |
 | Nonlinear decoder (Thm B) | `theory/identifiability.md` §5.3–5.4 | **Assembled** for the fixed-point regime: analytic decoders + non-resonance close it via Poincaré–Dulac + identity theorem (see §3.7). Non-fixed-point attractors open |
 | Literature positioning (step 8) | `theory/literature.md` | Drafted, provenance-tagged; needs write-up into §8 |
-| Numerical falsification | `experiments/` | exp01–exp10 pass, all JSONs current. **`exp11` and `exp12` intentionally report FAILING checks** — they encode predictions the *dynamics-only* regime refuted. Per §8 those are committed, not tuned away, so **neither is registered in `run_all.py`**, which covers exp01–exp10 only. Both are also **superseded in part by §3.12** and carry a banner saying so; read `exp13` instead for anything behavioural. Read their JSONs directly |
+| Numerical falsification | `experiments/` | exp01–exp10 pass, all JSONs current. **`exp11` and `exp12` intentionally report FAILING checks** — they encode predictions the *dynamics-only* regime refuted. Per §8 those are committed, not tuned away, so **neither is registered in `run_all.py`**, which covers exp01–exp10 only. Both are also **superseded in part by §3.12** and carry a banner saying so; read `exp13` instead for anything behavioural. Read their JSONs directly. **`exp14` is likewise unregistered, on cost (~25 fits) not outcome** — its parts 1–2 *are* the metric validation, run in seconds, and every claim in them is asserted in `tests/`, so the regression gate for the new machinery is the test suite |
 | Learning the partition from data | `src/idyn/selection.py`, `exp06` | Lattice search + fitted-model certification; fit and uniqueness each cover the other's blind spot |
 | **The behavioural penalty was a decoy** | **§3.12** (canonical), `models._behavioural_penalty`, `exp13` | **Found and fixed.** The penalty was gauge-dependent, so the optimiser paid it by shrinking the pinned block 21× rather than making it $u$-invariant. **No arm of `exp11`/`exp12` ever imposed Lemma D's behavioural hypothesis**, which voids both rows below. Fix: whiten the block → invariant under $GL(d_b)$, the §7 gauge group. Numbers and the four-defect pattern in §3.12 |
 | **B∘C under learning — linear decoder** | `exp11` | **Void as a B∘C result (§3.12)** — behaviour was never imposed, so it is dynamics-only. Measurement itself is sound (`jac_diag` $\in[0.988,0.999]$, sd $0.004$). Doubly uninformative anyway: §3.5 forces $h\in GL(d)$ here |
 | **B∘C under learning — nonlinear decoder** | `exp11`, `exp12` → superseded by `exp13` | **Headline retracted (§3.12), then reversed.** `exp12`'s monotone decline $0.994\to0.730\to0.702\to0.567$ is real but measures *dynamics-only* fitting. With the penalty fixed, `exp13` gets $0.815$ at the top dose and kills the forbidden `upper` to $\le0.081$ at **every** dose and restart (from $0.316$). Not uniform — see tasks 33/34 |
 | **Nonlinear block-structure metrics** | `src/idyn/metrics.py` | `jacobian_block_report` (= $M_{ij}$ itself, standardised) + `distance_correlation_block_report` (model-free). The linear `filtration_report` is provably blind here — §3.10 |
+| **Rotation number** | `spectra.rotation_number`, `exp14` part 1 | **Built and exact.** The conjugacy invariant the Lyapunov spectrum provably cannot see (task 23): `LimitCycleBlock(a=0.3)` has spectrum $\{0,\log\|1-2a\|\}$ for *every* $\omega$. Machine-precision on all known-answer blocks, survives a nonlinear gauge change, carries a `coherence` and a §3.9-style underflow horizon. Until now $\omega$ existed only as a *generating* parameter — nothing ever measured it back |
+| **Fit-to-fit invariant agreement** | `metrics.dynamical_fingerprint` / `invariant_agreement`, `exp14` | **Built and validated on exact systems.** The first metric here that needs **no ground truth** — it compares two fits to each other (task 40). Blind to a within-module gauge change and to the §3.7 triangular conjugacy; catches the §3.1 regrouping ($0.223$) and the task-23 frequency change ($\rho$ only, spectra tie at $10^{-18}$). Both directions are required and it is easy to get only one |
 | **Nonlinear data decoder** | `src/idyn/systems.py` `MLPDecoder` | Affine coupling flow, invertible in closed form, analytic, ~45% nonlinear residual. Until 2026-08-03 **no experiment generated nonlinear observations at all** — §3.11 |
-| Test suite | `tests/` | 236 tests, all passing |
+| Test suite | `tests/` | 268 tests, all passing |
 
 **Headline result of the build:** the §3.3 fix is correct but insufficient — it
 yields a *triangular* h, not a block-diagonal one, and provably cannot do better.
@@ -602,10 +604,18 @@ $4.8\times$. Legitimate under §3.8: $t=0$ points are in the visited region.
 **This is also why the learned per-module spectra are the least trustworthy
 number in `exp13`** (§3.12's candidate (ii)): the dominated block's transition is
 fit on data that carries almost no block-B signal after a few steps, so its
-learned Lyapunov exponents are weakly constrained. They are *horizon*-stable
-(unchanged from $n=25$ to $n=300$), which rules out an extrapolation artifact —
-but horizon-stable is not the same as data-constrained, and they disagree with
-the true exponents even for fits whose block structure is essentially perfect.
+learned Lyapunov exponents are weakly constrained. They disagree with the true
+exponents even for fits whose block structure is essentially perfect.
+
+> **CORRECTION (2026-08-04, `exp14`).** This paragraph used to argue that the
+> learned spectra being *horizon*-stable — unchanged from $n=25$ to $n=300$ —
+> "rules out an extrapolation artifact". **That inference is backwards.**
+> Horizon-stability is the *signature* of one: `exp14` §3.13 measures the orbit
+> and finds the learned block converging to a **spurious attracting fixed
+> point** outside the data's support, and an orbit sitting on a fixed point is
+> stable at every horizon by construction. Same trap as §3.9 — a stable wrong
+> number reads as a measurement. The rest of the paragraph stands, and `exp14`
+> supplies the mechanism plus the fix (read inside the data horizon).
 
 ### 3.12 A structural *penalty* can be gauge-dependent too — and then the optimiser games it (BLOCKING for exp11/exp12)
 
@@ -697,7 +707,157 @@ does **not** hold in the fitted transition even where the recovered structure is
 good. But per §3.11's design tension these are the least well-determined numbers
 in the repo: the dominated block's transition is fit on data carrying almost no
 block-B signal after a few steps. Treat as "unresolved and probably
-unmeasurable in this system", not as "Lemma C fails".
+unmeasurable in this system", not as "Lemma C fails". **§3.13(a) now supplies
+the mechanism: those spectra were read at a spurious attractor.**
+
+### 3.13 Never read an *asymptotic* invariant off a fitted map — and recoverability is per-invariant
+
+**Fifth defect of the §3.9 family, found in `exp14`.** Three things, all the same
+underlying point: **a fitted model is only a model where the data went.**
+
+**(a) Past the data horizon a fitted map is inventing, and it invents a fixed
+point.** Measured directly: the true block contracts to $0$; the learned block's
+orbit **stalls at $\|z\| = 0.0204$** and sits there forever — a spurious
+attracting fixed point outside the training support. Every asymptotic invariant
+read there describes the extrapolation. The rotation number is the cleanest
+casualty: it reads **exactly $0$** (a fixed point does not rotate) against a true
+$0.1751$, at **coherence $1.00$**. A confident, stable, 100% error that looks
+like a measurement. Reading inside the data horizon instead takes the rotation
+error $0.1751 \to 0.1324$ overall, and to **$0.0020$** on the module that still
+carries signal.
+
+> **This corrects §3.11.** That section argued the learned spectra being
+> *horizon-stable* ($n=25$ to $n=300$) "rules out an extrapolation artifact".
+> **Backwards** — an orbit parked on a spurious fixed point is horizon-stable
+> *by construction*. Exactly §3.9's trap: a stable wrong number reads as a
+> measurement, and is more dangerous than an unstable one.
+
+**Do:** read at $T =$ trial length with a modest warmup, and take the sample size
+from the **ensemble** (many initial conditions), never from the horizon.
+
+**(b) Recoverability is per-invariant, not per-model, and it tracks where the
+orbits actually spend time.** Same fit, same horizon, two modules:
+
+| module | variance retained at $t=T$ | $\lambda$ error | $\rho$ error |
+|---|---|---|---|
+| dominant | $2.7\times10^{-3}$ | $0.0035$ | $0.0020$ |
+| dominated | $2.6\times10^{-16}$ | $0.391$ | $0.132$ |
+
+Thirteen orders of magnitude of signal difference; a $100\times$ difference in
+recovery.
+
+**And the split runs *inside a single module*, between its own two exponents.**
+On a limit cycle:
+
+| quantity | lives | recovered |
+|---|---|---|
+| rotation number | on the attractor | $2.5\times10^{-4}$ across disjoint neuron splits |
+| neutral exponent | on the attractor | $5\times10^{-3}$ (true $0$) |
+| **transverse exponent** | **off it** | **$-0.56$ to $-0.70$ against a true $-0.916$ — 24–39% error** |
+
+Same module, same fit, same horizon. Orbits collapse onto the cycle in $\approx4$
+steps of a 30-step trial, so the transverse rate is determined by a handful of
+early samples and the other two by everything.
+
+§3.8's support caveat with a sharp edge. The failure is not that the fit is bad;
+it is that **the number was never measured**. Consequence for task 40: report
+**per-invariant** agreement. One boolean hides which half of the fingerprint the
+data constrained.
+
+**(c) Match modules across fits on the full invariant vector, not on spectra
+alone.** The pairing has to happen before any comparison, and matching by
+spectral distance is degenerate in exactly the case the rotation number exists
+to handle — two limit cycles have identical spectra, so the cost matrix is flat
+and the pairing is decided by nothing. Measured before the fix: `exp14` part 4a
+paired the wrong modules in **5 of 16** comparisons, each returning a rotation
+error of $0.1274$ — which is $|\rho_1 - \rho_2|$, the signature of a *swap*, not
+of a recovery failure. The same trap one level up from §3.10 trap 2, and it fails
+in the direction that reads as a null result.
+
+Two parts to the fix, both in `metrics.invariant_agreement`: the Hungarian cost
+carries a rotation term, and `_module_sort_key` **quantises** the spectral keys
+(`ORDER_TOL = 1e-2`) so a near-tie falls through to the $|\rho|$ tie-break
+instead of letting $10^{-3}$ of estimator noise order two neutral exponents.
+Read `order_margin` alongside any ordering claim — it reports how far apart the
+leading exponents actually are, so a tie is visible rather than implied.
+
+**(d) Do not score an *undetermined* quantity as a disagreement.** The same run
+exposed this one level further in: `agree` required the two fits to list their
+modules in the same filtration order, but for two limit cycles the spectrum
+**cannot** order them — `order_margin` was $0.0011$. So a comparison whose
+rotation numbers matched to $5\times10^{-4}$ was still scored a disagreement, on
+the strength of a hierarchy neither fit was entitled to claim. `agree` now drops
+the order requirement when `order_margin <= spec_tol` and says so in the notes;
+`order_agrees` is still reported, for callers whose claim *is* the hierarchy.
+
+Measured effect, re-derived from the saved fingerprints without refitting:
+linear arm $0.62 \to 1.00$, **negative control unchanged at $0.00$**. That second
+number is what makes it a fix rather than a relaxation — a change that raises the
+positive arm and leaves the negative arm rejecting is removing a false
+constraint, not lowering a bar. Check the negative control before believing any
+loosened criterion.
+
+> **Every arm's fingerprints are now written to the JSON**, so a matching or
+> scoring rule can be re-evaluated offline. Twenty-five fits is half an hour; a
+> criterion is a one-line change, and the two should never have been coupled.
+
+### 3.13(e) The remaining failure is per-restart mode collapse, and only one thing detects it
+
+Under a **nonlinear** observation map the invariants come back badly, and the
+first two explanations are both wrong. Ruling them out took two sweeps and both
+are worth keeping, because each is the obvious first guess.
+
+**Not undertraining.** Budget $3000 \to 20000$ steps improves `fit_quality`
+$4.2\times$ and leaves rotation recovery *unchanged* ($0.080 \to 0.116$, median
+over cross-split pairs), with coherence plateauing at $0.695$. **A better fit is
+not a better recovery** — §3.11's correlation result, now with the causal arrow
+checked by intervention rather than inferred from a correlation.
+
+**Population size matters, up to a point, and then stops.** Per-fit $|\rho|$
+error against ground truth, 4 fits each:
+
+| neurons/side | fits recovering ($<10^{-2}$) | median coherence | `fit_quality` |
+|---|---|---|---|
+| 8 | 1/4 | 0.599 | $1.6\times10^{-2}$ |
+| 16 | 0/4 | 0.683 | $1.3\times10^{-2}$ |
+| **32** | **3/4** | 0.841 | $2.4\times10^{-3}$ |
+| 64 | 2/4 | 0.815 | $3.5\times10^{-3}$ |
+
+Recovery turns on near 32 neurons per side and then plateaus. (Caveat kept
+because it is real: each row draws its own decoder, so the delivered dose varies
+$0.489$–$0.624$ and is *lowest* at the 32 row — part of that jump may be an
+easier observation map. §3.11's "read the delivered dose" applies to this table
+too.)
+
+**What survives at every size is a per-restart failure, and it is mode
+collapse.** At 32/side over 12 restarts, 2 fits put **both modules on the same
+factor** — duplicating one cycle and missing the other. Their error against
+sorted truth is $|\rho_1-\rho_2|$ to three digits, which is the arithmetic
+signature of exactly that.
+
+**Nothing generic detects it**, and this is the load-bearing negative:
+
+$$\mathrm{corr}(\texttt{coherence}, \log \text{err}) = -0.48, \qquad
+\mathrm{corr}(\log \texttt{fit\_quality}, \log \text{err}) = +0.24$$
+
+One collapsed fit scored coherence $0.961$, **above several good ones**; a gate
+at $0.90$ lifts precision only $83\% \to 90\%$. And `fit_quality` is again
+uninformative with the wrong sign — §3.11 in a third regime, so treat that as
+settled rather than as a quirk of `exp11`.
+
+**What does detect it: duplicate invariants.** `DynamicalFingerprint.duplicate_modules`
+flags module pairs whose spectra and rotation numbers coincide. It needs no
+ground truth — it is a property of the fitted model alone — and
+`invariant_agreement` now emits a note when either fingerprint is flagged, so a
+disagreement can be attributed to a collapsed fit instead of to the data. It is
+a **flag, not a verdict**: a system genuinely can carry two identical factors,
+and then duplication is the correct answer.
+
+**Consequence for task 40 on real data.** Fit many restarts; screen on duplicate
+invariants, **not** on fit quality or coherence; report the *fraction* of
+cross-split pairs that agree together with the median, never a max. Per-restart
+reliability is the binding constraint, and no amount of data or training removes
+it.
 
 ---
 
@@ -728,6 +888,28 @@ Run anything with:
 ```bash
 C:/Users/adene/miniconda3/envs/torch/python.exe -m pytest -q
 ```
+
+#### Moving this repo to another machine
+
+The repo has been moved once already (see History above), and the *only* thing
+that broke was paths written into prose. So the environment is now pinned in
+[`environment.yml`](environment.yml) (or [`requirements.txt`](requirements.txt))
+and the checklist is short:
+
+1. `conda env create -f environment.yml && conda activate idyn`
+2. `python -m pytest -q` — **expect 268 passing.** This is the real acceptance
+   test for a move: §3.9's regression tests are exactly the ones that changed
+   behaviour last time the numerics moved under them.
+3. Update the interpreter path in §4.1 and in `README.md`'s quick start, and the
+   repo root wherever it appears (§4.2, §5). **Nothing in `src/`, `tests/` or
+   `experiments/` contains an absolute path** — verified, and worth keeping true.
+4. Optionally re-run `experiments/run_all.py` (exp01–exp10, ~30 min, dominated by
+   exp06) to confirm the JSONs reproduce. Not required: the test suite covers the
+   same machinery and is seconds rather than minutes.
+
+**Any path under `\Users\alexa\` or `\Users\adene\` in this file is a fact about
+some past machine, not an instruction.** Treat it the way §4.3 already treats the
+literature table.
 
 ### 4.2 Sibling project (prior art, same author)
 
@@ -794,6 +976,7 @@ provenance tags there for which claims rest on full text and which on abstracts.
 IdentifiableDynamics/
 ├── CLAUDE.md                  # this file
 ├── README.md                  # short orientation + how to run
+├── environment.yml            # pinned env (requirements.txt = pure-pip twin)
 ├── docs/brief_v0.md           # original brief, verbatim, for provenance
 ├── theory/
 │   ├── identifiability.md     # corrected statement: Theorem A / Theorem B
@@ -804,15 +987,18 @@ IdentifiableDynamics/
 │   ├── systems.py             # modular maps, oscillators, coupling, counterexample,
 │   │                          #   LinearDecoder (Thm A) + MLPDecoder (Thm B, flow)
 │   ├── linear.py              # finest invariant decomposition, block-permutation test
-│   ├── spectra.py             # Lyapunov / dichotomy spectra, module gaps
+│   ├── spectra.py             # Lyapunov / dichotomy spectra, module gaps,
+│   │                          #   rotation number (the invariant spectra cannot see)
 │   ├── cocycle.py             # §3.3 iterated cocycle relation
 │   ├── normalform.py          # Poincaré–Dulac: homological operator, resonances
 │   ├── behavior.py            # Route B: u-conditioned sampling, invariant-subspace detector
 │   ├── models.py              # torch: modular vs unconstrained latents, 2 decoders
 │   ├── train.py               # fitting loop
-│   ├── metrics.py             # partition + filtration recovery, non-uniqueness
+│   ├── metrics.py             # partition + filtration recovery, non-uniqueness,
+│   │                          #   dynamical_fingerprint + invariant_agreement
+│   │                          #   (fit-to-fit, the only ground-truth-free metric)
 │   └── selection.py           # partition-lattice search, fitted-model certification
-├── experiments/               # exp01..exp13 + run_all.py; each writes to results/
+├── experiments/               # exp01..exp14 + run_all.py; each writes to results/
 │                              #   run_all covers exp01..exp10 only (see §2)
 ├── results/                   # generated JSON records, one per experiment
 └── tests/                     # pytest
@@ -862,7 +1048,7 @@ negative control comes back unique, stop and re-examine assumptions.
 | **34** | **NEW (ACTIVE): why does the dose-$0.31$ arm land triangular in every restart?** | open — **the current front line.** It is the one arm where imposing behaviour *lowers* `jac_diag` (whitened $0.546$ vs raw $0.730$), and the tightness (sd $0.025$/$0.029$ over 8 restarts) rules out optimiser noise: it is a property of the objective at that dose, not of the seed. Leading hypothesis, and it is my error to check first: **`W_WHITENED = 1.0` was calibrated on the endpoint doses only** ($0.00$ and $0.60$), so the interior was never tuned — sweep $w$ at `strength=0.5` before looking for anything deeper. Note the decoders form a *one-parameter family* (same rng draw, scaled), so this is not a decoder-draw artifact. Second hypothesis: `obs-nl` is non-monotone in `strength` in a way that makes $0.31$ special beyond its dose |
 | **30** | **NEW: `exp11` methodology — report distributions, not best-of-$N$** | open, unambiguous (§3.11). Selection by `fit_quality` carries no structural information ($\mathrm{corr}=-0.044$ / $+0.279$); with sd $0.104$ the current point estimate is near a coin flip. Also raise `STEPS` — 1200 was tuned for the linear decoder and undertrains the nonlinear one into a *reversed* result. Do this before re-running exp11 as a gate |
 | **39** | **NEW: co-smoothing adequacy gate on real data** | open — §6 "empirical program". Nested ladder unconstrained ⊃ triangular ⊃ block-diagonal, scored by held-out-**neuron** co-smoothing (fit ~80% of the population, refit a *fresh* decoder to the remaining ~20%). Target: Neural Latents Benchmark maze/RTT — standardised, and carries LFADS baselines. **This would be the first real data in the repo**; everything so far is `make_dataset`. Answers *is the structure there*, i.e. it settles diagonal-vs-triangular empirically instead of by §7's genericity argument. **It cannot answer identifiability** — the metric is constant on gauge orbits, by construction |
-| **40** | **NEW: invariant agreement across disjoint neuron splits** | open — **the identifiability test that needs no ground truth**, and the direct empirical statement of what the project has been proving. Fit independently on disjoint neuron subsets; identifiable dynamics recover different coordinates but the *same* invariants (filtration order, per-module Lyapunov spectra, rotation numbers). Varies the **data**, not the seed, so unlike restarts it excludes "artifact of this sample of neurons"; across sessions/animals stronger still. **Code gap: `metrics.py` assumes ground truth** — this needs a metric comparing two *fits to each other*, which does not exist yet |
+| **40** | **invariant agreement across disjoint neuron splits** | **METRIC BUILT AND VALIDATED (`exp14`); works under a linear observation map, open under a strong nonlinear one.** The test: fit independently on disjoint neuron subsets, then compare the *fits to each other* — identifiable dynamics give different coordinates and the same invariants. Varies the **data**, not the seed, so unlike restarts it excludes "artifact of this sample of neurons". Machinery: `metrics.dynamical_fingerprint` + `invariant_agreement`, plus `spectra.rotation_number` for the invariant spectra provably cannot see. **Validated on exact systems** — blind to a within-module gauge change *and* to the §3.7 triangular conjugacy, not blind to the §3.1 regrouping ($0.223$) or a frequency change; both directions are required and passing only one is easy. **Linear decoder: works** — 16/16 cross-split comparisons agree, rotation error median $2.5\times10^{-4}$ (max $5.1\times10^{-4}$), with signs *and* module order differing freely between fits, i.e. the gauge correctly quotiented out. **Negative control: works** — a frequency change is detected at $0.0638$ against a true separation of $0.06366$, 0/16 below threshold. **Transverse Lyapunov exponent does NOT agree** (median $0.052$, $208\times$ worse than $\rho$ on the same fits) — §3.13(b). **Nonlinear decoder (dose $0.574$, 8 neurons/side): fails, and not from undertraining** — $3\times$ the budget improves `fit_quality` $2.1\times$ and makes recovery *worse* ($0.080\to0.125$); it is **population size** up to $\approx32$ neurons/side, after which it plateaus. **What then remains is per-restart mode collapse** — 2 of 12 fits put both modules on one factor — and neither `coherence` ($r=-0.48$) nor `fit_quality` ($r=+0.24$, wrong sign) flags it. `DynamicalFingerprint.duplicate_modules` does, with no ground truth. **Protocol for real data: many restarts, screen on duplicate invariants, report the *fraction* of agreeing splits plus the median, never a max.** Full numbers in §3.13(e). **Still open: any real data at all** |
 
 ### Which route
 
