@@ -939,10 +939,12 @@ that broke was paths written into prose. So the environment is now pinned in
 [`environment.yml`](environment.yml) (or [`requirements.txt`](requirements.txt))
 and the checklist is short:
 
+0. **Check you are in the right checkout.** See the nesting warning below.
 1. `conda env create -f environment.yml && conda activate idyn`
-2. `python -m pytest -q` — **expect 268 passing.** This is the real acceptance
-   test for a move: §3.9's regression tests are exactly the ones that changed
-   behaviour last time the numerics moved under them.
+2. `python -m pytest -q` — **expect 274 passing on numpy 2.5, or 273 passed /
+   1 failed on numpy 2.4** (the §3.9 test, see the move note above). This is the
+   real acceptance test for a move: §3.9's regression tests are exactly the ones
+   that changed behaviour last time the numerics moved under them.
 3. Update the interpreter path in §4.1 and in `README.md`'s quick start, and the
    repo root wherever it appears (§4.2, §5). **Nothing in `src/`, `tests/` or
    `experiments/` contains an absolute path** — verified, and worth keeping true.
@@ -953,6 +955,23 @@ and the checklist is short:
 **Any path under `\Users\alexa\` or `\Users\adene\` in this file is a fact about
 some past machine, not an instruction.** Treat it the way §4.3 already treats the
 literature table.
+
+> **Nesting hazard — resolved 2026-08-10, do not recreate it.** This repo was for
+> a time cloned *inside* a stale July snapshot of itself, at
+> `C:\AdenCode\IdentifiableDynamics\IdentifiableDynamics`. The outer copy had no
+> `.git`, a CLAUDE.md half the size, and a to-do list naming a front line that had
+> since closed twice over — so it read as authoritative and was not. A session was
+> spent re-proving the partial-iVAE lemma from that stale brief before the nesting
+> was noticed; the result was a rediscovery of published block-identifiability
+> (task 38) via the very assumption-(iv) route Lemma D exists to avoid.
+>
+> The git checkout is now at `C:\AdenCode\IdentifiableDynamics` with nothing
+> nested inside it; the snapshot is archived at
+> `C:\AdenCode\_ARCHIVED_IdentifiableDynamics_stale_2026-07-31` and holds nothing
+> unique but a regenerable `.codegraph/` index and that superseded work.
+> **Before starting: confirm `git rev-parse --show-toplevel` is the directory you
+> are editing, and skim §2's status table** — the cheap check that would have
+> caught it.
 
 ### 4.2 Sibling project (prior art, same author)
 
