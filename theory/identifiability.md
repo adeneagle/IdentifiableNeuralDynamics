@@ -439,7 +439,34 @@ writing $h_B = \sum_m z_A^m c_m(z_B)$, the conjugacy gives
 $\lambda_A^m c_m(f_B z_B) = \tilde f_B c_m(z_B)$ and evaluating at the fixed
 point $z_B = 0$ reproduces Steps 2–3 — but Step 4's characteristic-function
 factorisation uses independence, which fails when $c_m$ depends on $z_B$.
-`TODO(gap)`. (b) *Anisotropic modulation.* (D2) assumes $u$ scales $z_A$
+`TODO(gap)`.
+
+> **Sharpening (a): the missing piece cannot come from behaviour.** Step 4's
+> entire behavioural input is (D4). There is a non-additive $h_B$ satisfying
+> **(D1)–(D4) exactly** with $M_{BA}\neq0$: with $p(z_B\mid u) = N(0,I_2)$,
+> $$h(z_A,z_B) \;=\; \big(z_A,\; R(\gamma z_{A,1})\,z_B\big),\qquad R=\text{rotation}.$$
+> For every $u$ and every fixed $z_A$, $R(\cdot)z_B \sim N(0,I)$ independent of
+> $z_A$, so the law of $h_B$ is exactly $u$-invariant — (D4) holds — while
+> $\|M_{BA}\| = |\gamma|\,\|z_B\|$. Measured: normalised $u$-dependence at the
+> sampling floor for $\gamma$ up to $2$. **So no strengthening of (D4) closes (a);
+> the work must come from Steps 1–3.** Here $c_m$ depends on $z_B$ linearly, which
+> is exactly the independence failure flagged above — the witness shows that
+> failure is not a technical artefact of the proof but a real obstruction.
+>
+> Lemma D's *conclusion* is untouched, and the reason says how (a) must be proved:
+> this $h$ is **not** a modular conjugacy. Since $f_B$ is a scaled rotation it
+> commutes with $R$, so the $B$-component of $h\circ F = \tilde F\circ h$ needs
+> $\theta\circ f_A - \theta$ constant; at the fixed point of a contracting $f_A$
+> that constant is $0$, forcing $\theta$ constant. **Step 1 does here what Step 4
+> does in the additive case.** Measured: defect $0$ at $\gamma=0$ (exactly) and
+> growing monotonically otherwise.
+>
+> $\dim z_B \ge 2$ is necessary — at $\dim z_B = 1$ the $p_B$-preserving
+> transports are the two isolated points $\pm\mathrm{id}$, so a family continuous
+> in $z_A$ is constant. The escape is the positive-dimensional transport group,
+> which exists for every $p_B$ from dimension 2 up.
+>
+> `systems.nonadditive_behavioural_escape()`, three tests in `tests/test_behavior.py`. (b) *Anisotropic modulation.* (D2) assumes $u$ scales $z_A$
 isotropically; a general covariance modulation makes $\psi(\sigma_u \zeta)$
 non-homogeneous in a single scalar and Step 4 needs replacing. `TODO(gap)`
 (c) *Nonlinear $f_A$, $\tilde f_B$*: read the above as the statement for the

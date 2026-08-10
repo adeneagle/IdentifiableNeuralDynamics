@@ -37,6 +37,7 @@ __all__ = [
     "triangular_conjugacy_counterexample",
     "multiindex_resonance_counterexample",
     "repeated_exponent_resonance_counterexample",
+    "nonadditive_behavioural_escape",
     "two_oscillator_system",
     "tier2_witness",
     "sample_initial_conditions",
@@ -835,6 +836,105 @@ def repeated_exponent_resonance_counterexample(
         "system": system,
         "h": h,
         "lyapunov": lyap,
+    }
+
+
+def nonadditive_behavioural_escape(
+    gamma: float = 1.0, s_a: float = 0.90, alpha: float = 0.40, omega_b: float = 1.10
+) -> dict:
+    """Lemma D open item (a): (D4) alone cannot carry the non-additive case.
+
+    Lemma D (``identifiability.md`` §4.5) proves ``psi = 0`` for **additive**
+    ``h_B(z_A,z_B) = z_B + psi(z_A)``.  Open item (a) notes the graded reduction
+    survives for non-additive ``h_B = sum_m z_A^m c_m(z_B)`` -- Steps 1-3 go
+    through by evaluating at ``z_B = 0`` -- but that Step 4's characteristic-
+    function factorisation needs the independence that ``c_m(z_B)`` destroys.
+
+    This is the witness showing that the missing piece **cannot** be recovered by
+    strengthening the behavioural hypothesis.  Take ``p(z_B | u) = N(0, I_2)`` and
+
+        h(z_A, z_B) = ( z_A,  R(gamma * z_A_1) z_B ),   R = rotation.
+
+    This is non-additive (``c_m`` depends on ``z_B``, linearly), and for **every**
+    ``u`` and every fixed ``z_A`` the rotated ``z_B`` is again ``N(0, I)`` and
+    independent of ``z_A``.  So the law of ``h_B`` is exactly ``u``-invariant:
+    **(D4) holds, with (D2) and (D3) untouched, while ``M_BA != 0``.**  Step 4's
+    entire behavioural input is therefore satisfied by a map it must exclude, so
+    no sharpening of (D4) closes item (a) -- the work has to come from Steps 1-3.
+
+    Consistency with Lemma D's *conclusion*: this ``h`` is **not** a conjugacy
+    between modular systems.  With ``f_B`` a scaled rotation (which commutes with
+    ``R``) the ``B``-component of ``h . F = F~ . h`` needs
+    ``theta . f_A - theta`` constant, and at the fixed point of a contracting
+    ``f_A`` that constant is ``0``, forcing ``theta`` -- hence ``gamma`` -- to
+    vanish.  ``dynamics_defect`` measures this and is exactly ``0`` iff
+    ``gamma = 0``.  So Step 1 is doing the work that Step 4 does in the additive
+    case, which is precisely the shape any proof of item (a) must have.
+
+    Orientation follows §4.5: block ``A`` is the ``u``-varying, spectrally
+    dominant one (``rho = s_a``) and block ``B`` the invariant, dominated one
+    (``rho = s_a^2 < s_a``), so **(D1) holds** and this is not an alignment
+    artefact.  ``d_B = 2`` is necessary: at ``d_B = 1`` the ``p_B``-preserving
+    transports are the two isolated points ``+-id``, so a family continuous in
+    ``z_A`` is constant and no such escape exists.
+    """
+    s_b = s_a**2  # (D1): rho(f_B) = s_a^2 < s_a = rho_min(f_A)
+    f_A = TwistBlock(s=s_a, omega=alpha, beta=0.0)
+    f_B = TwistBlock(s=s_b, omega=omega_b, beta=0.0)  # commutes with R
+
+    def _rot(b: np.ndarray, theta: np.ndarray) -> np.ndarray:
+        c, s = np.cos(theta), np.sin(theta)
+        out = np.array(b, dtype=float, copy=True)
+        out[..., 0] = c * b[..., 0] - s * b[..., 1]
+        out[..., 1] = s * b[..., 0] + c * b[..., 1]
+        return out
+
+    def theta(za: np.ndarray) -> np.ndarray:
+        return gamma * np.asarray(za, dtype=float)[..., 0]
+
+    def h(z: np.ndarray) -> np.ndarray:
+        z = np.asarray(z, dtype=float)
+        za, zb = z[..., :2], z[..., 2:]
+        return np.concatenate([za, _rot(zb, theta(za))], axis=-1)
+
+    def h_inv(w: np.ndarray) -> np.ndarray:
+        w = np.asarray(w, dtype=float)
+        wa, wb = w[..., :2], w[..., 2:]
+        return np.concatenate([wa, _rot(wb, -theta(wa))], axis=-1)
+
+    def cross_derivative(z: np.ndarray) -> np.ndarray:
+        """``|M_BA| = |d h_B / d z_A|`` per sample; a rotation derivative is an isometry."""
+        z = np.asarray(z, dtype=float)
+        return abs(gamma) * np.linalg.norm(z[..., 2:], axis=-1)
+
+    def dynamics_defect(za: np.ndarray, w_b: Sequence[float] = (1.0, 0.0)) -> float:
+        """Obstruction to ``h`` conjugating modular dynamics to modular dynamics.
+
+        Fix one value ``w_b`` of the reparameterised invariant block.  Its
+        pre-image depends on ``z_A``, so states sharing that ``wtilde_B`` now reach
+        different successors; an autonomous ``ftilde_B`` would need them to agree.
+        Exactly ``0`` iff ``gamma = 0``.  No binning, no estimation.
+        """
+        za = np.atleast_2d(np.asarray(za, dtype=float))[:, :2]
+        w = np.broadcast_to(np.asarray(w_b, dtype=float), za.shape[:-1] + (2,))
+        zb = _rot(w, -theta(za))
+        succ = _rot(f_B.step(zb), theta(f_A.step(za)))
+        return float(np.linalg.norm(succ - succ.mean(axis=0), axis=-1).mean())
+
+    return {
+        "gamma": float(gamma),
+        "system": ModularSystem([f_A, f_B]),
+        "f_A": f_A,
+        "f_B": f_B,
+        "rho_a": float(s_a),
+        "rho_b": float(s_b),
+        "one_sided_gap": float(s_a - s_b),  # (D1) margin, > 0
+        "h": h,
+        "h_inv": h_inv,
+        "cross_derivative": cross_derivative,
+        "dynamics_defect": dynamics_defect,
+        "additive": False,
+        "satisfies_D4": True,
     }
 
 

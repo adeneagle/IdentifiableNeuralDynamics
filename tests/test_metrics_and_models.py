@@ -24,6 +24,31 @@ def test_fit_linear_relation_recovers_a_known_map():
     assert np.allclose(MT.fit_linear_relation(Z, Z @ A.T), A, atol=1e-9)
 
 
+def test_fit_linear_relation_is_translation_invariant():
+    """h is defined up to translation, and a learned latent's mean is unpinned.
+
+    Without a fitted intercept an off-centre z_fit makes the solve misspecified,
+    and it fails *silently* -- the returned matrix still splits into block
+    energies. Measured at R^2 = -1.38 (below the mean baseline) on an MLP-decoder
+    fit before this was fixed.
+    """
+    rng = np.random.default_rng(0)
+    Z = rng.standard_normal((400, 4)) + 3.0        # off-centre inputs
+    A = rng.standard_normal((4, 4))
+    offset = np.array([5.0, -2.0, 0.5, 1.0])       # and off-centre outputs
+    assert np.allclose(MT.fit_linear_relation(Z, Z @ A.T + offset), A, atol=1e-9)
+    assert MT.linear_relation_r2(Z, Z @ A.T + offset) == pytest.approx(1.0, abs=1e-12)
+
+
+def test_linear_relation_r2_gates_a_readout_that_is_not_a_fit():
+    """The validity gate: near zero means the block readouts are not measuring h."""
+    rng = np.random.default_rng(1)
+    Z = rng.standard_normal((600, 3))
+    assert MT.linear_relation_r2(Z, Z @ rng.standard_normal((3, 3)).T) == pytest.approx(1.0, abs=1e-12)
+    # unrelated targets: an affine fit explains essentially nothing
+    assert abs(MT.linear_relation_r2(Z, rng.standard_normal((600, 3)))) < 0.05
+
+
 def test_recovery_report_flags_a_block_permutation_as_recovered():
     rng = np.random.default_rng(1)
     Z = rng.standard_normal((500, 4))

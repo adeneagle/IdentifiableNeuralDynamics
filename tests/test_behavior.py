@@ -275,3 +275,54 @@ def test_whitened_penalty_is_near_zero_for_a_genuinely_invariant_block():
     leak = float(L._behavioural_penalty(zt, ut, slice(0, 2), whiten=True))
     clean = float(L._behavioural_penalty(zt, ut, slice(2, 4), whiten=True))
     assert clean < 0.1 * leak
+
+
+# --------------------------------------------------------------------------
+# Lemma D open item (a): (D4) alone cannot carry the non-additive case
+# --------------------------------------------------------------------------
+
+
+def test_nonadditive_escape_satisfies_D4_exactly_while_M_BA_is_large():
+    """A non-additive h_B that behaviour cannot see, at any leak size.
+
+    Step 4's whole behavioural input is (D4) -- the law of h_B is u-invariant.
+    This map satisfies it *exactly*, for every u, with M_BA large.  So no
+    sharpening of (D4) closes open item (a); Steps 1-3 have to do the work.
+    """
+    rng = np.random.default_rng(30)
+    s = B.conditioned_initial_conditions(2, 2, np.arange(4), 40000, rng, mode="variance")
+    u_floor = B.block_u_dependence(s.Z[:, s.slice_b], s.U, normalize=True).total
+
+    for gamma in (0.5, 1.0, 2.0):
+        ce = S.nonadditive_behavioural_escape(gamma=gamma)
+        w = ce["h"](s.Z)
+        assert ce["cross_derivative"](s.Z).mean() > 0.5 * gamma, "the coupling is real"
+        # (D4) holds to the sampling floor: behaviour sees nothing
+        dep = B.block_u_dependence(w[:, 2:], s.U, normalize=True).total
+        assert dep < 3.0 * u_floor, f"gamma={gamma} is invisible to behaviour (got {dep})"
+
+
+def test_nonadditive_escape_satisfies_D1_and_is_not_additive():
+    """It is inside Lemma D's own hypotheses, not an alignment artefact."""
+    ce = S.nonadditive_behavioural_escape()
+    assert ce["one_sided_gap"] > 0.0, "(D1): rho(f_B) < rho_min(f_A)"
+    assert ce["rho_b"] < ce["rho_a"]
+    assert not ce["additive"]
+    # a genuine diffeomorphism
+    rng = np.random.default_rng(31)
+    z = rng.standard_normal((2000, 4))
+    assert np.allclose(ce["h_inv"](ce["h"](z)), z, atol=1e-12)
+
+
+def test_nonadditive_escape_is_killed_by_the_dynamics_not_by_behaviour():
+    """Lemma D's conclusion is not threatened: this h is not a modular conjugacy.
+
+    Step 1 is what excludes it -- the shape any proof of open item (a) must have.
+    """
+    rng = np.random.default_rng(32)
+    za = rng.standard_normal((3000, 2))
+    assert S.nonadditive_behavioural_escape(gamma=0.0)["dynamics_defect"](za) < 1e-12
+    defects = [S.nonadditive_behavioural_escape(gamma=g)["dynamics_defect"](za)
+               for g in (0.25, 0.5, 1.0)]
+    assert all(d > 1e-3 for d in defects), "no autonomous ftilde_B exists for gamma != 0"
+    assert defects[0] < defects[1] < defects[2], "the obstruction grows with the leak"

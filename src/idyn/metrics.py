@@ -21,6 +21,7 @@ from idyn.spectra import module_lyapunov_spectra, module_rotation_numbers
 
 __all__ = [
     "fit_linear_relation",
+    "linear_relation_r2",
     "mcc",
     "RecoveryReport",
     "recovery_report",
@@ -50,18 +51,50 @@ __all__ = [
 
 
 def fit_linear_relation(z_true: np.ndarray, z_fit: np.ndarray) -> np.ndarray:
-    """Least-squares A with ``z_fit ~= z_true @ A.T``; returns A of shape (d_fit, d_true).
+    """Least-squares A with ``z_fit - mean ~= (z_true - mean) @ A.T``.
 
-    In the linear-decoder setting this A *is* the reparameterisation h of the
-    theory (§3.5 forces h to be linear), so asking whether A is a block
-    permutation is exactly asking whether the partition was recovered.
+    Returns A of shape (d_fit, d_true).  In the linear-decoder setting this A *is*
+    the reparameterisation h of the theory (§3.5 forces h to be linear), so asking
+    whether A is a block permutation is exactly asking whether the partition was
+    recovered.
+
+    Both sides are **centred**, i.e. an intercept is fitted and discarded.  It has
+    to be: $h$ is only ever defined up to translation, and nothing pins the mean of
+    a learned latent (the whitening penalty constrains the covariance, not the
+    mean; an MLP encoder carries biases).  Without the intercept the solve is
+    misspecified whenever the fitted latents are off-centre, and it fails silently
+    — measured at $R^2 = -1.38$, *below* the mean baseline, on an MLP-decoder fit,
+    while still returning a matrix that the block-energy readouts happily split.
+    Centring takes the same fit to $0.879$.  Use :func:`linear_relation_r2` as the
+    gate before believing any readout built on this.
+
+    Centring is a no-op for the zero-mean linear-decoder experiments (exp02/03/06),
+    which is why the defect stayed invisible there.
     """
     Zt = np.asarray(z_true, dtype=float).reshape(-1, np.asarray(z_true).shape[-1])
     Zf = np.asarray(z_fit, dtype=float).reshape(-1, np.asarray(z_fit).shape[-1])
     if Zt.shape[0] != Zf.shape[0]:
         raise ValueError("z_true and z_fit must have the same number of samples")
-    A, *_ = np.linalg.lstsq(Zt, Zf, rcond=None)
+    A, *_ = np.linalg.lstsq(Zt - Zt.mean(0), Zf - Zf.mean(0), rcond=None)
     return A.T
+
+
+def linear_relation_r2(z_true: np.ndarray, z_fit: np.ndarray) -> float:
+    """Fraction of ``z_fit``'s variance the affine relation to ``z_true`` explains.
+
+    The validity gate for anything built on :func:`fit_linear_relation`.  §3.10
+    already establishes that a linear probe is *blind* to nonlinear block
+    structure; this is the complementary check, that the probe is even a fit.
+    Near zero (or negative) means the readout is not measuring $h$ at all and must
+    not be reported as if it were.
+    """
+    Zt = np.asarray(z_true, dtype=float).reshape(-1, np.asarray(z_true).shape[-1])
+    Zf = np.asarray(z_fit, dtype=float).reshape(-1, np.asarray(z_fit).shape[-1])
+    A = fit_linear_relation(Zt, Zf)
+    Zfc = Zf - Zf.mean(0)
+    resid = Zfc - (Zt - Zt.mean(0)) @ A.T
+    denom = float((Zfc**2).sum())
+    return float(1.0 - (resid**2).sum() / denom) if denom > 0 else 0.0
 
 
 def mcc(z_true: np.ndarray, z_fit: np.ndarray) -> float:
