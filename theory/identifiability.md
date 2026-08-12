@@ -425,6 +425,88 @@ $\lambda_A^{0} = 1 \in \operatorname{spec}(\tilde f_B)$, i.e. $\rho(\tilde f_B)\
 — no contraction in $B$, contradicting (D1). **The scale-invariant escape and the
 spectral gap are mutually exclusive.**
 
+### 4.5a Lemma D′ — (D1) is far more than the proof needs
+
+**New (2026-08-12).** The paragraph above is the key to a much stronger
+statement, and it was hiding in plain sight. It says (D1)'s job is to exclude
+**degree $0$**. But excluding degree $0$ needs only $1 \notin
+\operatorname{spec}(\tilde f_B)$ — not a gap, not an ordering, not even a
+contraction. And Step 3, the only other place (D1) appears, is **not load-bearing
+for the conclusion**: it establishes $|m|\ge2$, whereas Step 4's iteration
+$r = (\sigma_2/\sigma_1)^{p} \neq 1$ needs only $p \ge 1$.
+
+> **Lemma D′.** Replace (D1) by
+>
+> * **(D1$'$)** $1 \notin \operatorname{spec}(\tilde f_B)$.
+>
+> Then, under (D1$'$), (D2)–(D4) with $h_B$ additive and $\psi$ homogeneous,
+> the conclusion of Lemma D holds: $\psi \equiv 0$, so $M_{BA}\equiv0$.
+
+*Proof.* Steps 1–2 are unchanged (pure algebra; no spectral hypothesis was ever
+used there). **Step 3 is deleted.** Degree $0$ is excluded by (D1$'$) via Step 2,
+exactly as the paragraph above argues. For $p \ge 1$, Step 4 runs verbatim:
+$\sigma_1 \neq \sigma_2$ and $p\ge1$ give $r \neq 1$, and the iteration
+$\varphi_\psi(t) = \varphi_\psi(r^k t)\to1$ forces $\psi(\zeta)=0$ a.s. $\square$
+
+(D1) $\Rightarrow$ (D1$'$), since (D1) makes $\tilde f_B$ a strict contraction.
+So Lemma D′ strictly generalises Lemma D, and **Step 3 is demoted from a step of
+the proof to an observation about what the coupling looks like when a gap
+happens to be present.**
+
+**Why this is worth having: it reaches the case Theorem F cannot.** Two modules
+with *identical* spectra are the linear form of task 23's two-oscillator
+problem — (B4) is exactly $0$, (F3) is not ordered, Lemma C has no gap, and
+(D1) fails outright. (D1$'$) holds there for free.
+
+> **Witness** (`systems.gapless_resonant_coupling`, asserted in
+> `tests/test_behavior.py`). Both modules are $s\,R(\omega)$ with $s=0.85$,
+> $\omega=0.70$; $\psi = cI$ is **degree 1**, resonant because $f_A$ and
+> $\tilde f_B$ share their spectrum (resonance residual exactly $0$). Then
+> $h(z_A,z_B) = (z_A,\, z_B + c\,z_A)$ is an exact conjugacy (residual
+> $6.7\times10^{-16}$) with $\|M_{BA}\| = 0.99$. Spectra identical:
+> `spectral_gap` $=0$, `filtration_gap` $=0$ and **not ordered**; `gap_holds`
+> is `False`; $\min|\lambda_B - 1| = 0.65$, so (D1$'$) holds.
+>
+> Behaviour still kills it. Normalised $u$-dependence of $h_B$ at two levels
+> $\sigma\in\{0.6,1.6\}$, against the $c=0$ control, with $n$ per level:
+>
+> | $n$ | $c=0$ | $c=0.25$ | $c=0.5$ | $c=0.7$ |
+> |---|---|---|---|---|
+> | $2\times10^3$ | 0.0336 | 0.1478 | 0.2915 | 0.4677 |
+> | $1.28\times10^5$ | **0.0074** | 0.0883 | 0.2880 | 0.4476 |
+>
+> The control falls like $n^{-1/2}$ while every treated column converges to a
+> nonzero limit — so the signal is real and the floor is sampling noise, checked
+> rather than assumed (§3.9). At $n=1.28\times10^5$ even $c=0.25$ clears the
+> floor $12\times$.
+
+**And the degree-1 resonance is exactly "equal frequencies".** For two
+rotation-scalings at the same rate, $\lambda_A^m$ has modulus $s^{|m|}$, so only
+$|m|=1$ can resonate, and it does iff $\omega_A = \pm\omega_B$. Measured with
+`systems.sylvester_kernel_dim`: kernel dimension $2$ at $\omega_B = \pm0.70$ and
+$\mathbf{0}$ at $\omega_B \in \{1.30, 2.10\}$. **So for two oscillatory modules
+of equal contraction rate, either the frequencies differ and no coupling exists
+at all — behaviour is not even needed — or they agree and two behaviour levels
+remove it.** That is a complete answer for this class, and it is the first
+statement in this repo that separates two oscillators with a theorem rather than
+a measurement (cf. §6.5, where the rotation-number route is still `TODO(gap)`).
+
+> **A gap found while checking this, and it is pre-existing.** Step 4 writes
+> $\psi(\sigma\zeta) = \sigma^p\psi(\zeta)$ — it treats $\psi$ as homogeneous of
+> a *single* degree. Step 2 permits several degrees to survive at once
+> (different $m$ resonating with different eigenvalues of $\tilde f_B$), and then
+> $\Psi_\sigma = \sum_j \sigma^{p_j}\psi_{p_j}$ is not homogeneous and the
+> iteration does not run. **This is not a cost of dropping (D1)** — with (D1) the
+> surviving set is $\{|m|\ge2\}$, still not a singleton — so Lemma D as
+> previously stated has the same hole. It is not among the open items (a)–(c),
+> so it was unflagged. `TODO(gap)`
+>
+> Not obviously fatal: with $k$ distinct surviving degrees, $k+1$ behaviour
+> levels should separate them by a Vandermonde argument in $\sigma^{p_j}$, which
+> would degrade the two-level economy gracefully and still sit far below Kong's
+> $2n_s+1$. **Not proved.** The witness above is single-degree, so it is
+> unaffected.
+
 > **Witness** (`systems.lemma_d_witness`, asserted in `tests/test_behavior.py`).
 > In complex coordinates $f_A(z) = s e^{i\alpha}z$, $\psi(z)=z^2$,
 > $\tilde f_B(w) = s^2 e^{2i\alpha}w$: then $h(z_A,z_B) = (z_A,\,z_B + c\,z_A^2)$

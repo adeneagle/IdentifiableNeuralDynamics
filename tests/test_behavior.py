@@ -326,3 +326,95 @@ def test_nonadditive_escape_is_killed_by_the_dynamics_not_by_behaviour():
                for g in (0.25, 0.5, 1.0)]
     assert all(d > 1e-3 for d in defects), "no autonomous ftilde_B exists for gamma != 0"
     assert defects[0] < defects[1] < defects[2], "the obstruction grows with the leak"
+
+
+# --------------------------------------------------------------------------
+# Lemma D' -- (D1) is far more than the proof needs (identifiability.md 4.5a)
+#
+# The one-sided gap's only job is to exclude a degree-0 (scale-invariant) psi,
+# and that needs merely 1 not in spec(ftilde_B).  Step 3's |m| >= 2 is not
+# load-bearing: Step 4's iteration runs at every degree >= 1.
+# --------------------------------------------------------------------------
+
+
+def test_gapless_witness_is_an_exact_conjugacy_with_a_live_cross_derivative():
+    w = S.gapless_resonant_coupling()
+    z = np.random.default_rng(0).normal(size=(4000, 4))
+    assert np.abs(w["h"](w["F"](z)) - w["F"](w["h"](z))).max() < 1e-12
+    assert w["cross_derivative"] > 0.9, "M_BA is genuinely nonzero"
+    assert w["psi_degree"] == 1, "degree 1 -- what Step 3 says cannot happen with a gap"
+
+
+def test_gapless_witness_fails_D1_and_every_spectral_hypothesis():
+    """Identical spectra: (B4) is 0, (F3) is not ordered, (D1) fails, (D1') holds."""
+    from idyn import spectra as SP
+
+    w = S.gapless_resonant_coupling()
+    assert not w["gap_holds"]
+    assert SP.spectral_gap(w["spectra"]) == pytest.approx(0.0, abs=1e-15)
+    assert not SP.filtration_gap(w["spectra"]).ordered
+    assert w["unit_eigenvalue_distance"] > 0.1, "(D1') holds -- no unit eigenvalue"
+    assert w["resonance_residual"] == pytest.approx(0.0, abs=1e-12)
+
+
+def test_behaviour_kills_the_degree_1_coupling_with_no_gap():
+    """The claim of Lemma D': two levels suffice at degree 1, gap or no gap.
+
+    Asserted against a measured floor rather than against zero -- the c=0 arm is
+    the control, and the treated arms must clear it (3.9: never assert inside
+    the noise).
+    """
+    rng = np.random.default_rng(1)
+    n, sig, tau = 40_000, (0.6, 1.6), 1.0
+
+    def u_dep(c):
+        ws, us = [], []
+        for j, s in enumerate(sig):
+            za = rng.normal(scale=s, size=(n, 2))
+            zb = rng.normal(scale=tau, size=(n, 2))
+            ws.append(zb + c * za)
+            us.append(np.full(n, j))
+        return B.block_u_dependence(np.concatenate(ws), np.concatenate(us),
+                                    normalize=True).total
+
+    floor = u_dep(0.0)
+    scores = [u_dep(c) for c in (0.25, 0.5, 0.7)]
+    assert floor < 0.03, f"control should sit near zero at n={n}, got {floor}"
+    assert all(s > 4 * floor for s in scores), f"floor {floor}, scores {scores}"
+    assert scores[0] < scores[1] < scores[2], "detection grows with the coupling"
+
+
+def test_the_gapless_witness_matches_its_closed_form_variance():
+    """var(h_B) per component = tau^2 + c^2 sigma^2 -- degree 1, so sigma^2 not sigma^4."""
+    rng = np.random.default_rng(2)
+    w = S.gapless_resonant_coupling(c=0.7)
+    for sigma in (0.6, 1.0, 1.6):
+        za = rng.normal(scale=sigma, size=(200_000, 2))
+        zb = rng.normal(size=(200_000, 2))
+        got = float((zb + 0.7 * za).var(axis=0).mean())
+        assert got == pytest.approx(w["var_h_b"](sigma), rel=2e-2)
+
+
+def test_degree_zero_is_the_escape_that_D1_prime_must_exclude():
+    """A scale-invariant psi is invisible to behaviour -- so (D1') is not optional."""
+    rng = np.random.default_rng(3)
+    n, tau = 40_000, 1.0
+    ws, us = [], []
+    for j, s in enumerate((0.6, 1.6)):
+        za = rng.normal(scale=s, size=(n, 2))
+        zb = rng.normal(scale=tau, size=(n, 2))
+        ws.append(zb + 0.7 * za / np.linalg.norm(za, axis=1, keepdims=True))
+        us.append(np.full(n, j))
+    dep = B.block_u_dependence(np.concatenate(ws), np.concatenate(us), normalize=True)
+    assert dep.total < 0.03, "degree 0 hides from behaviour, as 4.5 already argued"
+
+
+def test_equal_frequency_is_the_degree_1_resonance_condition():
+    """Two oscillators of equal rate: a coupling exists iff omega_A = +/- omega_B.
+
+    So either the frequencies differ and no linear psi exists at all, or they
+    agree and Lemma D' removes it -- a complete answer for this class.
+    """
+    for omega_b, expected in ((0.70, 2), (-0.70, 2), (1.30, 0), (2.10, 0)):
+        w = S.gapless_resonant_coupling(omega=0.70, omega_b=omega_b)
+        assert w["sylvester_kernel_dim"] == expected, f"omega_b={omega_b}"

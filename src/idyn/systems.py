@@ -38,6 +38,9 @@ __all__ = [
     "multiindex_resonance_counterexample",
     "repeated_exponent_resonance_counterexample",
     "nonadditive_behavioural_escape",
+    "lemma_d_witness",
+    "gapless_resonant_coupling",
+    "sylvester_kernel_dim",
     "two_oscillator_system",
     "tier2_witness",
     "sample_initial_conditions",
@@ -1010,6 +1013,94 @@ def lemma_d_witness(s: float = 0.90, alpha: float = 0.40, c: float = 0.70) -> di
         "psi_degree": 2,
         "var_h_b": lambda sigma: 1.0 + 4.0 * c ** 2 * sigma ** 4,
     }
+
+
+def gapless_resonant_coupling(
+    s: float = 0.85, omega: float = 0.70, c: float = 0.70, omega_b: float | None = None
+) -> dict:
+    """Lemma D' -- the same coupling with **no spectral gap at all**.
+
+    ``lemma_d_witness`` above satisfies (D1), the one-sided gap, and is degree 2
+    because identifiability.md 4.5 Step 3 says the gap forces that.  This one
+    drops the gap entirely: both modules are ``s * Rot(omega)``, so their
+    Lyapunov spectra are *identical* -- ``spectral_gap`` is exactly 0 and
+    ``filtration_gap`` is not ordered.  Lemma C has nothing to work with,
+    Theorem F does not apply, and (D1) fails ("rho(f~_B) < rho_min(f_A)" reads
+    ``s < s``).
+
+    The point: behaviour does not care.  The surviving coupling here is
+    **degree 1** -- a linear ``psi = c I``, resonant because ``f_A`` and
+    ``f~_B`` share their spectrum -- and Step 4's scaling iteration works at
+    every degree ``>= 1``, not only at ``>= 2``.  So the conclusion survives
+    under the far weaker
+
+        (D1')  1 not in spec(f~_B),
+
+    which is all that is needed to exclude the degree-0 (scale-invariant)
+    escape that 4.5 already identifies as the unique one.
+
+    Why it matters: two modules with identical spectra is the *linear* form of
+    task 23's two-oscillator case -- exactly where the spectral route is dead.
+    ``omega_b`` defaults to ``omega`` (resonant).  Set it to anything other than
+    ``+/- omega`` and ``sylvester_kernel_dim`` drops to 0: no linear ``psi``
+    exists at all, and behaviour is not even needed.
+    """
+    omega_b = omega if omega_b is None else float(omega_b)
+
+    def _rot(w: float) -> np.ndarray:
+        return s * np.array([[np.cos(w), -np.sin(w)], [np.sin(w), np.cos(w)]])
+
+    R_a, R_b = _rot(omega), _rot(omega_b)
+
+    # Step 1 of Lemma D forces f_B = f~_B, so F and F~ coincide here.
+    def F(z: np.ndarray) -> np.ndarray:
+        z = np.asarray(z, dtype=float)
+        return np.concatenate([z[..., :2] @ R_a.T, z[..., 2:] @ R_b.T], axis=-1)
+
+    def h(z: np.ndarray) -> np.ndarray:
+        z = np.asarray(z, dtype=float)
+        return np.concatenate([z[..., :2], z[..., 2:] + c * z[..., :2]], axis=-1)
+
+    lam_a, lam_b = np.linalg.eigvals(R_a), np.linalg.eigvals(R_b)
+    spec = np.array([np.log(s), np.log(s)])
+
+    return {
+        "F": F,
+        "h": h,
+        "R_a": R_a,
+        "R_b": R_b,
+        "c": c,
+        "s": s,
+        "omega": omega,
+        "omega_b": omega_b,
+        "spectra": [spec, spec.copy()],
+        "psi_degree": 1,
+        "resonance_residual": float(np.abs(lam_a[:, None] - lam_b[None, :]).min()),
+        "sylvester_kernel_dim": sylvester_kernel_dim(R_a, R_b),
+        # (D1) needs rho(f~_B) < rho_min(f_A); both are s, so it fails
+        "gap_holds": False,
+        # (D1') needs 1 not in spec(f~_B)
+        "unit_eigenvalue_distance": float(np.abs(lam_b - 1.0).min()),
+        "cross_derivative": float(abs(c) * np.sqrt(2.0)),
+        "var_h_b": lambda sigma, tau=1.0: tau ** 2 + c ** 2 * sigma ** 2,
+    }
+
+
+def sylvester_kernel_dim(A: np.ndarray, B: np.ndarray, tol: float = 1e-10) -> int:
+    """Dimension of ``{P : P A = B P}`` -- the linear (degree-1) couplings.
+
+    Nonzero exactly when ``A`` and ``B`` share an eigenvalue, which for two
+    rotation-scalings at the same rate means ``omega_A = +/- omega_B``.  This is
+    the degree-1 instance of Lemma D Step 2's resonance condition, and it is
+    what makes "equal rotation numbers" the resonance analogue for oscillatory
+    modules (CLAUDE.md task 35).
+    """
+    A = np.asarray(A, dtype=float)
+    B = np.asarray(B, dtype=float)
+    d = A.shape[0]
+    M = np.kron(A.T, np.eye(d)) - np.kron(np.eye(d), B)
+    sv = np.linalg.svd(M, compute_uv=False)
+    return int((sv < tol * max(1.0, float(sv.max()))).sum())
 
 
 def tier2_witness(mu: float = 0.70, c: float = 0.90, nu: float = 0.50) -> dict:
