@@ -313,17 +313,50 @@ has mean $1.03$ and minimum $0.55$ over $\Omega$.
   $H_1(T^2)=\mathbb{Z}^2$ — not the individual rotation numbers. The
   construction realises $\left(\begin{smallmatrix}1&1\0&1\end{smallmatrix}\right)$.
 
-**Shear obstructs it, and that is the one piece of good news.** With
-$\beta_2 \neq 0$ the angle increment of $f_2$ depends on $r_2$, which the
-regrouped module 1 cannot see, so no autonomous $\tilde f_1$ exists: the
-residual jumps from $6.7\times10^{-16}$ to $9.3\times10^{-2}$ at $\beta_2=0.3$.
-Shear in the *receiving* block is harmless (residual $10^{-15}$ at
-$\beta_1 = 0.8$). So the obstruction is specifically **amplitude–phase coupling
-in the donor**, which is generic in a real oscillator and absent from the
-idealised one. Whether that genuinely restores identifiability, or merely
-defeats this particular $h$, is not settled here. `TODO(gap)`
+### 7.1 Shear does not save it
 
-> `systems.torus_regrouping_counterexample()`; the quotient is computable with
+The construction above uses the naive angle, and with $\beta_2\neq0$ it breaks:
+the angle increment of $f_2$ then depends on $r_2$, which the regrouped module 1
+cannot see, so no autonomous $\tilde f_1$ exists (residual $6.7\times10^{-16}
+\to 7.8\times10^{-2}$ at $\beta_2 = 0.3$). That looked like an escape, since
+amplitude–phase coupling is generic in a real oscillator and absent from the
+idealised one.
+
+**It is not an escape. It is a defect of the naive angle.** The object that
+advances rigidly is the **asymptotic phase**
+
+$$\Theta(r,\theta) \;=\; \theta + \beta \sum_{k\ge0}\big(g^{k}(r)-\rho\big),
+\qquad \Theta\circ f = \Theta + \omega \ \text{ for every } \beta,$$
+
+the sum converging geometrically because $g^k(r)\to\rho$. This is the discrete
+isochron coordinate, and it exists for any normally hyperbolic attracting cycle.
+Rebuilding $h$ with $\Theta_1,\Theta_2$ in place of $\theta_1,\theta_2$ gives an
+exact conjugacy **at every shear**:
+
+| $\beta_1$ | $\beta_2$ | naive $h$ | asymptotic $h$ |
+|---|---|---|---|
+| 0.0 | 0.0 | $1.1\times10^{-15}$ | $1.1\times10^{-15}$ |
+| 0.0 | 0.3 | $7.8\times10^{-2}$ | $1.4\times10^{-15}$ |
+| 0.0 | 0.8 | $2.1\times10^{-1}$ | $1.5\times10^{-15}$ |
+| 0.5 | 0.3 | $7.8\times10^{-2}$ | $1.6\times10^{-15}$ |
+| 0.5 | 0.8 | $2.1\times10^{-1}$ | $1.8\times10^{-15}$ |
+
+with $h^{-1}$ recovering the input to $1.7\times10^{-15}$ throughout, and
+$\sup\|Dh\| = 3.86$ with the cross-block bounded below by $0.80$.
+
+**In hindsight this had to be so, and the reason is worth keeping.** Shear is
+**not a conjugacy invariant of a single cycle** — passing to $(r,\Theta)$ removes
+it, which is exactly what the isochron coordinate is for. A quantity that is not
+an invariant cannot protect an invariant. The regrouped $\tilde f_1$ comes out
+shear-free even when $f_1$ is not, which is the same fact seen from the other
+side.
+
+So the $GL(2,\mathbb{Z})$ ambiguity is **intrinsic to two oscillatory modules**,
+not an artefact of an idealised model, and task 23 closes with no caveat.
+
+> `systems.torus_regrouping_counterexample()` (pass `naive_phase=True` for the
+> contrast), `systems.asymptotic_phase`; the quotient is computable with
 > `spectra.rotation_lattice_margin`. Note $\beta = 0$ is `LimitCycleBlock`'s
 > **default** and is what `exp14` part 4 uses, so the repo's own two-oscillator
-> system is the vulnerable one — see the margin correction in CLAUDE.md task 40.
+> system is vulnerable to even the naive form — see the margin correction in
+> CLAUDE.md task 40.

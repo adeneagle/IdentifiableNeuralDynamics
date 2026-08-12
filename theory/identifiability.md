@@ -326,10 +326,14 @@ an oscillatory module while $\lambda_{\min} < 0$ for any contracting one. Hence:
 > rotation *vector* up to $GL(2,\mathbb{Z})$ — not the per-module rotation
 > numbers.** This is §1's regrouping counterexample in oscillatory form.
 >
-> One caveat, unresolved: shear in the *donor* block obstructs the construction
-> (residual $9.3\times10^{-2}$ at $\beta_2=0.3$), and amplitude–phase coupling is
-> generic in a real oscillator. Whether that restores identifiability or merely
-> defeats this $h$ is open. `TODO(gap)`
+> **No caveat survives.** Shear in the donor block breaks the *naive-angle*
+> construction ($7.8\times10^{-2}$ at $\beta_2=0.3$), which briefly looked like
+> an escape. It is not: the object that advances rigidly is the **asymptotic
+> phase** $\Theta = \theta + \beta\sum_k(g^k(r)-\rho)$, and rebuilding $h$ with
+> it gives an exact conjugacy at every shear ($\le1.8\times10^{-15}$ over
+> $\beta_1\in\{0,0.5\}$, $\beta_2\in\{0,0.3,0.8\}$). In hindsight forced: shear
+> is not a conjugacy invariant of a single cycle — $(r,\Theta)$ removes it — so
+> it could never have protected one. `counterexamples.md` §7.1.
 
 Point 2 is the resolution of a case that previously produced numbers that could
 not be reconciled with the rate formula: it is outside Lemma C's hypotheses, not

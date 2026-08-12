@@ -371,18 +371,46 @@ def test_the_torus_conjugacy_satisfies_F1_and_is_genuinely_coupled():
 
 
 @pytest.mark.parametrize("beta_donor,breaks", [(0.0, False), (0.3, True), (0.8, True)])
-def test_shear_in_the_donor_block_obstructs_the_regrouping(beta_donor, breaks):
-    """The regrouped module 1 cannot see r_2, so beta_2 != 0 leaves no autonomous f~_1."""
-    w = S.torus_regrouping_counterexample(beta_donor=beta_donor)
+def test_donor_shear_breaks_the_NAIVE_angle_construction(beta_donor, breaks):
+    """The naive theta_2 increment depends on r_2, which module 1 cannot see."""
+    w = S.torus_regrouping_counterexample(beta_donor=beta_donor, naive_phase=True)
     z = _torus_annulus(np.random.default_rng(3))
     resid = float(np.abs(w["h"](w["F"](z)) - w["F_tilde"](w["h"](z))).max())
     assert (resid > 1e-3) == breaks, f"beta_donor={beta_donor}, residual={resid}"
 
 
-def test_shear_in_the_receiving_block_is_harmless():
-    w = S.torus_regrouping_counterexample(beta_receiving=0.8)
+@pytest.mark.parametrize("beta_receiving", [0.0, 0.5])
+@pytest.mark.parametrize("beta_donor", [0.0, 0.3, 0.8])
+def test_asymptotic_phase_restores_it_at_every_shear(beta_receiving, beta_donor):
+    """So shear is not an escape -- counterexamples.md 7.1.
+
+    Theta = theta + beta * sum_k (g^k(r) - rho) advances rigidly for any beta,
+    and rebuilding h with it is an exact conjugacy where the naive one fails.
+    """
+    w = S.torus_regrouping_counterexample(
+        beta_receiving=beta_receiving, beta_donor=beta_donor)
     z = _torus_annulus(np.random.default_rng(4))
     assert np.abs(w["h"](w["F"](z)) - w["F_tilde"](w["h"](z))).max() < 1e-12
+    assert np.abs(w["h_inv"](w["h"](z)) - z).max() < 1e-12
+
+
+@pytest.mark.parametrize("beta", [0.0, 0.3, 0.8])
+def test_asymptotic_phase_advances_rigidly(beta):
+    """Theta(f z) = Theta(z) + omega, which the naive angle does not satisfy."""
+    blk = S.LimitCycleBlock(a=0.3, rho=1.0, omega=1.3, beta=beta)
+    z = _torus_annulus(np.random.default_rng(5))[:, 2:]
+    d = S.asymptotic_phase(blk, blk.step(z)) - S.asymptotic_phase(blk, z) - blk.omega
+    assert np.abs((d + np.pi) % (2 * np.pi) - np.pi).max() < 1e-12
+    if beta != 0.0:
+        naive = np.arctan2(z[:, 1], z[:, 0])
+        assert np.abs(S.asymptotic_phase(blk, z) - naive).max() > 1e-3, "Theta != theta"
+
+
+def test_shear_is_not_a_conjugacy_invariant_so_it_cannot_protect_one():
+    """The regrouped module comes out shear-free even when the original is not."""
+    w = S.torus_regrouping_counterexample(beta_receiving=0.5, beta_donor=0.8)
+    assert w["system"].blocks[0].beta == 0.5
+    assert w["system_tilde"].blocks[0].beta == 0.0
 
 
 def test_lattice_margin_sees_through_the_regrouping_but_not_past_a_real_change():

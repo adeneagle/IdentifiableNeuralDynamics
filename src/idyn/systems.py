@@ -1087,12 +1087,43 @@ def gapless_resonant_coupling(
     }
 
 
+def asymptotic_phase(blk: LimitCycleBlock, z: np.ndarray, n_max: int = 4000,
+                     tol: float = 1e-15) -> np.ndarray:
+    """The phase that advances rigidly: ``Theta(f z) = Theta(z) + omega``, any shear.
+
+    For ``theta' = theta + omega + beta (r - rho)`` the naive angle does *not*
+    advance rigidly off the cycle.  The asymptotic phase does:
+
+        Theta(r, theta) = theta + beta * sum_{k>=0} (g^k(r) - rho),
+
+    the sum converging geometrically since ``g^k(r) -> rho``.  This is the
+    discrete isochron coordinate, and it exists for any normally hyperbolic
+    attracting cycle -- which is why **shear is not a conjugacy invariant of a
+    single cycle**: passing to ``(r, Theta)`` removes it.
+    """
+    z = np.asarray(z, dtype=float)
+    r = np.hypot(z[..., 0], z[..., 1])
+    th = np.arctan2(z[..., 1], z[..., 0])
+    if blk.beta == 0.0:
+        return th
+    acc = np.zeros_like(r)
+    cur = r.copy()
+    for _ in range(n_max):
+        d = cur - blk.rho
+        acc += d
+        if float(np.abs(d).max()) < tol:
+            break
+        cur = blk._g(cur)
+    return th + blk.beta * acc
+
+
 def torus_regrouping_counterexample(
     a: float = 0.30,
     rho: float = 1.0,
     omega: tuple[float, float] = (0.50, 1.30),
     beta_receiving: float = 0.0,
     beta_donor: float = 0.0,
+    naive_phase: bool = False,
 ) -> dict:
     """**The rotation number does not pin the splitting.** Task 23, answered NO.
 
@@ -1116,16 +1147,29 @@ def torus_regrouping_counterexample(
     conjecture that the rotation number could stand in for the missing spectral
     separation.
 
-    **Shear in the donor block obstructs it.**  With ``beta_donor != 0`` the
-    angle increment of ``f_2`` depends on ``r_2``, which the regrouped module 1
-    cannot see, so no autonomous ``f~_1`` exists.  ``beta_receiving`` is free.
-    Note that ``beta = 0`` is `LimitCycleBlock`'s default and is what `exp14`
-    part 4 uses, so the repo's own two-oscillator system is the vulnerable one.
+    **Shear does not save it.**  ``naive_phase=True`` reproduces the formula
+    above literally, and it *does* break under donor shear -- with
+    ``beta_donor != 0`` the naive angle increment of ``f_2`` depends on ``r_2``,
+    which the regrouped module 1 cannot see.  But that is a defect of the naive
+    angle, not an obstruction: the object that advances rigidly is the
+    **asymptotic phase** (`asymptotic_phase` above), and rebuilding ``h`` with it
+    restores an exact conjugacy at every shear.  The default does that.
+
+    Two consequences worth stating.  The regrouped ``f~_1`` is shear-*free* even
+    when ``f_1`` is not, which is fine because shear is not a conjugacy invariant
+    of a single cycle to begin with -- so it was never a candidate for
+    protecting one.  And ``beta = 0`` is `LimitCycleBlock`'s default and what
+    `exp14` part 4 uses, so the repo's own two-oscillator system is vulnerable
+    to even the naive form.
     """
     w1, w2 = float(omega[0]), float(omega[1])
     f1 = LimitCycleBlock(a=a, rho=rho, omega=w1, beta=beta_receiving)
     f2 = LimitCycleBlock(a=a, rho=rho, omega=w2, beta=beta_donor)
-    f1_tilde = LimitCycleBlock(a=a, rho=rho, omega=w1 + w2, beta=beta_receiving)
+    # In (r, Theta) coordinates the phase advance is radius-independent, so the
+    # regrouped module carries no shear.  With naive_phase it must mirror f_1.
+    f1_tilde = LimitCycleBlock(
+        a=a, rho=rho, omega=w1 + w2, beta=beta_receiving if naive_phase else 0.0
+    )
 
     def _pair(blocks):
         def step(z):
@@ -1135,20 +1179,30 @@ def torus_regrouping_counterexample(
             )
         return step
 
-    def _c(z):
-        z = np.asarray(z, dtype=float)
-        return z[..., 0] + 1j * z[..., 1], z[..., 2] + 1j * z[..., 3]
+    def _phase(blk, z):
+        if naive_phase:
+            return np.arctan2(z[..., 1], z[..., 0])
+        return asymptotic_phase(blk, z)
 
-    def _r(u, v):
-        return np.stack([u.real, u.imag, v.real, v.imag], axis=-1)
+    def _shift(blk, r):
+        """Theta - theta, the isochron twist at radius r (0 under naive_phase)."""
+        if naive_phase or blk.beta == 0.0:
+            return np.zeros_like(r)
+        probe = np.stack([r, np.zeros_like(r)], axis=-1)
+        return asymptotic_phase(blk, probe)
 
     def h(z):
-        u, v = _c(z)
-        return _r(u * v / np.abs(v), v)
+        z = np.asarray(z, dtype=float)
+        r1 = np.hypot(z[..., 0], z[..., 1])
+        p = _phase(f1, z[..., :2]) + _phase(f2, z[..., 2:])
+        return np.stack([r1 * np.cos(p), r1 * np.sin(p), z[..., 2], z[..., 3]], axis=-1)
 
     def h_inv(w):
-        u, v = _c(w)
-        return _r(u * np.conj(v) / np.abs(v), v)
+        w = np.asarray(w, dtype=float)
+        r1 = np.hypot(w[..., 0], w[..., 1])
+        th1 = (np.arctan2(w[..., 1], w[..., 0])
+               - _phase(f2, w[..., 2:]) - _shift(f1, r1))
+        return np.stack([r1 * np.cos(th1), r1 * np.sin(th1), w[..., 2], w[..., 3]], axis=-1)
 
     two_pi = 2.0 * np.pi
     return {
