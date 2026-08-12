@@ -182,7 +182,8 @@ Current state of this repo:
 | **Rotation number** | `spectra.rotation_number`, `exp14` part 1 | **Built and exact.** The conjugacy invariant the Lyapunov spectrum provably cannot see (task 23): `LimitCycleBlock(a=0.3)` has spectrum $\{0,\log\|1-2a\|\}$ for *every* $\omega$. Machine-precision on all known-answer blocks, survives a nonlinear gauge change, carries a `coherence` and a §3.9-style underflow horizon. Until now $\omega$ existed only as a *generating* parameter — nothing ever measured it back |
 | **Fit-to-fit invariant agreement** | `metrics.dynamical_fingerprint` / `invariant_agreement`, `exp14` | **Built and validated on exact systems.** The first metric here that needs **no ground truth** — it compares two fits to each other (task 40). Blind to a within-module gauge change and to the §3.7 triangular conjugacy; catches the §3.1 regrouping ($0.223$) and the task-23 frequency change ($\rho$ only, spectra tie at $10^{-18}$). Both directions are required and it is easy to get only one |
 | **Nonlinear data decoder** | `src/idyn/systems.py` `MLPDecoder` | Affine coupling flow, invertible in closed form, analytic, ~45% nonlinear residual. Until 2026-08-03 **no experiment generated nonlinear observations at all** — §3.11 |
-| Test suite | `tests/` | 274 tests. **One pre-existing failure on a numpy-2.4 machine** — `test_naive_sigma_min_route_is_noise_on_a_limit_cycle`, exactly the environment-fragile check §3.9/§4.1 warn about: on numpy 2.4 the noise floor *wanders* instead of converging to the wrong limit, so the `wrong_limit` assertion fails while the defect's *magnitude* assertion still passes. See §4.1 |
+| **Theorem F — the filtration, written up** | `theory/identifiability.md` §6, `spectra.filtration_gap` | **DONE (task 11).** Standalone statement, no `TODO(gap)` in its dynamics. Tier 1 (Prop. T1) stated first with a regularity ledger — which invariants are free topologically and which need the $C^1$ bounds. **Hypothesis changed in the writing: (F3) ordered separation, not (B4) disjointness** — the module spectra must occupy disjoint *intervals*. Two things fell out as **conclusions**: the ordering half of the matching lemma, and identification of every head system $F_{\le i}$ (not just $f_1$). Open: only the coarsening, = nonlinear (B2) |
+| Test suite | `tests/` | **285 tests, all passing** (was 274 with one environment failure). `test_naive_sigma_min_route_is_noise_on_a_limit_cycle` is fixed per §4.1's own prescription — it now asserts only the clause true on *both* numpy 2.4 and 2.5, namely that the naive rate misses the truth by more than half the spread. New datum from the rewrite: at `n_max=200` the naive rate is **+0.73 against a true −0.29**, i.e. it returns the wrong *sign* — a false **negative** on Lemma C, mirroring the known false positive |
 
 **Headline result of the build:** the §3.3 fix is correct but insufficient — it
 yields a *triangular* h, not a block-diagonal one, and provably cannot do better.
@@ -887,6 +888,53 @@ the *other* failure mode — a fit that misses a factor outright rather than
 duplicating one — which nothing here detects without ground truth. That is the
 honest boundary of the method as it stands.
 
+### 3.14 `spectral_gap` is (B4) and it is the wrong hypothesis — use `filtration_gap`
+
+**Sixth defect of the §3.9 family, and the first one in a *hypothesis* rather
+than a readout or a loss.** §3.12 caught an objective that measured the gauge;
+this is a *check* that certifies the wrong condition, and it certifies it
+positively — the worst direction.
+
+`spectra.spectral_gap` returns the minimum distance between exponents belonging
+to different modules. That is hypothesis **(B4)**: no two modules *share* an
+exponent. Lemma C does not need that. It needs the **oriented** gap
+$\lambda_{\max}(f_j) < \lambda_{\min}(\tilde f_i)$, and chaining those across
+$K$ modules requires the module spectra to occupy **disjoint intervals** —
+hypothesis **(F3)**, `spectra.filtration_gap`. `identifiability.md` §4.3 has said
+(B4) is too weak since the triangular counterexample was found; what was missing
+was a computed quantity for the condition that is actually wanted.
+
+**The gap between the two is exactly the §3.1 regrouping counterexample.** With
+$\lambda = (0.90, 0.75, 0.60, 0.45)$:
+
+| grouping | `spectral_gap` (B4) | `filtration_gap` (F3) |
+|---|---|---|
+| true, $\{\lambda_1\lambda_2\}\{\lambda_3\lambda_4\}$ | $+0.2231$ | $+0.2231$ ✓ |
+| regrouped, $\{\lambda_1\lambda_3\}\{\lambda_2\lambda_4\}$ | **$+0.1823$** ✓ | **$-0.2231$** ✗ |
+
+The regrouping keeps every exponent distinct while *interleaving* the hulls
+$[-0.5108,-0.1054]$ and $[-0.7985,-0.2877]$. So (B4) reports the repo's own
+negative control as satisfying the separation hypothesis. (F3) rejects it.
+
+**And (F3) is not merely stricter, it is *right*** — it reproduces a measured
+threshold with no free parameter. On `exp08`'s sweep (attracting invariant
+circle, hull $[-0.9163, 0]$, against a contracting partner) `filtration_gap > 0`
+agrees with the measured `forces_M_zero` at **every** point on both sides of the
+crossing, $s_{\text{fast}} \in \{0.20, 0.25, 0.30, 0.35, 0.38\}$ forcing and
+$\{0.42, 0.50\}$ not, the crossing at $\log|1-2a|$ to the digit.
+
+**A consequence that is easy to miss: width, not speed, is what disqualifies.**
+A module with a *wide* hull can swallow a narrower one lying inside it, and then
+neither cross-derivative is forced even though one module plainly has the larger
+$\lambda_{\max}$. A limit cycle's hull $[\lambda_{\text{transverse}}, 0]$ is as
+wide as they come, so `identifiability.md` §4.4's rider "an oscillatory module
+sits at the top" does **not** make it separable from everything below it.
+
+**Do:** gate any filtration claim on `filtration_gap(...).ordered`. **Do not**
+read `spectral_gap > 0` as licence for Lemma C — it is the hypothesis of a
+theorem this repo has a counterexample to. Regression tests in
+`tests/test_spectra_and_cocycle.py` (§"Ordered separation").
+
 ---
 
 ## 4. Resources
@@ -908,13 +956,15 @@ honest boundary of the method as it stands.
 > interpreter is `C:\Users\alexa\miniconda3\envs\torch\python.exe` with
 > **numpy 2.4.3, torch 2.7.1+cu118** (CUDA build present, still not needed). So
 > the environment has moved *back* to the one the note below calls stale.
-> **Consequence, and it is the predicted one:** `test_naive_sigma_min_route_is_noise_on_a_limit_cycle`
-> fails here, because it was rewritten against numpy 2.5's behaviour (floor
-> converges to the wrong limit) and numpy 2.4's floor *wanders* instead. The
-> §3.9 invariant it exists to protect — that the naive route misses the truth by
-> the whole spread — still passes. Rewrite it against that clause alone if this
-> machine becomes the primary one. **Baseline for any change made here is
-> therefore 273 passed / 1 failed, not 274/0.**
+>
+> **RESOLVED 2026-08-12.** This machine is now the primary one, so
+> `test_naive_sigma_min_route_is_noise_on_a_limit_cycle` was rewritten against
+> the §3.9 invariant alone, exactly as the note here prescribed: it asserts that
+> the naive rate misses the truth by more than half the spread (true on both
+> numpy 2.4 and 2.5) and no longer asserts that the noise floor *converges* to
+> the wrong limit (true only on 2.5). **Baseline is now 285 passed / 0 failed.**
+> Both floor behaviours are recorded in the docstring with numbers, so a future
+> move has the comparison rather than a symptom.
 >
 > **History.** An earlier revision recorded `C:\Users\alexa\...` with
 > torch 2.7.1+cu118 / numpy 2.4.3. That was a *different machine*; the repo was
@@ -941,10 +991,11 @@ and the checklist is short:
 
 0. **Check you are in the right checkout.** See the nesting warning below.
 1. `conda env create -f environment.yml && conda activate idyn`
-2. `python -m pytest -q` — **expect 274 passing on numpy 2.5, or 273 passed /
-   1 failed on numpy 2.4** (the §3.9 test, see the move note above). This is the
-   real acceptance test for a move: §3.9's regression tests are exactly the ones
-   that changed behaviour last time the numerics moved under them.
+2. `python -m pytest -q` — **expect 285 passing**, on numpy 2.4 *or* 2.5; the
+   one test that used to split across those versions no longer does (§4.1's
+   RESOLVED note). This is the real acceptance test for a move: §3.9's
+   regression tests are exactly the ones that changed behaviour last time the
+   numerics moved under them, so if anything breaks, expect it there.
 3. Update the interpreter path in §4.1 and in `README.md`'s quick start, and the
    repo root wherever it appears (§4.2, §5). **Nothing in `src/`, `tests/` or
    `experiments/` contains an absolute path** — verified, and worth keeping true.
@@ -1055,6 +1106,8 @@ IdentifiableDynamics/
 │   │                          #   LinearDecoder (Thm A) + MLPDecoder (Thm B, flow)
 │   ├── linear.py              # finest invariant decomposition, block-permutation test
 │   ├── spectra.py             # Lyapunov / dichotomy spectra, module gaps,
+│   │                          #   filtration_gap = (F3) ordered separation, NOT
+│   │                          #     spectral_gap = (B4) disjointness -- see 3.14
 │   │                          #   rotation number (the invariant spectra cannot see)
 │   ├── cocycle.py             # §3.3 iterated cocycle relation
 │   ├── normalform.py          # Poincaré–Dulac: homological operator, resonances
@@ -1094,7 +1147,7 @@ negative control comes back unique, stop and re-examine assumptions.
 | 8 | **Position against the literature** (Hyvärinen & Morioka, Hälvä & Hyvärinen, Khemakhem et al.). Be explicit about what modular *dynamics* adds beyond conditioning on a time index | drafted in `theory/literature.md` §1; needs write-up into `identifiability.md` §8. **CORRECTION (2026-08-04):** an earlier revision claimed "those results all need non-stationarity or an auxiliary variable, and we have neither — autonomous + stationary is exactly the uncovered case". **That is wrong, and it conflates an autonomous *system* with a stationary *process*.** The dynamics are time-invariant, but the process $\{z_t\}$ is *not* stationary unless $z_0$ is drawn from the invariant measure — and `make_dataset` deliberately spreads initial conditions over an annulus, so every dataset in this repo is non-stationary by construction. Measured: with $u=t$ the blocks' scale-normalised $t$-dependence is $1.32$ and $4.20$, i.e. strongly non-stationary. The positioning has to be rewritten around *what kind* of non-stationarity, not its absence — see task 35 |
 | **9** | **NEW: resolve the two-sided cocycle obstruction (§3.7)** | **resolved negatively.** The conclusion is *false* under (B1)–(B4), not merely unprovable — counterexample in `counterexamples.md` §5. Both candidate routes are dead |
 | **10** | **Route A — diagonality under $C^\infty$ + cross-module non-resonance** | open; proof plan in `literature.md` §2.2. **Not dead** — the §5 counterexample needs resonance, a measure-zero condition |
-| **11** | **Route C — filtration identifiability.** Assemble `identifiability.md` §4.2 into a standalone theorem | open; **essentially proved already**, needs writing up. Write it as the **Tier 2** half of §1.2, and state **Tier 1** (free conjugacy) ahead of it — Tier 1 costs nothing, is already true of what is built, and frames what the filtration adds |
+| **11** | **Route C — filtration identifiability.** Assemble `identifiability.md` §4.2 into a standalone theorem | **DONE — `identifiability.md` §6.** Tier 1 stated first (Prop. T1) with a **regularity ledger**: dimension, fixed-point count, stability type, attractor topology, entropy and rotation number are free *topologically*; only the Lyapunov spectrum needs the $C^1$ derivative bounds. Then Theorem F under (F1)–(F4). **One hypothesis changed in the writing and it matters: (B4) disjointness is replaced by (F3) ordered separation** — disjoint *intervals*, not merely distinct exponents. That is not cosmetic: the §3.1 regrouping counterexample **passes (B4) at $+0.1823$** and **fails (F3) at $-0.2231$**, so (F3) is what rejects it, and `spectra.filtration_gap` computes it. Two things came out as *conclusions* rather than hypotheses — (a) the **ordering half of the matching lemma** (§3.2) is free, since both sides must partition the same Tier-1 spectrum into consecutive groups, leaving only the *coarsening* freedom = nonlinear (B2); (b) **every head system $F_{\le i}$ is identified**, not just $f_1$, so the whole chain of quotients is pinned, with $\Lambda(f_i)$ recovered by set difference. Validated: (F3) computed from spectra alone reproduces `exp08`'s measured `forces_M_zero` threshold at **every** sweep point on both sides of the crossing, no free parameter |
 | **12** | **Route B — hybrid: behavioural auxiliary + one-sided gap** | open; mechanism verified numerically. Needs a *partial* iVAE theorem |
 | **13** | **Learn an indecomposable model** — certify the fitted model, then search the partition lattice | **largely done** (`selection.py`, `exp06`): fitted-model certification + lattice search recover the finest partition from data. Finding: fit rejects splitting an indecomposable block, uniqueness breaks ties among equal-fit regroupings — each covers the other's blind spot. The linearised certifier's Tier 2 false negative is now fixed at the fixed point (task 25, degree-2 jet). Off-fixed-point (genuine-attractor) indecomposability still open |
 | **22** | **Does Lemma C extend to genuine attractors?** (the filtration off the fixed point) | **resolved positively** for *periodic* attractors — Lemma C′, `identifiability.md` §4.4, certified in `exp08` (rate exact to 2.4e-14, threshold exact at $\|1-2a\|$; uniformity over the basin measured to 2.8e-16 across a 100× radius range). Uses only (B1)'s bounded-derivative clause — **not** $\mathrm{int}\,\Omega\neq\emptyset$, not (B2), not (B3). Prerequisite finding: the naive $\sigma_{\min}$ bound is unusable here (§3.9). **Open:** attractors with non-uniform exponents (chaotic) |
@@ -1111,7 +1164,7 @@ negative control comes back unique, stop and re-examine assumptions.
 | **38** | **NEW: the "partial iVAE lemma" is PUBLISHED — reposition the behavioural half** | open, and it **changes what Route B can claim** (`literature.md` §1.3). The obligation task 27 called the B∘C front line — "$u$-invariant complement identified as a subspace, not a corollary of Khemakhem et al." — is the literature's **block-identifiability** (von Kügelgen et al. 2021, Def. 4.1: $\hat c = h(c)$ for invertible $h$ — verbatim our target and verbatim §7). Two theorems in *our* setting, an auxiliary variable indexing a law rather than paired views: **Kong et al. arXiv 2306.06510 Thm 4.2** and **Sun et al. arXiv 2208.14161 Prop. 4.2**, both giving the invariant block up to invertible transformation, both allowing invariant/varying dependence, and Kong's componentwise-monotonic domain action $z_s=f_u(\tilde z_s)$ **exactly matches our variance modulation** $z_A=s(u)\tilde z_A$. **Lemma D is not redundant** — it needs **two** behaviour levels against Kong's $2n_s+1$ and Sun's $2\ell+1$, and buys that economy with the dynamics (the gap forces coupling degree $\ge2$). That economy is now the defensible novelty of the behavioural half, and it should be stated that way rather than as "we proved a lemma nobody had". **Blocking check first:** Kong's A2 is *componentwise* conditional independence, which our within-module coordinates violate — read from summaries, A2/A3 look like they serve the finer $z_s$ conclusion while the block conclusion rests on A1 + A4 (a cylinder-set condition, not a factorisation), but **this was not read from the proof.** Verify before citing |
 | **35** | **Route B′ — auxiliary variable = the time index $t$** | open, **promoted: it matches the target model class and it is free.** Autonomous LFADS is random $g_0$ + deterministic generator, so all trial-to-trial randomness is in the initial condition; at fixed $t$ across trials that is an **ensemble**, exactly what TCL/iVAE consume. Path-conditioning (PCL/SNICA) is excluded by the target itself, not by a modelling choice. Available because the process is non-stationary (task 8 correction). **Not a cheaper $u$ for Lemma D** — Lemma D needs one block *flat* in $u$, and time moves every block ($t$-dep $1.32$/$4.20$ vs behaviour's $1.14$/$\mathbf{0.14}$), so there is no $t$-invariant subspace. What it powers is the TCL/iVAE **variability** condition: per-module natural parameters go like $s_i^{-2t}$, linearly independent across modules **iff the contraction rates differ** — i.e. satisfied exactly when Lemma C's gap holds. Same hypothesis, second extraction. **It may answer task 23**, the route's sharpest limitation: $u=t$ sees the **rotation number**, which Lyapunov exponents provably cannot. Measured — two limit cycles, $\omega=0.5$ vs $1.3$, *identical* spectra $\{0,-0.9163\}$ so Lemma C is dead, yet phase signatures separate by $1.571$ rad; at $\omega_1=\omega_2=0.9$ separation collapses to $0.006$ (**equal rotation numbers are B′'s resonance analogue**). Three costs: **(i)** at a fixed point only $\approx9$–$10$ usable $t$ levels before the fast block underflows, against Khemakhem's $nk+1=9$ — right at the line; **(ii)** on a *cycle* the variability is **persistent**, not transient ($t$-dep $1.489$ early, $1.493$ late, coherence held $0.881$; uniform initial phase → $0.057$, correctly dead), so B′ is **stronger off the fixed point than on it** — I first claimed the opposite and was corrected by measurement. Caveat: coherence held exactly because the model is noiseless with $\beta=0$; real dephasing sets a finite horizon, longer than (i)'s but not infinite; **(iii)** cost 3 — if TCL-style identification works, modularity may do no work. Defence: within-module coordinates are dependent, so plain TCL does not apply and a block version is needed. **Demoted 2026-08-04 by §1.3:** dropping the VAE commitment retires the *reason* to want an auxiliary variable at all, so B′'s TCL/iVAE half is no longer wanted; what survives is only its **rotation-number** sensitivity, which task 37 does need. **Zero repo footprint** — prose in this row plus `literature.md` §1.2's correction box, no module, no experiment, and `identifiability.md` §4.4's task-23 gap still reads `TODO(gap)` as though nothing had been measured |
 | **36** | **add process noise to the modules — but it is a CHANGE OF TARGET, not a fidelity fix** | open, and **demoted 2026-08-04 after checking LFADS.** I originally justified this as "determinism was chosen for convenience, not the science — LFADS latents are stochastic." **That justification is wrong.** In an autonomous LFADS model one samples $g_0$ from the prior and then simulates a **deterministic** RNN forward; the only per-timestep stochasticity is the *inferred inputs* $u_t$, which §1.1 scopes out. So under this project's own scope, LFADS is exactly **random initial condition + deterministic flow** — which is precisely what `make_dataset` builds. Determinism here is *faithful to the target*. What remains true: determinism is what makes PCL/SNICA inapplicable (`literature.md` §1.2 point 1 — the pair $(z_t,z_{t-1})$ lives on the graph of $f_i$), and adding noise would open that family, close §3.8's distributional-equivalence `TODO(gap)`, and make the sibling SNICA implementation reusable. But that is **moving to a model class where identifiability is easier**, not modelling LFADS more accurately, and it should be argued on those terms. Note the link to §3.8: if input drive $u_t$ is ever brought back in scope, LFADS's stochastic inputs *would* supply a per-timestep stochastic drive, and this task merges with that one |
-| **37** | **NEW: re-target from block-diagonality to dynamical invariants** | open. §7 already concedes that what is identified is the **partition plus each $f_i$'s conjugacy class**, never coordinates. The applied goal may need strictly less than block-diagonality of $h$: the number of modules, their dimensions, and per-module invariants (Lyapunov spectrum, rotation number, attractor topology). That reads as *"this population carries a slow 2-D rotation at 8 Hz and a fast 3-D decaying component"* — usable by a neuroscientist, and testable. Lemma C (filtration) plus task 35 (rotation number) may deliver it **without** ever proving $h$ block-diagonal, i.e. without needing tasks 33/34 to close |
+| **37** | **NEW: re-target from block-diagonality to dynamical invariants** | **specified, partly delivered.** `identifiability.md` §6.4 is now the spec: a six-row table (K, level dims, ordering, per-level Lyapunov spectrum, top-level rotation number, attractor topology) with the estimator and the hypothesis identifying each. Rows 3–5 are `metrics.dynamical_fingerprint` and are built; rows 1–2 rest on (F4)/nonlinear (B2); row 6 is **not built**. §6.3 is the sharp caveat and it was not obvious: $f_1$ is identified *outright* ($h_1=h_1(z_1)$ is a genuine conjugacy, so its rotation number is identified), but for $i\ge2$ what is identified is $f_i$ as **fibre dynamics of a skew product** — a conjugacy along the orbit of the base point, genuine only over a fixed or periodic point. Unconditionally only $\Lambda(f_i)$ survives at depth. That is the *theoretical* counterpart of §3.13(b)'s measured $100\times$ asymmetry between dominant and dominated modules, which is a good sign for both. Open: row 6, and the empirical half (39/40). Original entry: open. §7 already concedes that what is identified is the **partition plus each $f_i$'s conjugacy class**, never coordinates. The applied goal may need strictly less than block-diagonality of $h$: the number of modules, their dimensions, and per-module invariants (Lyapunov spectrum, rotation number, attractor topology). That reads as *"this population carries a slow 2-D rotation at 8 Hz and a fast 3-D decaying component"* — usable by a neuroscientist, and testable. Lemma C (filtration) plus task 35 (rotation number) may deliver it **without** ever proving $h$ block-diagonal, i.e. without needing tasks 33/34 to close |
 | **34** | **NEW (ACTIVE): why does the dose-$0.31$ arm land triangular in every restart?** | open — **the current front line.** It is the one arm where imposing behaviour *lowers* `jac_diag` (whitened $0.546$ vs raw $0.730$), and the tightness (sd $0.025$/$0.029$ over 8 restarts) rules out optimiser noise: it is a property of the objective at that dose, not of the seed. Leading hypothesis, and it is my error to check first: **`W_WHITENED = 1.0` was calibrated on the endpoint doses only** ($0.00$ and $0.60$), so the interior was never tuned — sweep $w$ at `strength=0.5` before looking for anything deeper. Note the decoders form a *one-parameter family* (same rng draw, scaled), so this is not a decoder-draw artifact. Second hypothesis: `obs-nl` is non-monotone in `strength` in a way that makes $0.31$ special beyond its dose |
 | **30** | **NEW: `exp11` methodology — report distributions, not best-of-$N$** | open, unambiguous (§3.11). Selection by `fit_quality` carries no structural information ($\mathrm{corr}=-0.044$ / $+0.279$); with sd $0.104$ the current point estimate is near a coin flip. Also raise `STEPS` — 1200 was tuned for the linear decoder and undertrains the nonlinear one into a *reversed* result. Do this before re-running exp11 as a gate |
 | **39** | **NEW: co-smoothing adequacy gate on real data** | open — §6 "empirical program". Nested ladder unconstrained ⊃ triangular ⊃ block-diagonal, scored by held-out-**neuron** co-smoothing (fit ~80% of the population, refit a *fresh* decoder to the remaining ~20%). Target: Neural Latents Benchmark maze/RTT — standardised, and carries LFADS baselines. **This would be the first real data in the repo**; everything so far is `make_dataset`. Answers *is the structure there*, i.e. it settles diagonal-vs-triangular empirically instead of by §7's genericity argument. **It cannot answer identifiability** — the metric is constant on gauge orbits, by construction |

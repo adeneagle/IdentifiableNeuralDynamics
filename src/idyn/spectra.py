@@ -31,6 +31,8 @@ __all__ = [
     "module_lyapunov_spectra",
     "ModuleSpectra",
     "spectral_gap",
+    "FiltrationOrder",
+    "filtration_gap",
     "RotationNumber",
     "rotation_number",
     "rotation_number_averaged",
@@ -155,6 +157,66 @@ def spectral_gap(spectra: Sequence[np.ndarray]) -> float:
             b = np.asarray(spectra[j]).ravel()
             best = min(best, float(np.abs(a[:, None] - b[None, :]).min()))
     return float(best) if np.isfinite(best) else 0.0
+
+
+@dataclass(frozen=True)
+class FiltrationOrder:
+    """The ordered-separation data Theorem F needs, which ``spectral_gap`` is not.
+
+    ``order`` lists module indices from slowest to fastest (descending
+    ``lambda_max``); ``gap`` is the smallest step down that chain,
+
+        min_i [ lambda_min(module order[i]) - lambda_max(module order[i+1]) ].
+
+    Positive iff the modules occupy **pairwise disjoint intervals** of the real
+    line, in that order.
+    """
+
+    order: list[int]
+    gap: float
+    hulls: list[tuple[float, float]]
+
+    @property
+    def ordered(self) -> bool:
+        return self.gap > 0.0
+
+    def summary(self) -> str:
+        chain = " > ".join(
+            f"f{i + 1}[{lo:+.4f},{hi:+.4f}]" for i, (lo, hi) in zip(self.order, self.hulls)
+        )
+        return f"chain-gap={self.gap:+.4f}  {chain}"
+
+
+def filtration_gap(spectra: Sequence[np.ndarray]) -> FiltrationOrder:
+    """Ordered separation of the module spectra -- hypothesis (F3) of Theorem F.
+
+    ``spectral_gap`` above asks only that no two modules **share** an exponent.
+    That is hypothesis (B4), and identifiability.md §4.3 records that it is
+    strictly too weak: Lemma C needs the *oriented* gap
+    ``lambda_max(f_j) < lambda_min(f_i)``, and disjointness does not supply it.
+    The difference is not academic -- it is exactly what separates the CLAUDE.md
+    §3.1 regrouping counterexample from a genuine filtration.  There the
+    alternative grouping interleaves two modules whose exponent sets are still
+    pairwise distinct, so ``spectral_gap`` reports a comfortable +0.18 while the
+    convex hulls overlap and no chain of oriented gaps exists.
+
+    Returns the descending order and the weakest link in the chain.  Negative
+    (or zero) means the modules cannot be arranged as a filtration at all, and
+    Theorem F does not apply -- whatever ``spectral_gap`` says.
+    """
+    hulls = [
+        (float(np.asarray(s).ravel().min()), float(np.asarray(s).ravel().max()))
+        for s in spectra
+    ]
+    if not hulls:
+        return FiltrationOrder(order=[], gap=0.0, hulls=[])
+    order = sorted(range(len(hulls)), key=lambda i: -hulls[i][1])
+    if len(order) == 1:
+        return FiltrationOrder(order=order, gap=float("inf"), hulls=[hulls[order[0]]])
+    gap = min(
+        hulls[order[k]][0] - hulls[order[k + 1]][1] for k in range(len(order) - 1)
+    )
+    return FiltrationOrder(order=order, gap=float(gap), hulls=[hulls[i] for i in order])
 
 
 # ---------------------------------------------------------------------------

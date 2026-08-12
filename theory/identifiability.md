@@ -5,7 +5,7 @@ Replaces the conjecture and proof sketch of the original draft
 §2–3 and `counterexamples.md`.
 
 Claims that depend on an unproved lemma are flagged `TODO(gap)` inline, per
-CLAUDE.md §8. There are three, and §6 lists them together.
+CLAUDE.md §8. §7 lists the open ones together; §6 is the theorem that has none.
 
 ---
 
@@ -140,7 +140,9 @@ to factor.
   independently evolving factors on $\Omega_i$. The nonlinear analogue of (A1);
   making this precise is itself open. `TODO(gap)`
 * **(B3) Matching.** A bijection $\sigma$ pairing the modules of $F$ with those
-  of $\tilde F$, with $\tilde f_{\sigma(i)}$ conjugate to $f_i$. `TODO(gap)` — see §6.
+  of $\tilde F$, with $\tilde f_{\sigma(i)}$ conjugate to $f_i$. `TODO(gap)` — see
+  §7, and §6.7 for how far Theorem F reduces it (the ordering half is free there,
+  and is *not* free here).
 * **(B4) Dichotomy separation.** The Lyapunov (Sacker–Sell) spectra
   $\Lambda(f_i) \subset \mathbb{R}$ are pairwise disjoint. This replaces the
   draft's Assumption 4, which was stated on pointwise Jacobian spectra and is
@@ -334,7 +336,7 @@ a counterexample to it. `spectra.spectral_gap` returns exactly $0$ there.
 > suspected, is innocent: it shifts the intercept by exactly
 > $\sqrt{(\beta/2a)^2+1}$ and leaves the rate invariant.
 
-**What this buys.** Theorem F (the filtration, §6.1) is the route standing on
+**What this buys.** Theorem F (the filtration, §6) is the route standing on
 proved ground, and it now extends past the fixed-point regime to periodic
 attractors — the case §5.3's caveat (b) had to exclude for block-diagonality.
 **Still open:** attractors with *non-uniform* exponents (chaotic, non-uniformly
@@ -627,22 +629,276 @@ prove, not a corollary here.
 
 ---
 
-## 6. Open problems, in priority order
+## 6. Theorem F — the filtration, and what it identifies
 
-1. **Theorem F — filtration identifiability.** *Now the priority.* §4.3 shows the
-   symmetric-partition target is false, but the triangular structure of §4.2 **is**
-   forced and is already proved. Restate it as the headline theorem: modules are
-   identified as an *ordered filtration* by Lyapunov spectrum. No new hypotheses
-   are needed, and under §0 the filtration is the more apt object anyway. The
-   work is assembling §4.2 into a standalone statement, pinning down what
-   "identified" means for a filtration (the flag of invariant foliations, and
-   each factor's conjugacy class), and checking it against `exp03`.
-   **§4.4 widens its scope before it is written:** the statement holds at
-   attracting periodic orbits too, not only at fixed points, and it carries two
-   structural riders worth stating in the theorem — an oscillatory module is
-   always the top element of the filtration, and there can be at most one of
-   them. Both are testable claims about timescale structure in a real
-   population, which is what §0 says the object of study is.
+*CLAUDE.md task 11 (Route C) and task 37. This is the statement that stands
+entirely on proved ground: no `TODO(gap)` is consumed by its dynamics, and the
+one hypothesis it cannot yet discharge is named in §6.7.*
+
+Theorem B asks whether $h$ is block-diagonal. §4.3 answers no — the target is
+false, not merely unproved. Theorem F asks the question that survives: **what
+does an equivalence identify, given that it is only triangular?** The answer is
+an ordered filtration plus a per-level invariant vector, and that is enough for
+the applied claim (CLAUDE.md §1.0).
+
+### 6.0 Tier 1 — the global conjugacy class costs nothing
+
+Before any modularity is used at all:
+
+> **Proposition T1.** Let $(F,g)$ and $(\tilde F,\tilde g)$ be equivalent with
+> $g,\tilde g$ injective on $\Omega$ and $\tilde\Omega$. Then
+> $h := \tilde g^{-1}\!\circ g$ is a bijection $\Omega\to\tilde\Omega$ and
+> $$\tilde F = h\circ F\circ h^{-1} \quad\text{on } \tilde\Omega .$$
+
+*Proof.* $g(z_t)=\tilde g(\tilde z_t)$ and $\tilde g$ injective give
+$\tilde z_t = h(z_t)$; substituting into $\tilde z_{t+1}=\tilde F(\tilde z_t)$
+gives $h(F(z_t))=\tilde F(h(z_t))$ at every visited point, hence on $\Omega$.
+$\square$
+
+So **the fitted transition is automatically conjugate to the true one**, and
+every conjugacy invariant of the whole system is identified with no theorem, no
+auxiliary variable, and no spectral hypothesis. What that buys, and at what
+regularity — the distinction matters, because a fitted $h$ is a diffeomorphism
+but its derivative bounds are not free:
+
+| invariant | regularity of $h$ needed |
+|---|---|
+| latent dimension $d$ | $h$ a homeomorphism |
+| number of fixed points / periodic orbits, and their periods | topological |
+| stability type (attracting / repelling / saddle) | topological |
+| attractor topology; topological entropy | topological |
+| rotation number on an invariant circle | topological |
+| **Lyapunov spectrum** (global, as a multiset) | $C^1$ with $\sup\|Dh\|,\sup\|Dh^{-1}\|<\infty$ |
+
+Only the last row needs (F1) below; the rest are free. This is CLAUDE.md §1.2
+Tier 1, and it is worth stating first because it is *already true of everything
+built in this repo* and it frames what the rest adds. Its caveats are the
+ordinary ones: correct latent dimension, exact fit, and $\Omega$ only.
+
+**What Tier 1 does not give is the decomposition.** $h$ may mix factors —
+§3.1's regrouping and §4.3's triangular conjugacy both act inside the Tier 1
+conclusion. Everything below is about recovering the *parts*.
+
+### 6.1 The hypothesis (B4) was never the right one
+
+Lemma C needs the **oriented** gap $\lambda_{\max}(f_j) < \lambda_{\min}(\tilde f_i)$.
+(B4) asks only that the module spectra be *disjoint*, and §4.3 already records
+that this is strictly weaker. Theorem F therefore replaces it with ordered
+separation, which is the honest hypothesis and is cheap to check:
+
+> **(F3) Ordered separation.** After indexing modules so that
+> $\lambda_{\max}(f_1) > \lambda_{\max}(f_2) > \cdots$, the *convex hulls* of the
+> module spectra are pairwise disjoint:
+> $$\lambda_{\min}(f_i) \;>\; \lambda_{\max}(f_{i+1}) \qquad (1 \le i < K).$$
+> The weakest link, $\min_i[\lambda_{\min}(f_i)-\lambda_{\max}(f_{i+1})]$, is
+> `spectra.filtration_gap`.
+
+The gap between (B4) and (F3) is not a technicality — **it is exactly the §3.1
+counterexample.** With $\lambda=(0.90,0.75,0.60,0.45)$, the true grouping has
+`spectral_gap` $=+0.2231$ and chain gap $=+0.2231$; the regrouping that swaps
+coordinates 2 and 3 still has `spectral_gap` $=+0.1823$ — comfortably
+"disjoint" — while its chain gap is $\mathbf{-0.2231}$, because the two hulls
+$[-0.5108,-0.1054]$ and $[-0.7985,-0.2877]$ interleave. **(F3) rejects the
+regrouping counterexample outright, and (B4) does not.** That is the single
+sharpest reason to state Theorem F with (F3).
+
+(F3) also reproduces a measured threshold with no free parameter. In `exp08` an
+attracting invariant circle (spectrum $[-0.9163,\,0]$) is paired with a
+contracting module swept across the crossing; `filtration_gap` $>0$ agrees with
+the measured `forces_M_zero` at **every** sweep point on both sides
+($s = 0.20\ldots0.38$ positive and forcing, $s = 0.42, 0.50$ negative and not),
+the crossing sitting at $\log|1-2a|$ to the digit. Note what this rules in as
+well as out: a module with a *wide* hull — and a limit cycle's is
+$[\lambda_{\text{transverse}},\,0]$, as wide as it gets — can fail (F3) against
+a module nested strictly inside it, even though it is "on top". Ordered
+separation is a statement about intervals, not about which module is fastest.
+
+### 6.2 The theorem
+
+> **Theorem F (filtration identifiability).** Let $(F,g)$ and $(\tilde F,\tilde g)$
+> be equivalent, $F=\bigoplus_{i=1}^K f_i$ and $\tilde F=\bigoplus_{i=1}^{K}\tilde f_i$
+> modular, $h=\tilde g^{-1}\!\circ g$. Assume
+>
+> * **(F1) Regularity.** $\Omega$ compact and $F$-invariant; $h$ is $C^1$ with
+>   $\sup_\Omega\|Dh\|<\infty$ and $\sup\|Dh^{-1}\|<\infty$.
+>   *No open-interior clause — see the note below.*
+> * **(F2) Uniform exponents.** The Lyapunov exponents of each $f_i$ and
+>   $\tilde f_i$ are realised by **every** orbit in $\Omega$, not merely a.e.
+>   (Lemma C′; holds at attracting fixed points and at normally hyperbolic
+>   attracting periodic orbits / invariant circles.)
+> * **(F3) Ordered separation**, as above, for both $F$ and $\tilde F$.
+> * **(F4) Matching.** $\tilde f_i$ is conjugate to $f_i$ for each $i$, in the
+>   common (F3) ordering. `TODO(gap)` — reduced but not discharged; §6.7.
+>
+> Then $h$ is **block lower-triangular** with respect to that ordering,
+> $$M_{ij} := \partial h_i/\partial z_j \equiv 0 \quad\text{for all } j>i,
+> \qquad\text{i.e.}\qquad h_i = h_i(z_1,\dots,z_i),$$
+> and consequently, for every $i$:
+>
+> 1. **the flag is preserved** — $h$ carries the foliation
+>    $\mathcal{F}_i = \{z_{\le i} = \text{const}\}$ (leaves of dimension
+>    $d_{i+1}+\cdots+d_K$) to $\tilde{\mathcal{F}}_i$, and
+>    $\mathcal{F}_1 \supset \mathcal{F}_2 \supset \cdots \supset \mathcal{F}_{K-1}$
+>    is a canonical nested family;
+> 2. **each head system is identified** — $h_{\le i} := (h_1,\dots,h_i)$ is a
+>    diffeomorphism conjugating $F_{\le i} := f_1\oplus\cdots\oplus f_i$ to
+>    $\tilde F_{\le i}$, so the whole chain of quotient systems
+>    $$F \twoheadrightarrow F_{\le K-1} \twoheadrightarrow \cdots
+>      \twoheadrightarrow F_{\le 1} = f_1$$
+>    is identified up to conjugacy;
+> 3. **the level spectra are identified** — $\Lambda(f_i) = \Lambda(F_{\le i})
+>    \setminus \Lambda(F_{\le i-1})$ as multisets, each side computed from its
+>    own representation.
+
+*Proof.* Tier 1 (Prop. T1) gives $h\circ F = \tilde F\circ h$ on $\Omega$.
+Differentiating in $z_j$ gives the cocycle relation of §4.1; (F1)'s bounded
+derivatives and (F2)'s uniformity put Lemma C′ (§4.4) in force at **every** point
+of $\Omega$. For $j>i$, (F3) plus (F4) give
+$\lambda_{\max}(f_j) \le \lambda_{\max}(f_{i+1}) < \lambda_{\min}(f_i) = \lambda_{\min}(\tilde f_i)$,
+so Lemma C′ forces $M_{ij}\equiv0$. That is the displayed triangularity.
+
+(1) $h_i$ depending only on $z_{\le i}$ is exactly the statement that $h$ maps
+fibres of $\pi_{\le i}$ into fibres of $\tilde\pi_{\le i}$.
+
+(2) The same computation applied to $h^{-1}$ — which is a conjugacy in the
+reverse direction between systems with the *same* spectra, hence the same
+orientation — makes $h^{-1}$ triangular too, so $h_{\le i}$ is a bijection onto
+$\tilde\Omega_{\le i}$; and $h_{\le i}\circ F_{\le i} = \tilde F_{\le i}\circ h_{\le i}$
+holds because $\pi_{\le i}$ semiconjugates $F$ to $F_{\le i}$.
+
+(3) Conjugate systems with (F1) bounds have equal Lyapunov spectra, applied to
+$F_{\le i}$ and $F_{\le i-1}$ separately. $\square$
+
+> **What is *not* used, and why it matters.** $\mathrm{int}\,\Omega\neq\emptyset$
+> is not used, nor is (B2) indecomposability, nor any normal form, nor
+> analyticity. Those are precisely what Theorem B consumes, and precisely what
+> fails on an attractor. **Theorem F therefore holds where Theorem B cannot go**
+> — at attracting periodic orbits and invariant circles (§4.4), which is the
+> regime a neural recording is actually in. That, not its strength, is why it is
+> the priority.
+
+### 6.3 The successive factors, and where their conjugacy is genuine
+
+Conclusion 2 identifies the *head* systems $F_{\le i}$, not the individual $f_i$
+for $i\ge2$. The distinction is real and should not be blurred:
+
+- **$f_1$ is identified outright.** $h_1 = h_1(z_1)$ is a genuine conjugacy
+  $f_1 \to \tilde f_1$. Every conjugacy invariant of the slowest module — fixed
+  points, attractor topology, Lyapunov spectrum, **rotation number** — is
+  identified in the strong sense.
+- **For $i\ge2$, what is identified is $f_i$ as the fibre dynamics of a skew
+  product.** Restricting the conjugacy to a fibre gives
+  $$h_i\big(F_{\le i-1}(c),\, f_i(z_i)\big) = \tilde f_i\big(h_i(c, z_i)\big),$$
+  a conjugacy *along the orbit of $c$*, not at fixed $c$. It becomes a genuine
+  conjugacy $f_i\to\tilde f_i$ when $c$ is a fixed point of $F_{\le i-1}$, and a
+  conjugacy of $f_i^{\,p}$ to $\tilde f_i^{\,p}$ when $c$ is $p$-periodic.
+  Unconditionally, conclusion 3 still identifies $\Lambda(f_i)$.
+
+So the invariant that survives at every level with no side conditions is the
+**spectrum**; the finer invariants are unconditional only at the top of the
+filtration. That is not a defect of the write-up — §3.13(b) measures the same
+asymmetry in fitted models, where the dominated module's invariants come back
+$100\times$ worse than the dominant one's.
+
+### 6.4 What a filtration claim consists of (task 37)
+
+The deliverable is not "$h$ is block-diagonal". It is this list, every entry of
+which is estimable from a fitted model with no ground truth:
+
+| # | quantity | estimator | identified by |
+|---|---|---|---|
+| 1 | number of levels $K$ | partition search | (F4) / §6.7 |
+| 2 | level dimensions $d_1,\dots,d_K$ | `selection` lattice | (F4) / §6.7 |
+| 3 | the **ordering** | `spectra.filtration_gap` | (F3), free once spectra are known |
+| 4 | per-level Lyapunov spectrum | `spectra.module_lyapunov_spectra` | Thm F(3) |
+| 5 | rotation number of the top level | `spectra.rotation_number` | Thm F(2) + §6.3 |
+| 6 | attractor topology per level | — (not built) | Tier 1 + Thm F(2) |
+
+Items 3–5 are `metrics.dynamical_fingerprint`, and `metrics.invariant_agreement`
+compares two such fingerprints without ground truth — the empirical form of this
+theorem (task 40, `exp14`). Read as a sentence, a positive result is *"this
+population carries a slow 2-D rotation at 8 Hz, and a faster 3-D decaying
+component driven by it"* — which is what §0 says the object of study is, and is
+strictly less than block-diagonality.
+
+**Three measurement caveats, all load-bearing and all already paid for
+elsewhere.** (a) Read items 4–6 *inside the data horizon*: past it a fitted map
+invents an attractor, and the rotation number reads a confident, coherent $0$
+(§3.13(a)). (b) Recoverability is **per-invariant**, so report agreement
+per-invariant, never as one boolean (§3.13(b)). (c) Screen restarts on
+**duplicate invariants**, not on fit quality or coherence, both of which are
+uninformative and one of which has the wrong sign (§3.13(e)).
+
+### 6.5 Two structural riders
+
+Carried from §4.4, and they belong in the theorem statement because they are
+testable claims about a real population rather than proof hygiene.
+
+1. **An oscillatory module is the top of the filtration or is not separated at
+   all.** Its $\lambda_{\max}=0$, and (F3) requires everything below it to have
+   $\lambda_{\max}<0$. The phase of an autonomous oscillation is the slowest
+   thing in the system.
+2. **At most one oscillatory module can appear.** Two cycles both contribute
+   $\lambda_{\max}=0$, so their hulls overlap, (F3) fails, and neither
+   cross-derivative is forced. §6.1's remark sharpens this: it is not only two
+   cycles — *any* module whose hull nests inside another's is unseparable, so
+   rider 1 does not make oscillations safe.
+
+Rider 2 collides with §0's own definition of a module ("distinct oscillatory
+components"), and the collision is the sharpest limitation on the applied claim.
+The rotation number is the invariant that distinguishes two cycles and it is
+built and validated (`spectra.rotation_number`, `exp14`) — but **using it to
+force a splitting is not proved**, and nothing here proves it. `TODO(gap)`
+
+### 6.6 What Theorem F does not claim
+
+- **Not coordinates.** Within a level, $h_i$ is an arbitrary diffeomorphism.
+- **Not block-diagonality.** §4.3 is a counterexample, not a gap; the surviving
+  cross-block $M_{ij}$, $j<i$, is genuinely nonzero in general. Killing it needs
+  behaviour (Lemma D, §4.5) or analyticity + non-resonance (Theorem B, §5.3).
+- **Nothing off $\Omega$.**
+- **Not a claim about anatomy.** Levels are timescale-separated dynamical
+  factors within one population.
+
+### 6.7 The one open hypothesis, and how far it has been reduced
+
+(F4) is the matching lemma of CLAUDE.md §3.2, and Theorem F needs much less of
+it than Theorem B does. The general problem — pair blocks across representations
+by conjugacy invariants, *before* using any spectral hypothesis — is open
+nonlinearly. Here it collapses in two steps:
+
+1. **The ordering is free.** (F3) holding on both sides means each
+   representation's modules occupy disjoint ordered intervals of a spectrum
+   that Tier 1 already identifies as a multiset. So $\sigma$ cannot permute:
+   any admissible correspondence is order-preserving. This is where the §3.1
+   regrouping dies (§6.1), and it is the part of §3.2 that Theorem B has to
+   assume outright.
+2. **What remains is the coarsening.** Both sides partition the *same* ordered
+   multiset of exponents into consecutive groups; the residual freedom is
+   whether one side splits a level the other keeps whole. That is exactly
+   nonlinear indecomposability, (B2) / open problem 3 below — and it is the
+   filtration-side reading of §3.1: **the regrouping ambiguity is a coarsening
+   ambiguity, nothing more.**
+
+So Theorem F's dynamics are unconditional and its one gap is a single, named,
+already-tracked lemma. Note the empirical program does not wait on it:
+`selection.py` + `exp06` recover the finest partition from data by fit and
+uniqueness, and `exp03` confirms the (F3) chain on a case with
+$\Lambda(f_1)=\{-0.0513\}^2$, $\Lambda(f_2)=\{-0.3567\}^2$, chain gap $0.3054$,
+partition recovered in 5/5 converged restarts.
+
+---
+
+## 7. Open problems, in priority order
+
+1. ~~**Theorem F — filtration identifiability.**~~ **Written up — §6.** One
+   hypothesis changed in the writing and it is worth flagging: the theorem needs
+   **ordered separation (F3)**, not (B4) disjointness, and the difference is
+   exactly the §3.1 regrouping counterexample (§6.1). Two things came out as
+   *conclusions* rather than hypotheses — the ordering half of the matching
+   lemma, and the identification of every head system $F_{\le i}$, not merely of
+   $f_1$. What remains open under it is item 3 below, which §6.7 shows is the
+   only residual freedom.
 2. **The matching lemma (B3)**, CLAUDE.md §3.2. Pair indecomposable blocks
    across representations by conjugacy invariants — Lyapunov spectrum,
    fixed-point structure, entropy — *before* any spectral hypothesis is used.
@@ -659,7 +915,7 @@ prove, not a corollary here.
 
 ---
 
-## 7. Scope of interpretation claims
+## 8. Scope of interpretation claims
 
 Carried over from CLAUDE.md §5, and now with a sharper upper bound on what can
 be claimed.
@@ -683,7 +939,7 @@ where the §3.1 swap scores $\mathrm{MCC} = 1.0$ and on-block fraction $0.5$.
 
 ---
 
-## 8. Position against the literature
+## 9. Position against the literature
 
 `TODO(gap)` — CLAUDE.md §4 step 8, not yet done. The comparison to make:
 
@@ -692,14 +948,25 @@ where the §3.1 swap scores $\mathrm{MCC} = 1.0$ and on-block fraction $0.5$.
   plus non-stationarity*, recovering latents up to componentwise transformation
   — i.e. they identify **coordinates**, which is more than we claim.
 - **Khemakhem et al.** (iVAE) needs an observed auxiliary variable; we have none.
-- The distinguishing claim is that modular *dynamics* identifies structure in the
-  **autonomous, stationary, no-auxiliary-variable** setting where none of those
-  results apply. Under the §0 scope this is not a hedge — it is precisely the
-  regime we have restricted to, and `literature.md` §1.2 finds no existing result
-  covering it. PCL is the nearest neighbour (stationary, no auxiliary) but needs
-  mutually independent *scalar stochastic* sources with a nonvanishing
-  cross-derivative of the joint log-density, which is structurally false for
-  deterministic dynamics.
+- The distinguishing claim is that modular *dynamics* identifies structure with
+  **no auxiliary variable and no distributional prior on the latent**. PCL is the
+  nearest neighbour (no auxiliary) but needs mutually independent *scalar
+  stochastic* sources with a nonvanishing cross-derivative of the joint
+  log-density, which is structurally false for deterministic dynamics.
+
+  > **CORRECTION (2026-08-12).** This bullet previously read "autonomous,
+  > **stationary**, no-auxiliary-variable", and stationarity was offered as the
+  > thing that puts us outside the existing results. **That is wrong, and it
+  > conflates an autonomous *system* with a stationary *process*.** The dynamics
+  > are time-invariant, but $\{z_t\}$ is stationary only if $z_0$ is drawn from
+  > the invariant measure, and `make_dataset` deliberately spreads initial
+  > conditions over an annulus — so every dataset here is non-stationary *by
+  > construction*, and measurably so (with $u=t$ the two blocks'
+  > scale-normalised $t$-dependence is $1.32$ and $4.20$; CLAUDE.md task 8).
+  > The positioning cannot rest on absence of non-stationarity. What it rests on
+  > instead is §1.3: those theorems constrain $p(z\mid u)$, and a deterministic
+  > latent map with an injective decoder has no such prior to constrain — its
+  > identifiability content is conjugacy plus spectra, which is what §6 states.
 - What we claim is also *weaker in kind*: those results recover **coordinates**
   up to componentwise transformation; we claim a **filtration of multidimensional
   factors**. The two are not competing statements about the same object.

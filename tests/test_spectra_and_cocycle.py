@@ -292,11 +292,24 @@ def test_naive_sigma_min_route_is_noise_on_a_limit_cycle():
 
     We assert that *wrongness*, not the n_max-instability an earlier revision of
     this test used as its proxy.  Whether the noise floor wanders or sits still
-    is a property of the BLAS: on the environment this test was written for it
-    wandered by units, on numpy 2.5 / scipy 1.18 it converges cleanly to the
-    wrong answer.  The convergent version is if anything the more dangerous one
-    -- a stable wrong number looks like a measurement -- so the defect, and not
-    its variance, is what the regression must pin.
+    is a property of the BLAS, and BOTH behaviours have now been observed on the
+    same code: on numpy 2.5 / scipy 1.18 the naive rate converges cleanly to
+    ``wrong_limit``; on numpy 2.4.3 it wanders across
+    (-1.96, +0.73, -1.00, -1.15) as n_max runs (100, 200, 400, 800), landing
+    within 0.2*spread of the wrong limit only at the last two.  A revision that
+    asserted the convergence therefore failed here for a reason that has nothing
+    to do with the defect.
+
+    So the regression pins the one clause that is true in both environments and
+    is what §3.9 actually claims: **the naive rate misses the truth by more than
+    half the block's spread, at every horizon.**  Neither the variance of the
+    error nor the particular wrong value it converges to is a property of the
+    defect.
+
+    Note the n_max=200 entry above: +0.73 against a true -0.29.  The naive route
+    does not merely mis-estimate the rate, it can return the wrong *sign* -- a
+    false negative on Lemma C, the mirror of the false positive pinned by
+    ``test_the_naive_route_can_invent_a_gap_that_is_not_there``.
     """
     cyc = S.LimitCycleBlock(a=0.3, rho=1.0, omega=0.5, beta=0.6)
     fast = S.TwistBlock(s=0.30, omega=1.1, beta=-0.5)
@@ -316,9 +329,14 @@ def test_naive_sigma_min_route_is_noise_on_a_limit_cycle():
     assert np.ptp(sound) < 1e-9, "the sound rate does not depend on n_max"
     assert all(r == pytest.approx(predicted, abs=1e-9) for r in sound)
 
-    # the naive route reads lambda_max, missing the truth by the whole spread
+    # the naive route misses the truth by more than half the block's spread.
+    # This is the environment-independent clause; see the docstring for why the
+    # "converges to wrong_limit" clause is not asserted.
     assert all(abs(r - predicted) > 0.5 * spread for r in naive)
-    assert all(abs(r - wrong_limit) < 0.2 * spread for r in naive)
+    assert min(abs(r - wrong_limit) for r in naive) < 0.2 * spread, (
+        "the naive rate should reach the lambda_max limit at some horizon, "
+        f"even where it does not stay there: {naive}"
+    )
 
 
 def test_the_naive_route_can_invent_a_gap_that_is_not_there():
@@ -467,6 +485,89 @@ def test_two_limit_cycles_can_never_be_separated():
         assert predicted > 0.0
         assert cb.rate == pytest.approx(predicted, abs=1e-9)
         assert not cb.forces_M_zero
+
+
+# --------------------------------------------------------------------------
+# Ordered separation -- hypothesis (F3) of Theorem F, identifiability.md §6.1
+#
+# spectral_gap is (B4): no two modules SHARE an exponent.  filtration_gap is
+# (F3): the module spectra occupy disjoint ordered INTERVALS.  The gap between
+# the two is not academic -- it is exactly the §3.1 regrouping counterexample.
+# --------------------------------------------------------------------------
+
+
+def test_filtration_gap_rejects_the_regrouping_that_spectral_gap_accepts():
+    """(B4) passes the §3.1 counterexample at +0.18; (F3) rejects it at -0.22.
+
+    This is the reason Theorem F is stated with ordered separation rather than
+    disjointness: the regrouped representation keeps every exponent distinct
+    while interleaving the two hulls, so no chain of oriented gaps exists and
+    Lemma C has nothing to work with in either direction.
+    """
+    lg = np.log(np.array([0.90, 0.75, 0.60, 0.45]))
+    true_grouping = [lg[[0, 1]], lg[[2, 3]]]
+    regrouped = [lg[[0, 2]], lg[[1, 3]]]
+
+    assert SP.spectral_gap(true_grouping) > 0.0
+    assert SP.spectral_gap(regrouped) > 0.0, "(B4) cannot see the regrouping"
+    assert SP.spectral_gap(regrouped) == pytest.approx(0.1823, abs=1e-3)
+
+    assert SP.filtration_gap(true_grouping).ordered
+    assert SP.filtration_gap(true_grouping).gap == pytest.approx(0.2231, abs=1e-3)
+    assert not SP.filtration_gap(regrouped).ordered, "(F3) must see it"
+    assert SP.filtration_gap(regrouped).gap == pytest.approx(-0.2231, abs=1e-3)
+
+
+def test_filtration_gap_orders_modules_slowest_first():
+    """Index 1 is the module with the largest exponents -- the top of the flag."""
+    slow = np.array([-0.05, -0.05])
+    fast = np.array([-0.90, -1.20])
+    assert SP.filtration_gap([fast, slow]).order == [1, 0]
+    assert SP.filtration_gap([slow, fast]).order == [0, 1]
+    assert SP.filtration_gap([slow, fast]).gap == pytest.approx(0.85, abs=1e-12)
+
+
+@pytest.mark.parametrize("s_fast", [0.20, 0.25, 0.30, 0.35, 0.38, 0.42, 0.50])
+def test_filtration_gap_predicts_the_measured_cocycle_threshold(s_fast):
+    """(F3) computed from spectra alone reproduces exp08's crossing, no free parameter.
+
+    The cycle's hull is [log|1-2a|, 0], so a partner is ordered-separated from it
+    iff log(s_fast) < log|1-2a| -- which is exactly where cocycle_bound flips.
+    """
+    cyc = S.LimitCycleBlock(a=0.3, rho=1.0, omega=0.5, beta=0.6)
+    fast = S.TwistBlock(s=s_fast, omega=1.1, beta=-0.5)
+    fo = SP.filtration_gap([cyc.lyapunov_spectrum_exact(), fast.lyapunov_spectrum_exact()])
+    cb = CC.cocycle_bound(cyc, np.array([1.0, 0.0]), fast, np.array([0.7, 0.3]), n_max=300)
+    assert fo.ordered == cb.forces_M_zero
+
+
+def test_a_wide_hull_can_swallow_a_narrower_one_even_when_it_is_on_top():
+    """Rider 1 does not make an oscillatory module safe (identifiability.md §6.5).
+
+    A limit cycle spans [log|1-2a|, 0].  A contracting partner sitting *inside*
+    that range is unseparable in both directions, even though the cycle has the
+    larger lambda_max -- ordered separation is about intervals, not about which
+    module is fastest.
+    """
+    cyc = S.LimitCycleBlock(a=0.3, rho=1.0, omega=0.5, beta=0.6)   # [-0.9163, 0]
+    mid = S.TwistBlock(s=0.50, omega=1.1, beta=-0.5)               # [-0.6931]*2
+    specs = [cyc.lyapunov_spectrum_exact(), mid.lyapunov_spectrum_exact()]
+
+    assert SP.spectral_gap(specs) > 0.0, "(B4) is satisfied -- and is not enough"
+    assert not SP.filtration_gap(specs).ordered
+
+    z_cyc, z_mid = np.array([1.0, 0.0]), np.array([0.7, 0.3])
+    for target, z_t, source, z_s in ((cyc, z_cyc, mid, z_mid), (mid, z_mid, cyc, z_cyc)):
+        assert not CC.cocycle_bound(target, z_t, source, z_s, n_max=300).forces_M_zero
+
+
+def test_two_limit_cycles_fail_ordered_separation_as_well_as_disjointness():
+    """Rider 2: identical hulls, so (F3) fails no matter how the two are ordered."""
+    c1 = S.LimitCycleBlock(a=0.30, rho=1.0, omega=0.50, beta=0.6)
+    c2 = S.LimitCycleBlock(a=0.45, rho=1.0, omega=0.90, beta=-0.4)
+    specs = [c1.lyapunov_spectrum_exact(), c2.lyapunov_spectrum_exact()]
+    assert not SP.filtration_gap(specs).ordered
+    assert SP.filtration_gap(specs).gap < 0.0
 
 
 # --------------------------------------------------------------------------
