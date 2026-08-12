@@ -40,6 +40,7 @@ __all__ = [
     "nonadditive_behavioural_escape",
     "lemma_d_witness",
     "gapless_resonant_coupling",
+    "torus_regrouping_counterexample",
     "sylvester_kernel_dim",
     "two_oscillator_system",
     "tier2_witness",
@@ -1083,6 +1084,88 @@ def gapless_resonant_coupling(
         "unit_eigenvalue_distance": float(np.abs(lam_b - 1.0).min()),
         "cross_derivative": float(abs(c) * np.sqrt(2.0)),
         "var_h_b": lambda sigma, tau=1.0: tau ** 2 + c ** 2 * sigma ** 2,
+    }
+
+
+def torus_regrouping_counterexample(
+    a: float = 0.30,
+    rho: float = 1.0,
+    omega: tuple[float, float] = (0.50, 1.30),
+    beta_receiving: float = 0.0,
+    beta_donor: float = 0.0,
+) -> dict:
+    """**The rotation number does not pin the splitting.** Task 23, answered NO.
+
+    Two attracting limit cycles have an invariant torus, and a conjugacy acts on
+    ``H_1(T^2) = Z^2``.  So the rotation *vector* is identified only up to
+    ``GL(2,Z)``, not up to permutation.  Concretely, in complex coordinates
+
+        h(z_1, z_2) = (z_1 * z_2/|z_2|,  z_2)
+
+    borrows module 2's phase into module 1.  It is a diffeomorphism away from
+    ``z_2 = 0`` -- an annulus is enough, and `sample_initial_conditions` gives
+    one -- and it conjugates ``f_1 (+) f_2`` to ``f~_1 (+) f_2``, still modular
+    with 2-D blocks, where ``f~_1`` is ``f_1`` with ``omega_1 -> omega_1 +
+    omega_2``.  The rotation numbers move from ``(w_1, w_2)/2pi`` to
+    ``(w_1 + w_2, w_2)/2pi``.
+
+    This is the oscillatory analogue of the CLAUDE.md 3.1 regrouping: an
+    alternative modular representation of the same observations, differing by
+    more than a permutation.  It does **not** contradict Theorem F, whose (F3)
+    fails outright for two cycles (identical hulls); it contradicts the
+    conjecture that the rotation number could stand in for the missing spectral
+    separation.
+
+    **Shear in the donor block obstructs it.**  With ``beta_donor != 0`` the
+    angle increment of ``f_2`` depends on ``r_2``, which the regrouped module 1
+    cannot see, so no autonomous ``f~_1`` exists.  ``beta_receiving`` is free.
+    Note that ``beta = 0`` is `LimitCycleBlock`'s default and is what `exp14`
+    part 4 uses, so the repo's own two-oscillator system is the vulnerable one.
+    """
+    w1, w2 = float(omega[0]), float(omega[1])
+    f1 = LimitCycleBlock(a=a, rho=rho, omega=w1, beta=beta_receiving)
+    f2 = LimitCycleBlock(a=a, rho=rho, omega=w2, beta=beta_donor)
+    f1_tilde = LimitCycleBlock(a=a, rho=rho, omega=w1 + w2, beta=beta_receiving)
+
+    def _pair(blocks):
+        def step(z):
+            z = np.asarray(z, dtype=float)
+            return np.concatenate(
+                [blocks[0].step(z[..., :2]), blocks[1].step(z[..., 2:])], axis=-1
+            )
+        return step
+
+    def _c(z):
+        z = np.asarray(z, dtype=float)
+        return z[..., 0] + 1j * z[..., 1], z[..., 2] + 1j * z[..., 3]
+
+    def _r(u, v):
+        return np.stack([u.real, u.imag, v.real, v.imag], axis=-1)
+
+    def h(z):
+        u, v = _c(z)
+        return _r(u * v / np.abs(v), v)
+
+    def h_inv(w):
+        u, v = _c(w)
+        return _r(u * np.conj(v) / np.abs(v), v)
+
+    two_pi = 2.0 * np.pi
+    return {
+        "F": _pair([f1, f2]),
+        "F_tilde": _pair([f1_tilde, f2]),
+        "h": h,
+        "h_inv": h_inv,
+        "system": ModularSystem([f1, f2]),
+        "system_tilde": ModularSystem([f1_tilde, f2]),
+        "omega": (w1, w2),
+        "omega_tilde": (w1 + w2, w2),
+        "rotation_true": (w1 / two_pi, w2 / two_pi),
+        "rotation_tilde": ((w1 + w2) / two_pi, w2 / two_pi),
+        # the GL(2,Z) element realised: (w1, w2) -> (w1 + w2, w2)
+        "lattice_action": np.array([[1, 1], [0, 1]]),
+        "spectra": [f1.lyapunov_spectrum_exact(), f2.lyapunov_spectrum_exact()],
+        "shear_free_donor": beta_donor == 0.0,
     }
 
 

@@ -33,6 +33,7 @@ __all__ = [
     "spectral_gap",
     "FiltrationOrder",
     "filtration_gap",
+    "rotation_lattice_margin",
     "RotationNumber",
     "rotation_number",
     "rotation_number_averaged",
@@ -217,6 +218,46 @@ def filtration_gap(spectra: Sequence[np.ndarray]) -> FiltrationOrder:
         hulls[order[k]][0] - hulls[order[k + 1]][1] for k in range(len(order) - 1)
     )
     return FiltrationOrder(order=order, gap=float(gap), hulls=[hulls[i] for i in order])
+
+
+def rotation_lattice_margin(
+    rho_a: Sequence[float], rho_b: Sequence[float], max_coeff: int = 3
+) -> tuple[float, np.ndarray | None]:
+    """How far apart two rotation vectors are **after quotienting by GL(2,Z)**.
+
+    Two limit cycles carry an invariant torus, and a conjugacy acts on
+    ``H_1(T^2) = Z^2``.  So the rotation *vector* is identified only up to an
+    integer unimodular change of basis -- see
+    ``systems.torus_regrouping_counterexample``, which realises
+    ``(w1, w2) -> (w1 + w2, w2)`` as an exact modular conjugacy.  Comparing
+    rotation numbers coordinatewise therefore over-states how much the data
+    pins down.
+
+    Returns ``(margin, A)``: the smallest ``max |A rho_a - rho_b|`` over integer
+    ``A`` with ``|det A| = 1`` and entries bounded by ``max_coeff``, and the
+    minimiser.  A margin near zero means the two fits may describe the *same*
+    dynamics in different lattice bases; a large one means they genuinely
+    differ.  Two modules only -- raises otherwise.
+    """
+    a = np.asarray(rho_a, dtype=float).ravel()
+    b = np.asarray(rho_b, dtype=float).ravel()
+    if a.size != 2 or b.size != 2:
+        raise ValueError("the lattice quotient is only implemented for K = 2")
+    if not (np.all(np.isfinite(a)) and np.all(np.isfinite(b))):
+        return float("inf"), None
+    best: tuple[float, np.ndarray | None] = (float("inf"), None)
+    rng = range(-max_coeff, max_coeff + 1)
+    for p in rng:
+        for q in rng:
+            for r in rng:
+                for s in rng:
+                    if abs(p * s - q * r) != 1:
+                        continue
+                    A = np.array([[p, q], [r, s]], dtype=float)
+                    err = float(np.abs(A @ a - b).max())
+                    if err < best[0]:
+                        best = (err, A.astype(int))
+    return best
 
 
 # ---------------------------------------------------------------------------

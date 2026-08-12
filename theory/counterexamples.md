@@ -263,3 +263,67 @@ $0.9025 = 0.95^2$ — and looks entirely innocuous. Guard test systems with
 > `systems.multiindex_resonance_counterexample()`,
 > `systems.repeated_exponent_resonance_counterexample()`, and the checker
 > `spectra.cross_module_resonances`; eight tests in `tests/test_counterexamples.py`.
+
+---
+
+## 7. The rotation number does not pin the splitting
+
+**New (2026-08-12).** §1's regrouping showed that a decomposition into
+non-indecomposable blocks is not unique. This is its **oscillatory** analogue,
+and it settles task 23 negatively: the invariant that was supposed to rescue the
+two-oscillator case — where the Lyapunov spectrum provably cannot separate the
+modules — is itself not identified.
+
+**Construction.** Let $f_1, f_2$ be attracting limit cycles with frequencies
+$\omega_1, \omega_2$ and no shear. In complex coordinates,
+
+$$h(z_1, z_2) \;=\; \left(z_1 \cdot \frac{z_2}{|z_2|},\; z_2\right).$$
+
+Then $h$ conjugates $f_1 \oplus f_2$ to $\tilde f_1 \oplus f_2$, where
+$\tilde f_1$ is $f_1$ with $\omega_1 \mapsto \omega_1 + \omega_2$ — **still
+modular, still two 2-D blocks, still attracting cycles.** The rotation numbers
+move from $(\omega_1,\omega_2)/2\pi$ to $(\omega_1+\omega_2,\omega_2)/2\pi$.
+
+*Verification.* Writing $f_i(z) = g(|z|)\,e^{i\omega_i}\hat z$ with
+$\hat z := z/|z|$: since $\widehat{f_2(z_2)} = e^{i\omega_2}\hat z_2$,
+
+$$h(F(z))_1 = g(|z_1|)e^{i\omega_1}\hat z_1 \cdot e^{i\omega_2}\hat z_2
+= g(|z_1\hat z_2|)\,e^{i(\omega_1+\omega_2)}\widehat{z_1\hat z_2} = \tilde f_1(h(z)_1),$$
+
+using $|z_1\hat z_2| = |z_1|$. Measured residual $6.7\times10^{-16}$;
+$h^{-1}(w_1,w_2) = (w_1\overline{\hat w_2}, w_2)$ inverts to $8.9\times10^{-16}$;
+measured rotation numbers $(0.0796, 0.2069) \to (0.2865, 0.2069)$, exactly as
+predicted.
+
+**Why this is a genuine counterexample and not a domain artefact.** $h$ is
+singular only at $z_2 = 0$, which the basin excludes anyway, and on an annulus
+$\Omega$ it is a diffeomorphism with $\sup\|Dh\| = \sup\|Dh^{-1}\| = 2.72$ — so
+**(F1) holds**. The coupling is not marginal: $\|\partial h_1/\partial z_2\|$
+has mean $1.03$ and minimum $0.55$ over $\Omega$.
+
+**What it does and does not refute.**
+
+- It does **not** touch Theorem F. (F3) fails outright for two cycles — the
+  hulls are identical, chain gap $-0.9163$ — so §6 never applied here. The two
+  statements are consistent, and that consistency is the point: §6.5's rider 2
+  was right to call this case out.
+- It **does** refute the conjecture in §4.4 and §6.5 that the rotation number
+  could supply what the spectrum cannot. What a conjugacy preserves is the
+  rotation *vector up to* $GL(2,\mathbb{Z})$ — the induced automorphism of
+  $H_1(T^2)=\mathbb{Z}^2$ — not the individual rotation numbers. The
+  construction realises $\left(\begin{smallmatrix}1&1\0&1\end{smallmatrix}\right)$.
+
+**Shear obstructs it, and that is the one piece of good news.** With
+$\beta_2 \neq 0$ the angle increment of $f_2$ depends on $r_2$, which the
+regrouped module 1 cannot see, so no autonomous $\tilde f_1$ exists: the
+residual jumps from $6.7\times10^{-16}$ to $9.3\times10^{-2}$ at $\beta_2=0.3$.
+Shear in the *receiving* block is harmless (residual $10^{-15}$ at
+$\beta_1 = 0.8$). So the obstruction is specifically **amplitude–phase coupling
+in the donor**, which is generic in a real oscillator and absent from the
+idealised one. Whether that genuinely restores identifiability, or merely
+defeats this particular $h$, is not settled here. `TODO(gap)`
+
+> `systems.torus_regrouping_counterexample()`; the quotient is computable with
+> `spectra.rotation_lattice_margin`. Note $\beta = 0$ is `LimitCycleBlock`'s
+> **default** and is what `exp14` part 4 uses, so the repo's own two-oscillator
+> system is the vulnerable one — see the margin correction in CLAUDE.md task 40.

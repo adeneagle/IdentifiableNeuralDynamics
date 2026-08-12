@@ -309,3 +309,91 @@ def test_full_column_rank_decoder_forces_h_linear():
     # h is recovered exactly as W~^+ W, with no reference to the dynamics
     h = np.linalg.pinv(W_tilde) @ W
     assert np.allclose(h, A, atol=1e-9)
+
+
+# --------------------------------------------------------------------------
+# 7. The rotation number does not pin the splitting (counterexamples.md 7)
+# --------------------------------------------------------------------------
+
+
+def _torus_annulus(rng, n=3000, lo=0.7, hi=1.3):
+    r = rng.uniform(lo, hi, (n, 2))
+    t = rng.uniform(-np.pi, np.pi, (n, 2))
+    return np.stack([r[:, 0] * np.cos(t[:, 0]), r[:, 0] * np.sin(t[:, 0]),
+                     r[:, 1] * np.cos(t[:, 1]), r[:, 1] * np.sin(t[:, 1])], axis=-1)
+
+
+def test_torus_regrouping_is_an_exact_modular_conjugacy():
+    w = S.torus_regrouping_counterexample()
+    z = _torus_annulus(np.random.default_rng(0))
+    assert np.abs(w["h"](w["F"](z)) - w["F_tilde"](w["h"](z))).max() < 1e-12
+    assert np.abs(w["h_inv"](w["h"](z)) - z).max() < 1e-12
+    assert w["system_tilde"].partition == [2, 2], "still modular, still 2-D blocks"
+
+
+def test_torus_regrouping_moves_the_rotation_numbers():
+    """(w1, w2) -> (w1 + w2, w2): a GL(2,Z) action, not a permutation."""
+    w = S.torus_regrouping_counterexample(omega=(0.50, 1.30))
+    assert w["rotation_true"][0] != pytest.approx(w["rotation_tilde"][0], abs=1e-3)
+    assert w["rotation_true"][1] == pytest.approx(w["rotation_tilde"][1], abs=1e-12)
+    assert w["rotation_tilde"][0] == pytest.approx(1.80 / (2 * np.pi), abs=1e-12)
+
+    rot = [SP.rotation_number_averaged(b, _torus_annulus(np.random.default_rng(1), 16)[:, 2 * i:2 * i + 2],
+                                       T=400, warmup=100).rho
+           for i, b in enumerate(w["system_tilde"].blocks)]
+    assert abs(abs(rot[0]) - w["rotation_tilde"][0]) < 1e-3, "measured, not just asserted"
+
+
+def test_the_torus_counterexample_does_not_contradict_theorem_F():
+    """(F3) fails outright for two cycles, so Theorem F never applied here."""
+    w = S.torus_regrouping_counterexample()
+    assert not SP.filtration_gap(w["spectra"]).ordered
+    assert SP.filtration_gap(w["spectra"]).gap < -0.8
+
+
+def test_the_torus_conjugacy_satisfies_F1_and_is_genuinely_coupled():
+    w = S.torus_regrouping_counterexample()
+    z = _torus_annulus(np.random.default_rng(2), n=500)
+
+    def jac(fn, pts, eps=1e-6):
+        out = np.zeros((pts.shape[0], 4, 4))
+        for k in range(4):
+            e = np.zeros(4)
+            e[k] = eps
+            out[:, :, k] = (fn(pts + e) - fn(pts - e)) / (2 * eps)
+        return out
+
+    J = jac(w["h"], z)
+    assert np.linalg.norm(J, axis=(1, 2)).max() < 10.0, "bounded derivative: (F1)"
+    assert np.linalg.norm(jac(w["h_inv"], w["h"](z)), axis=(1, 2)).max() < 10.0
+    coupling = np.linalg.norm(J[:, :2, 2:], axis=(1, 2))
+    assert coupling.min() > 0.3, "the cross-block is not marginal anywhere"
+
+
+@pytest.mark.parametrize("beta_donor,breaks", [(0.0, False), (0.3, True), (0.8, True)])
+def test_shear_in_the_donor_block_obstructs_the_regrouping(beta_donor, breaks):
+    """The regrouped module 1 cannot see r_2, so beta_2 != 0 leaves no autonomous f~_1."""
+    w = S.torus_regrouping_counterexample(beta_donor=beta_donor)
+    z = _torus_annulus(np.random.default_rng(3))
+    resid = float(np.abs(w["h"](w["F"](z)) - w["F_tilde"](w["h"](z))).max())
+    assert (resid > 1e-3) == breaks, f"beta_donor={beta_donor}, residual={resid}"
+
+
+def test_shear_in_the_receiving_block_is_harmless():
+    w = S.torus_regrouping_counterexample(beta_receiving=0.8)
+    z = _torus_annulus(np.random.default_rng(4))
+    assert np.abs(w["h"](w["F"](z)) - w["F_tilde"](w["h"](z))).max() < 1e-12
+
+
+def test_lattice_margin_sees_through_the_regrouping_but_not_past_a_real_change():
+    """Zero against the regrouping; still rejecting exp14's negative control."""
+    w = S.torus_regrouping_counterexample(omega=(0.50, 1.30))
+    same, _ = SP.rotation_lattice_margin(w["rotation_true"], w["rotation_tilde"])
+    assert same == pytest.approx(0.0, abs=1e-12)
+
+    control = (0.50 / (2 * np.pi), 0.90 / (2 * np.pi))
+    naive = max(abs(a - b) for a, b in zip(w["rotation_true"], control))
+    quotient, _ = SP.rotation_lattice_margin(w["rotation_true"], control)
+    assert naive == pytest.approx(0.06366, abs=1e-4)
+    assert quotient == pytest.approx(0.01592, abs=1e-4)
+    assert 0.0 < quotient < naive, "the control still rejects, with less headroom"

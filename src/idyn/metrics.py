@@ -18,7 +18,11 @@ from scipy.optimize import linear_sum_assignment
 
 from idyn.linear import block_energy_matrix, block_permutation_report, slices_of
 from idyn.spectra import filtration_gap as spectra_filtration_gap
-from idyn.spectra import module_lyapunov_spectra, module_rotation_numbers
+from idyn.spectra import (
+    module_lyapunov_spectra,
+    module_rotation_numbers,
+    rotation_lattice_margin,
+)
 
 __all__ = [
     "fit_linear_relation",
@@ -1304,6 +1308,22 @@ def invariant_agreement(
             f"min rotation coherence {min_coh:.3f} < {coherence_floor}: "
             "rotation_error is not meaningful for at least one module"
         )
+    # Two oscillatory modules span an invariant torus, and a conjugacy acts on
+    # H_1 = Z^2 -- so the rotation VECTOR is identified only up to GL(2,Z)
+    # (counterexamples.md 7).  A coordinatewise rotation comparison therefore
+    # over-states the separation.  Reported, never scored: whether the lattice
+    # ambiguity is real depends on shear, which a fingerprint does not carry.
+    if fa.K == 2 and fb.K == 2 and rot_err > rot_tol:
+        ra = [abs(fa.rotations[i]) for i in fa.order]
+        rb = [abs(fb.rotations[i]) for i in fb.order]
+        margin, A = rotation_lattice_margin(ra, rb)
+        if np.isfinite(margin) and margin < rot_err:
+            notes.append(
+                f"rotation vectors differ coordinatewise by {rot_err:.4g} but only "
+                f"{margin:.4g} after quotienting by GL(2,Z) (A = {A.tolist()}): "
+                "for two oscillatory modules the per-module rotation numbers are "
+                "not invariants, only the lattice orbit is -- counterexamples.md §7"
+            )
     for tag, f in (("A", fa), ("B", fb)):
         if f.K > 1 and not f.is_filtration:
             notes.append(

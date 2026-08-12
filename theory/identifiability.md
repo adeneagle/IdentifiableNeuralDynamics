@@ -315,6 +315,21 @@ an oscillatory module while $\lambda_{\min} < 0$ for any contracting one. Hence:
 > down the decomposition. Rotation number being a conjugacy invariant of a
 > single circle map is classical; using it to force a *splitting* is not, and
 > nothing here proves it. The measurement is a prerequisite, not the result.
+>
+> **RESOLVED NEGATIVELY (2026-08-12) — the missing theorem is false.**
+> `counterexamples.md` §7: for two shear-free attracting cycles,
+> $h(z_1,z_2) = (z_1 z_2/|z_2|,\, z_2)$ is an exact modular conjugacy (residual
+> $6.7\times10^{-16}$, (F1) satisfied on an annulus with
+> $\sup\|Dh\|=2.72$) carrying $(\omega_1,\omega_2)$ to
+> $(\omega_1+\omega_2,\omega_2)$. Two cycles span an invariant torus, and a
+> conjugacy acts on $H_1(T^2)=\mathbb{Z}^2$, so **what is identified is the
+> rotation *vector* up to $GL(2,\mathbb{Z})$ — not the per-module rotation
+> numbers.** This is §1's regrouping counterexample in oscillatory form.
+>
+> One caveat, unresolved: shear in the *donor* block obstructs the construction
+> (residual $9.3\times10^{-2}$ at $\beta_2=0.3$), and amplitude–phase coupling is
+> generic in a real oscillator. Whether that restores identifiability or merely
+> defeats this $h$ is open. `TODO(gap)`
 
 Point 2 is the resolution of a case that previously produced numbers that could
 not be reconciled with the rate formula: it is outside Lemma C's hypotheses, not
@@ -946,14 +961,29 @@ force a splitting is not proved**, and nothing here proves it. `TODO(gap)`
 > So invariant recovery happens in a regime Theorem F provably does not reach.
 > That is not a contradiction — (F3) is a sufficient condition — but it is the
 > honest statement of where the theory and the measurement stand relative to
-> each other, and it is evidence *for* the conjecture this rider flags as
-> `TODO(gap)`: the rotation number is doing work that no theorem here licenses.
+> each other.
 >
-> **One caveat that must travel with it.** The fitted model class *imposes*
+> **RETRACTION (same day).** This box originally continued: "*and it is evidence
+> for the conjecture this rider flags as `TODO(gap)`: the rotation number is
+> doing work that no theorem here licenses*." **That reading is wrong, and the
+> conjecture it pointed at is false** — `counterexamples.md` §7 exhibits an
+> exact modular conjugacy of two shear-free cycles carrying
+> $(\omega_1,\omega_2)$ to $(\omega_1+\omega_2,\omega_2)$. Only the
+> $GL(2,\mathbb{Z})$ orbit of the rotation vector is identified, so the
+> per-module rotation numbers `exp14` agrees on are **not** invariants of the
+> data; both fits land on the same lattice basis for reasons of parameterisation
+> and initialisation, not because the observations determine it. The agreement
+> is real and reproducible; what it is evidence *of* is weaker than claimed.
+>
+> **Two caveats that must travel with it.** (i) The fitted model class *imposes*
 > modularity, so producing two modules is automatic and proves nothing. What is
 > not automatic is that two fits on **disjoint neuron subsets** agree on *which*
 > two — 2 of 12 restarts fail exactly there, by mode collapse (§3.13(e)) — and
-> that a frequency change is rejected. Those two facts are the content.
+> that a frequency change is rejected. (ii) The negative control's margin is
+> smaller than it looks: quotienting by $GL(2,\mathbb{Z})$, the control
+> $(\omega_1,0.90)$ sits $0.0159$ from an image of the true system, not the
+> $0.0637$ the coordinatewise comparison reports. It still rejects, with a
+> quarter of the headroom. Use `spectra.rotation_lattice_margin`.
 >
 > Note also what this says about the diagnostics. `order_margin` reads $0.0011$
 > here, which §3.13(d) correctly treats as an *undetermined* ordering; the chain
