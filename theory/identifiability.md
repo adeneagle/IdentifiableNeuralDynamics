@@ -908,8 +908,21 @@ nonlinearly. Here it collapses in two steps:
    filtration-side reading of §3.1: **the regrouping ambiguity is a coarsening
    ambiguity, nothing more.**
 
-So Theorem F's dynamics are unconditional and its one gap is a single, named,
-already-tracked lemma. Note the empirical program does not wait on it:
+**Reconciliation with `approaches.md` §C, which says "(B2) not needed".** Both
+are right, and the difference is what is being claimed:
+
+- **Report a filtration.** Take the levels as given by whichever decomposition
+  is in hand. Then the coarsening ambiguity is *tolerated* — the flag one
+  reports may be coarser than the finest one — and (B2) is genuinely not needed.
+  This is `approaches.md` §C's reading, and it is the honest default on data.
+- **Claim *the* finest filtration.** Then the coarsening must be pinned, and
+  that is (B2). This is `approaches.md` §C's own cost 1 ("identifies how any two
+  modular explanations relate, not that the decomposition is unique"), stated
+  from the other side.
+
+So Theorem F's dynamics are unconditional; its one gap is a single, named,
+already-tracked lemma, and that gap is only consumed by the *stronger* of the
+two readings. Note the empirical program does not wait on either:
 `selection.py` + `exp06` recover the finest partition from data by fit and
 uniqueness, and `exp03` confirms the (F3) chain on a case with
 $\Lambda(f_1)=\{-0.0513\}^2$, $\Lambda(f_2)=\{-0.3567\}^2$, chain gap $0.3054$,

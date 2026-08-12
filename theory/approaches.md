@@ -16,10 +16,10 @@ responses to that. Scope throughout is CLAUDE.md §1.1: autonomous, single-area.
 |---|---|---|---|
 | **Claim** | $h$ block-diagonal up to permutation | block-diagonal between behaviour-varying and invariant parts | $h$ triangular; modules ordered by Lyapunov spectrum |
 | **Strength** | strongest — the original goal | strong on the A/B split | weakest — a relation, not a uniqueness claim |
-| **Extra hypotheses** | $C^\infty$ + multi-index non-resonance + $\mathrm{int}\,\Omega \neq \emptyset$ | an observed behavioural variable $u$ (variance-modulating) + one-sided gap, **varying block dominant** (§B.1) | none beyond (B1) + a one-sided gap |
-| **Needs (B2) indecomposability** | **derivable** in Tier 1; jet-algebraic in Tier 2 (§A.2) | **yes**, within the invariant block | **no** |
-| **Needs (B3) matching** | **yes** — open | partly | **no** — the ordering *is* the matching |
-| **Proved?** | no; proof plan only | **both halves proved** in a restricted setting: Lemma C (dynamics) + Lemma D (behaviour, additive $h_B$ + linear modules, §4.5). Partial-iVAE lemma no longer needed — Lemma D discharges it dynamically | **essentially yes** (§4.2, Lemma C) |
+| **Extra hypotheses** | $C^\infty$ + multi-index non-resonance + $\mathrm{int}\,\Omega \neq \emptyset$ | an observed behavioural variable $u$ (variance-modulating) + one-sided gap, **varying block dominant** (§B.1) | (F1) bounded derivatives + (F2) uniform exponents + **(F3) ordered separation**. No interior clause, no analyticity. (F3) is strictly stronger than (B4) — see the box in §C |
+| **Needs (B2) indecomposability** | **derivable** in Tier 1; jet-algebraic in Tier 2 (§A.2) | **yes**, within the invariant block | **no** to report *a* filtration; **yes** to claim *the finest* one (§6.7) |
+| **Needs (B3) matching** | **yes** — open | partly | **no** for the ordering, which (F3) forces; the residue is the coarsening, i.e. (B2) again |
+| **Proved?** | no; proof plan only | **both halves proved** in a restricted setting: Lemma C (dynamics) + Lemma D (behaviour, additive $h_B$ + linear modules, §4.5). Partial-iVAE lemma no longer needed — Lemma D discharges it dynamically | **yes, and written up** — Theorem F, `identifiability.md` §6 |
 | **Nonlinear?** | yes, near a fixed point | yes | yes, unconditionally |
 | **Off the fixed point?** | **no** — normal forms need the Poincaré domain; limit cycles are Siegel | **yes** — the dynamics half is Lemma C, which reaches attractors (§4.4) | **yes** for periodic attractors (Lemma C′, §4.4) |
 | **Blocked by the learning gap?** | yes | yes | **no** |
@@ -28,7 +28,8 @@ The short version: **A** is the prize, and after the §A.2 assessment it splits 
 its easy tier is really *robustness of Theorem A* against decoder ambiguity,
 while its hard tier carries the nonlinear content and has one gap left. **B**
 introduces a genuinely new mechanism but changes the model. **C** is the only
-thing currently standing on proved ground.
+thing currently standing on proved ground, and as of 2026-08-12 the only one
+written as a theorem (§6).
 
 **The new row is the sharpest separation between A and C.** Task 22 established
 that Lemma C survives at attracting periodic orbits (`identifiability.md` §4.4),
@@ -459,6 +460,19 @@ not alter its character there.
 ---
 
 ## C. Filtration
+
+> **WRITTEN UP (2026-08-12) — `identifiability.md` §6, "Theorem F".** This
+> section is now the *rationale*; the statement, hypotheses and proof live there.
+> Two things changed in the writing and both matter here:
+>
+> 1. **The hypothesis is (F3) ordered separation, not (B4) disjointness.** The
+>   gap is not cosmetic — the §3.1 regrouping counterexample *passes* (B4) at
+>   $+0.1823$ and fails (F3) at $-0.2231$. `spectra.filtration_gap` computes it;
+>   `spectra.spectral_gap` computes the wrong one (CLAUDE.md §3.14).
+> 2. **"(B3) nearly free" below is right, and §6.7 says exactly how far.** The
+>   *ordering* half is free — with (F3) on both sides, any correspondence is
+>   forced to be order-preserving. What remains is the **coarsening**, which is
+>   the same thing as cost 1 below; see the reconciliation in §6.7.
 
 **Claim.** $h$ is triangular: modules are identified as an **ordered flag** by
 Lyapunov spectrum, not as an unordered partition.
