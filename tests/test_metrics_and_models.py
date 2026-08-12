@@ -700,6 +700,63 @@ def test_two_oscillatory_modules_report_a_zero_order_margin():
     assert _fp(_twin_twists(), _ann(np.random.default_rng(0))).order_margin > 0.4
 
 
+def test_order_margin_and_filtration_gap_answer_different_questions():
+    """A wide hull can swallow a narrow one while still leading comfortably.
+
+    order_margin looks only at leading exponents; (F3) looks at whole intervals.
+    Here the ordering is decisive (+0.69) and there is no filtration (-0.22), so
+    an ordering claim read off order_margin alone is not entitled to call itself
+    a filtration.  CLAUDE.md §3.14 / identifiability.md §6.1.
+    """
+    wide = MT.DynamicalFingerprint(
+        partition=[2, 2],
+        spectra=[np.array([0.0, -0.9163]), np.array([-0.6931, -0.6931])],
+        rotations=[0.08, float("nan")], coherences=[1.0, 1.0],
+    )
+    assert wide.order_margin == pytest.approx(0.6931, abs=1e-4)
+    assert wide.filtration_gap == pytest.approx(-0.2232, abs=1e-4)
+    assert not wide.is_filtration
+
+
+def test_a_genuine_filtration_passes_F3():
+    """Separated modules: both diagnostics agree, and the gap is the chain step."""
+    fp = _fp(_twin_twists(), _ann(np.random.default_rng(0)))
+    assert fp.order_margin > 0.4
+    assert fp.is_filtration
+    assert fp.filtration_gap > 0.4
+
+
+def test_two_cycles_fail_F3_decisively_where_the_order_margin_is_only_a_tie():
+    """exp14 part 4's system, and the reason its result is outside Theorem F.
+
+    §3.13(d) had to add a tolerance because order_margin reads ~0.001 here -- an
+    *undetermined* ordering, which is a different thing from a definite failure.
+    (F3) says the second: the hulls coincide, so the gap is the whole transverse
+    exponent, not a near-tie.  Both diagnostics reject; only one says how hard.
+    """
+    sysm = S.ModularSystem([S.LimitCycleBlock(a=0.3, omega=0.5),
+                            S.LimitCycleBlock(a=0.3, omega=1.3)])
+    fp = _fp(sysm, _ann(np.random.default_rng(0), lo=0.9, hi=1.1))
+    assert fp.order_margin < 1e-6
+    assert not fp.is_filtration
+    assert fp.filtration_gap < -0.8
+
+
+def test_the_F3_note_is_diagnostic_and_does_not_change_agree():
+    """Two fits of the same non-filtration still agree -- (F3) is sufficient, not necessary.
+
+    This is exp14 part 4 in miniature: Theorem F does not apply, and the
+    invariants match anyway.  The note must say so without overriding the score,
+    or it would turn the repo's own positive result into a failure.
+    """
+    sysm = S.ModularSystem([S.LimitCycleBlock(a=0.3, omega=0.5),
+                            S.LimitCycleBlock(a=0.3, omega=1.3)])
+    z0 = _ann(np.random.default_rng(0), lo=0.9, hi=1.1)
+    r = MT.invariant_agreement(_fp(sysm, z0), _fp(sysm, z0))
+    assert r.agree
+    assert sum("fails (F3)" in n for n in r.notes) == 2  # one per fingerprint
+
+
 def test_a_different_module_count_disagrees_without_crashing():
     z0 = _ann(np.random.default_rng(0))
     two = _fp(_twin_twists(), z0)

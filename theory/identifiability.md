@@ -850,6 +850,34 @@ The rotation number is the invariant that distinguishes two cycles and it is
 built and validated (`spectra.rotation_number`, `exp14`) — but **using it to
 force a splitting is not proved**, and nothing here proves it. `TODO(gap)`
 
+> **(F3) is sufficient, not necessary — and the repo's own best empirical result
+> is on the wrong side of it.** `exp14` part 4, the task-40 validation, fits two
+> limit cycles at $\omega = 0.5$ and $1.3$; the experiment chose that system
+> deliberately, as "exactly where Lemma C has no gap to use". Evaluating (F3) on
+> its **24 saved fingerprints** — no refitting needed, §3.13(d) saved them for
+> exactly this — gives `is_filtration` in **0 of 24**, median chain gap
+> $\mathbf{-0.65}$, uniformly across the linear, nonlinear and negative-control
+> arms. And yet in the linear arm all 16 cross-split comparisons agree, at a
+> median rotation error of $2.5\times10^{-4}$, while the negative control
+> correctly rejects.
+>
+> So invariant recovery happens in a regime Theorem F provably does not reach.
+> That is not a contradiction — (F3) is a sufficient condition — but it is the
+> honest statement of where the theory and the measurement stand relative to
+> each other, and it is evidence *for* the conjecture this rider flags as
+> `TODO(gap)`: the rotation number is doing work that no theorem here licenses.
+>
+> **One caveat that must travel with it.** The fitted model class *imposes*
+> modularity, so producing two modules is automatic and proves nothing. What is
+> not automatic is that two fits on **disjoint neuron subsets** agree on *which*
+> two — 2 of 12 restarts fail exactly there, by mode collapse (§3.13(e)) — and
+> that a frequency change is rejected. Those two facts are the content.
+>
+> Note also what this says about the diagnostics. `order_margin` reads $0.0011$
+> here, which §3.13(d) correctly treats as an *undetermined* ordering; the chain
+> gap reads $-0.65$, a *definite* failure. Same verdict, different strength, and
+> the difference matters: a tie invites a tie-break, a definite failure does not.
+
 ### 6.6 What Theorem F does not claim
 
 - **Not coordinates.** Within a level, $h_i$ is an arbitrary diffeomorphism.

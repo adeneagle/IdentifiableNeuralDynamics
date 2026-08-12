@@ -17,6 +17,7 @@ import numpy as np
 from scipy.optimize import linear_sum_assignment
 
 from idyn.linear import block_energy_matrix, block_permutation_report, slices_of
+from idyn.spectra import filtration_gap as spectra_filtration_gap
 from idyn.spectra import module_lyapunov_spectra, module_rotation_numbers
 
 __all__ = [
@@ -1023,6 +1024,31 @@ class DynamicalFingerprint:
         lead = sorted((float(self.spectra[i][0]) for i in range(self.K)), reverse=True)
         return float(min(lead[i] - lead[i + 1] for i in range(len(lead) - 1)))
 
+    @property
+    def filtration_gap(self) -> float:
+        """Ordered separation of the module hulls -- (F3), identifiability.md §6.1.
+
+        **A different question from ``order_margin``, and the two can disagree.**
+        ``order_margin`` asks whether the *leading* exponents are far enough apart
+        to order the modules; this asks whether the modules' full spectra occupy
+        disjoint intervals, which is what Theorem F needs and what Lemma C's
+        oriented gap actually is.
+
+        A module with a *wide* spectrum can swallow a narrower one nested inside
+        it while still leading comfortably: a limit cycle spanning
+        [-0.9163, 0] against a block at [-0.6931, -0.6931] has
+        ``order_margin`` = +0.6931 -- decisively ordered -- and
+        ``filtration_gap`` = -0.2232, no filtration at all.  So an ordering claim
+        read off ``order_margin`` alone is not entitled to call itself a
+        filtration.  CLAUDE.md §3.14.
+        """
+        return spectra_filtration_gap(self.spectra).gap
+
+    @property
+    def is_filtration(self) -> bool:
+        """Does this fingerprint satisfy (F3)?  Gate filtration claims on this."""
+        return self.filtration_gap > 0.0
+
     def duplicate_modules(
         self, spec_tol: float = 0.05, rot_tol: float = 0.01
     ) -> list[tuple[int, int]]:
@@ -1086,7 +1112,10 @@ class DynamicalFingerprint:
             f"rho={f.rotations[i]:+.5f}(coh {f.coherences[i]:.2f})"
             for i in range(f.K)
         ]
-        return f"K={f.K} margin={f.order_margin:+.4f} | " + " || ".join(parts)
+        return (
+            f"K={f.K} margin={f.order_margin:+.4f} F3={f.filtration_gap:+.4f} | "
+            + " || ".join(parts)
+        )
 
 
 def dynamical_fingerprint(
@@ -1275,6 +1304,15 @@ def invariant_agreement(
             f"min rotation coherence {min_coh:.3f} < {coherence_floor}: "
             "rotation_error is not meaningful for at least one module"
         )
+    for tag, f in (("A", fa), ("B", fb)):
+        if f.K > 1 and not f.is_filtration:
+            notes.append(
+                f"fingerprint {tag} fails (F3) ordered separation "
+                f"(filtration gap {f.filtration_gap:+.4g}): its module spectra "
+                "overlap as intervals, so Theorem F does not apply and the "
+                "hierarchy is not a claim this fit is entitled to make. Note "
+                "`order_margin` can be comfortably positive here -- CLAUDE.md §3.14"
+            )
 
     agree = bool(same_dims and order_ok and spec_err <= spec_tol and rot_err <= rot_tol)
     return AgreementReport(
