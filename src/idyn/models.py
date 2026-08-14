@@ -39,6 +39,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Sequence
 
+import numpy as np
 import torch
 import torch.nn as nn
 
@@ -47,6 +48,9 @@ __all__ = [
     "UnconstrainedTransition",
     "ModularTransition",
     "LatentDynamicsModel",
+    "TriangularTransition",
+    "LearnedBlock",
+    "LearnedSystem",
     "ModelConfig",
 ]
 
@@ -106,6 +110,45 @@ class ModularTransition(nn.Module):
         return torch.cat(parts, dim=-1)
 
 
+class TriangularTransition(nn.Module):
+    """The skew product: module i sees modules 1..i, never i+1..K.
+
+    This is the object §3.7 proves the spectral gap actually delivers -- a
+    *filtration*, not a direct sum -- and §7 argues is the generic one, since a
+    filtration needs only invariant subspaces while a direct sum needs an
+    invariant complement too.
+
+    It sits strictly between the other two transitions, so the three form a
+    nested ladder
+
+        unconstrained  >  triangular  >  modular,
+
+    which is what the task-39 co-smoothing gate scores.  Nesting is what makes
+    held-out performance a legitimate test: same bias ordering, decreasing
+    variance, so a *drop* at a rung is evidence that rung's constraint is false.
+    """
+
+    def __init__(
+        self, partition: Sequence[int], hidden: Sequence[int] = (32, 32), act: str = "tanh"
+    ):
+        super().__init__()
+        self.partition = list(partition)
+        self.d = int(sum(self.partition))
+        bounds, off = [], 0
+        for k in self.partition:
+            bounds.append((off, off + k))
+            off += k
+        self.bounds = bounds
+        # module i is driven by everything up to and including itself
+        self.nets = nn.ModuleList([mlp(b, k, hidden, act) for (_, b), k in zip(bounds, self.partition)])
+
+    def forward(self, z: torch.Tensor) -> torch.Tensor:
+        parts = []
+        for (a, b), net in zip(self.bounds, self.nets):
+            parts.append(z[..., a:b] + net(z[..., :b]))
+        return torch.cat(parts, dim=-1)
+
+
 @dataclass
 class ModelConfig:
     n_obs: int
@@ -116,6 +159,9 @@ class ModelConfig:
     hidden_dyn: tuple[int, ...] = (32, 32)
     hidden_obs: tuple[int, ...] = (64, 64)
     act: str = "tanh"
+    # "modular" (block-diagonal), "triangular" (skew product) or "unconstrained".
+    # Only consulted when `partition` is set; the three are the task-39 ladder.
+    structure: str = "modular"
 
     def __post_init__(self) -> None:
         if self.partition is not None and sum(self.partition) != self.d:
@@ -124,10 +170,12 @@ class ModelConfig:
             raise ValueError("decoder must be 'linear' or 'mlp'")
         if self.encoder not in {"linear", "mlp"}:
             raise ValueError("encoder must be 'linear' or 'mlp'")
+        if self.structure not in {"modular", "triangular", "unconstrained"}:
+            raise ValueError("structure must be modular, triangular or unconstrained")
 
     @property
     def modular(self) -> bool:
-        return self.partition is not None
+        return self.partition is not None and self.structure != "unconstrained"
 
 
 class LatentDynamicsModel(nn.Module):
@@ -148,11 +196,12 @@ class LatentDynamicsModel(nn.Module):
             if cfg.decoder == "linear"
             else mlp(d, n_obs, cfg.hidden_obs, cfg.act)
         )
-        self.dyn: nn.Module = (
-            ModularTransition(cfg.partition, cfg.hidden_dyn, cfg.act)
-            if cfg.modular
-            else UnconstrainedTransition(d, cfg.hidden_dyn, cfg.act)
-        )
+        if cfg.modular and cfg.structure == "triangular":
+            self.dyn: nn.Module = TriangularTransition(cfg.partition, cfg.hidden_dyn, cfg.act)
+        elif cfg.modular:
+            self.dyn = ModularTransition(cfg.partition, cfg.hidden_dyn, cfg.act)
+        else:
+            self.dyn = UnconstrainedTransition(d, cfg.hidden_dyn, cfg.act)
 
     def encode(self, x: torch.Tensor) -> torch.Tensor:
         return self.enc(x)
@@ -265,3 +314,49 @@ class LatentDynamicsModel(nn.Module):
         means = torch.stack(means)   # (n_u, d_b)
         covs = torch.stack(covs)     # (n_u, d_b, d_b)
         return means.var(0).sum() + covs.var(0).sum()
+
+
+class LearnedBlock:
+    """One block of a fitted ``ModularTransition``, as a ``spectra.HasJacobian``.
+
+    The block MLP sees only its own coordinates, so it can be iterated alone --
+    which is what makes a per-module Lyapunov spectrum and rotation number well
+    posed on a *fitted* model at all.
+
+    Cast the model to ``double()`` before wrapping.  The Jacobian is a central
+    difference at ``eps=1e-6``; on a float32 model that puts the roundoff floor
+    on top of the signal.
+    """
+
+    def __init__(self, dyn: ModularTransition, k: int):
+        a, b = dyn.bounds[k]
+        self.net = dyn.nets[k]
+        self.dim = b - a
+
+    def _f(self, Z: np.ndarray) -> np.ndarray:
+        with torch.no_grad():
+            t = torch.as_tensor(np.asarray(Z, float), dtype=torch.float64)
+            return (t + self.net(t)).numpy()
+
+    def step(self, z: np.ndarray) -> np.ndarray:
+        z = np.asarray(z, float)
+        return self._f(np.atleast_2d(z)).reshape(z.shape)
+
+    def jacobian(self, z: np.ndarray, eps: float = 1e-6) -> np.ndarray:
+        z = np.asarray(z, float).reshape(self.dim)
+        E = np.eye(self.dim) * eps
+        out = self._f(np.vstack([z + E, z - E]))
+        return ((out[: self.dim] - out[self.dim :]) / (2.0 * eps)).T
+
+
+class LearnedSystem:
+    """``partition`` + ``blocks`` -- the whole interface a fingerprint needs.
+
+    Lets ``metrics.dynamical_fingerprint`` run on a fitted model exactly as it
+    runs on a ground-truth ``ModularSystem``, which is what task 40 requires:
+    the comparison is fit-to-fit, with no ground truth anywhere.
+    """
+
+    def __init__(self, dyn: ModularTransition, partition: Sequence[int] | None = None):
+        self.partition = list(partition if partition is not None else dyn.partition)
+        self.blocks = [LearnedBlock(dyn, k) for k in range(len(self.partition))]

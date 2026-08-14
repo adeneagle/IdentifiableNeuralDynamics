@@ -220,44 +220,75 @@ def filtration_gap(spectra: Sequence[np.ndarray]) -> FiltrationOrder:
     return FiltrationOrder(order=order, gap=float(gap), hulls=[hulls[i] for i in order])
 
 
-def rotation_lattice_margin(
-    rho_a: Sequence[float], rho_b: Sequence[float], max_coeff: int = 3
-) -> tuple[float, np.ndarray | None]:
-    """How far apart two rotation vectors are **after quotienting by GL(2,Z)**.
+_GL_CACHE: dict[tuple[int, int], np.ndarray] = {}
 
-    Two limit cycles carry an invariant torus, and a conjugacy acts on
-    ``H_1(T^2) = Z^2``.  So the rotation *vector* is identified only up to an
-    integer unimodular change of basis -- see
+
+def rotation_lattice_margin(
+    rho_a: Sequence[float],
+    rho_b: Sequence[float],
+    max_coeff: int | None = None,
+    max_candidates: int = 5_000_000,
+) -> tuple[float, np.ndarray | None]:
+    """How far apart two rotation vectors are **after quotienting by GL(K,Z)**.
+
+    ``K`` oscillatory modules carry an invariant ``K``-torus, and a conjugacy
+    acts on ``H_1(T^K) = Z^K``.  So the rotation *vector* is identified only up
+    to an integer unimodular change of basis -- see
     ``systems.torus_regrouping_counterexample``, which realises
     ``(w1, w2) -> (w1 + w2, w2)`` as an exact modular conjugacy.  Comparing
     rotation numbers coordinatewise therefore over-states how much the data
-    pins down.
+    pins down, and the overstatement grows with ``K``: there are more lattice
+    bases to hide in.
+
+    **This bites on real data.** A fit of MC_Maze with three 2-D modules has
+    three rotating factors, so what two independent fits can agree on is the
+    ``GL(3,Z)`` *orbit*, not the individual numbers.
 
     Returns ``(margin, A)``: the smallest ``max |A rho_a - rho_b|`` over integer
     ``A`` with ``|det A| = 1`` and entries bounded by ``max_coeff``, and the
     minimiser.  A margin near zero means the two fits may describe the *same*
     dynamics in different lattice bases; a large one means they genuinely
-    differ.  Two modules only -- raises otherwise.
+    differ.
+
+    ``max_coeff`` defaults to 3 for ``K = 2``, 2 for ``K = 3`` and 1 above, to
+    keep the brute-force enumeration under ``max_candidates``.  The candidate
+    set is cached per ``(K, max_coeff)`` because building it dominates the cost.
     """
     a = np.asarray(rho_a, dtype=float).ravel()
     b = np.asarray(rho_b, dtype=float).ravel()
-    if a.size != 2 or b.size != 2:
-        raise ValueError("the lattice quotient is only implemented for K = 2")
+    if a.size != b.size:
+        raise ValueError("rotation vectors must have the same length")
+    K = int(a.size)
+    if K < 2:
+        raise ValueError("the lattice quotient needs K >= 2 modules")
     if not (np.all(np.isfinite(a)) and np.all(np.isfinite(b))):
         return float("inf"), None
-    best: tuple[float, np.ndarray | None] = (float("inf"), None)
-    rng = range(-max_coeff, max_coeff + 1)
-    for p in rng:
-        for q in rng:
-            for r in rng:
-                for s in rng:
-                    if abs(p * s - q * r) != 1:
-                        continue
-                    A = np.array([[p, q], [r, s]], dtype=float)
-                    err = float(np.abs(A @ a - b).max())
-                    if err < best[0]:
-                        best = (err, A.astype(int))
-    return best
+
+    if max_coeff is None:
+        # the search is (2c+1)^(K^2) matrices before the determinant filter
+        max_coeff = {2: 3, 3: 2}.get(K, 1)
+    base = 2 * max_coeff + 1
+    n_cand = base ** (K * K)
+    if n_cand > max_candidates:
+        raise ValueError(
+            f"GL({K},Z) search with max_coeff={max_coeff} needs {n_cand:.3g} "
+            f"candidates, over the {max_candidates:.3g} cap; lower max_coeff"
+        )
+
+    key = (K, max_coeff)
+    mats = _GL_CACHE.get(key)
+    if mats is None:
+        idx = np.arange(n_cand, dtype=np.int64)
+        powers = base ** np.arange(K * K, dtype=np.int64)
+        digits = (idx[:, None] // powers[None, :]) % base - max_coeff
+        cand = digits.astype(np.int16).reshape(-1, K, K)
+        dets = np.rint(np.linalg.det(cand.astype(float)))
+        mats = cand[np.abs(dets) == 1]
+        _GL_CACHE[key] = mats
+
+    err = np.abs(np.einsum("nij,j->ni", mats.astype(float), a) - b[None, :]).max(axis=1)
+    i = int(np.argmin(err))
+    return float(err[i]), mats[i].astype(int)
 
 
 # ---------------------------------------------------------------------------

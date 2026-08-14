@@ -10,6 +10,12 @@ __pycache__/
 .vscode/
 .idea/
 
+# Neural Latents Benchmark NWB files -- large, and re-fetchable from DANDI by
+# idyn.nlb.fetch() (dandisets 000128 / 000129 / 000140).  The loader records the
+# asset id and byte size in every results JSON, so a run stays reproducible
+# without the blobs being tracked here.
+data/*.nwb
+
 # NOT ignored, deliberately: results/*.json
 #
 # CLAUDE.md 8 makes the JSON record the artifact of an experiment -- it carries
