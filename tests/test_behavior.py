@@ -418,3 +418,183 @@ def test_equal_frequency_is_the_degree_1_resonance_condition():
     for omega_b, expected in ((0.70, 2), (-0.70, 2), (1.30, 0), (2.10, 0)):
         w = S.gapless_resonant_coupling(omega=0.70, omega_b=omega_b)
         assert w["sylvester_kernel_dim"] == expected, f"omega_b={omega_b}"
+
+
+# --------------------------------------------------------------------------
+# Lemma D'' -- several surviving degrees at once (identifiability.md 4.5b)
+#
+# Step 4 assumed psi homogeneous of a SINGLE degree; Step 2 permits several.
+# The repair runs on second moments: Var(<t, psi(sigma zeta)>) is a polynomial
+# in sigma with no constant term, so constancy across enough levels kills it.
+# --------------------------------------------------------------------------
+
+
+def test_multidegree_witness_is_an_exact_conjugacy_with_two_live_degrees():
+    w = S.multidegree_resonant_coupling()
+    z = np.random.default_rng(0).normal(size=(4000, 4))
+    assert np.abs(w["h"](w["F"](z)) - w["F"](w["h"](z))).max() < 1e-12
+    assert w["degrees"] == [1, 2], "the case Step 4 could not handle"
+    # both resonances are structural (mu^1 = mu, mu^2 = mu^2), not numerical
+    assert all(r == 0.0 for r in w["resonance_residuals"])
+    m = np.linalg.norm(w["cross_derivative"](z[:, :2]), axis=(1, 2))
+    assert m.mean() > 1.0, "M_BA is genuinely nonzero"
+    assert w["unit_eigenvalue_distance"] > 0.1, "(D1') holds"
+
+
+def test_multidegree_variance_is_exactly_the_gram_quadratic_form():
+    """V_t(sigma) = s(sigma)^T C s(sigma) -- the identity the proof runs on."""
+    rng = np.random.default_rng(4)
+    w = S.multidegree_resonant_coupling()
+    zeta = rng.normal(size=(400_000, 2))
+    t = np.array([1.0, 1.0])
+
+    x = zeta @ w["a_vec"]
+    a1, a2 = w["c1"] * t[0] * x, w["c2"] * t[1] * x**2
+    C = np.cov(np.stack([a1, a2]), ddof=0)
+
+    for sigma in (0.6, 1.0, 1.6, 2.2):
+        measured = float(np.var(w["psi"](sigma * zeta) @ t))
+        s = np.array([sigma, sigma**2])
+        assert measured == pytest.approx(float(s @ C @ s), rel=1e-10)
+
+
+def test_symmetric_mu_A_kills_the_odd_coefficient_so_two_levels_suffice():
+    """(R1)+(R2): Cov(A_1, A_2) is an odd moment of a symmetric law, hence 0.
+
+    Asserted against a measured sampling floor, not against zero (3.9): the
+    entry must fall like n^{-1/2}, which is what makes it noise rather than a
+    small real value.
+    """
+    rng = np.random.default_rng(5)
+    w = S.multidegree_resonant_coupling()
+
+    def rms_offdiag(n, repeats=16):
+        vals = []
+        for _ in range(repeats):
+            x = rng.normal(size=(n, 2)) @ w["a_vec"]
+            vals.append(float(np.cov(np.stack([x, x**2]), ddof=0)[0, 1]))
+        return float(np.sqrt(np.mean(np.square(vals))))
+
+    small, large = rms_offdiag(5_000), rms_offdiag(80_000)
+    # 16x the sample => the floor should drop by ~4x if it is n^{-1/2} noise
+    assert small / large == pytest.approx(4.0, rel=0.6), f"{small} -> {large}"
+
+    # and with the odd term absent V is strictly increasing, so 2 levels suffice
+    info = S.required_behaviour_levels([1, 2], symmetric=True)
+    assert info["two_levels_suffice"] and info["levels"] == 2
+    assert info["unconditional_levels"] == 4, "worst case is |P+P|+1 = 4"
+
+
+def test_level_count_reduces_to_lemma_d_prime_for_a_single_degree():
+    for p in (1, 2, 3):
+        info = S.required_behaviour_levels([p])
+        assert info["levels"] == 2 and info["two_levels_suffice"]
+
+
+def test_two_level_tie_threshold_predicts_every_measured_case():
+    """(R3) is sharp: a tie exists iff |corr| clears the threshold."""
+    rng = np.random.default_rng(6)
+    n = 1_000_000
+    sym = rng.normal(size=n)
+    skew = rng.normal(size=n) * 0.30 + 1.0
+
+    cases = [
+        # (p, q, sample, expect_tie)
+        (1, 2, sym, False),   # opposite parity under a symmetric law -> corr 0
+        (1, 3, sym, False),   # EQUAL parity, corr = 3/sqrt(15) -- still no tie
+        (2, 3, sym, False),
+        (1, 2, skew, True),   # skewed: corr ~ 0.978 clears 0.969
+    ]
+    for p, q, sample, expect in cases:
+        thr = S.two_level_tie_threshold(p, q, 0.6, 1.6)
+        corr = abs(float(np.corrcoef(sample**p, sample**q)[0, 1]))
+        assert (corr >= thr) == expect, f"P={{{p},{q}}}: corr {corr} vs thr {thr}"
+
+
+def test_equal_parity_degrees_still_need_only_two_levels_under_a_gaussian():
+    """The counting bound is conservative and (R3) says so.
+
+    P = {1,3} shares parity, so (R2) does not apply and the count asks for 4.
+    But corr(X, X^3) = 3/sqrt(15) = 0.775 is far below the 0.944 threshold, so
+    two levels really do suffice.  Recorded because it is the one place the two
+    criteria disagree.
+    """
+    assert S.required_behaviour_levels([1, 3], symmetric=True)["levels"] == 4
+    thr = S.two_level_tie_threshold(1, 3, 0.6, 1.6)
+    assert 3 / np.sqrt(15) < thr, f"3/sqrt(15) = {3 / np.sqrt(15)} vs {thr}"
+
+
+def test_the_tie_defeats_the_second_moment_argument_not_the_lemma():
+    """At a constructed two-level tie the VARIANCE matches and the law does not.
+
+    This is the honest boundary of Lemma D'': the level count is a property of
+    the argument.  (D4) asks for equality of laws, and skewness still separates
+    the levels, so the coupling remains detectable.
+    """
+    rng = np.random.default_rng(7)
+    n = 2_000_000
+    x = (rng.normal(size=(n, 2)) * 0.30 + 1.0) @ np.array([1.0, 0.5])
+    u1, u2 = x - x.mean(), x**2 - (x**2).mean()
+    v11, v12, v22 = float(np.mean(u1 * u1)), float(np.mean(u1 * u2)), float(np.mean(u2 * u2))
+
+    s1, s2 = 0.6, 1.6
+    P_, Q_, R_ = s1 + s2, s1**2 + s1 * s2 + s2**2, (s1 + s2) * (s1**2 + s2**2)
+    qa, qb, qc = v22 * R_, 2 * v12 * Q_, v11 * P_
+    disc = qb**2 - 4 * qa * qc
+    assert disc > 0, "the skewed law admits a tie -- that is the point"
+    k = (-qb + np.sqrt(disc)) / (2 * qa)
+
+    def y(sigma):
+        return sigma * x + sigma**2 * k * x**2
+
+    ya, yb = y(s1), y(s2)
+    assert float(np.var(ya)) == pytest.approx(float(np.var(yb)), rel=1e-6)
+    skew = [float(np.mean(((v - v.mean()) / v.std()) ** 3)) for v in (ya, yb)]
+    assert abs(skew[0] - skew[1]) > 1.0, f"the law still moves: skew {skew}"
+
+
+def test_separating_the_levels_shrinks_the_escape():
+    """The threshold lives in [2 sqrt(pq)/(p+q), 1) and rises with separation.
+
+    Design consequence: spread the two behaviour levels.  It costs nothing and
+    it strictly raises the correlation a coupling needs in order to hide.
+    """
+    floor = 2 * np.sqrt(1 * 2) / (1 + 2)
+    ts = [S.two_level_tie_threshold(1, 2, 1.0, r) for r in (1.001, 1.5, 5.0, 20.0)]
+    assert ts[0] == pytest.approx(floor, rel=1e-3), "floor at coincident levels"
+    assert all(a < b for a, b in zip(ts, ts[1:])), f"must rise: {ts}"
+    assert ts[-1] > 0.998 and ts[-1] < 1.0
+
+    # AM-GM: the threshold never reaches 1, for any degrees or levels
+    rng = np.random.default_rng(9)
+    for _ in range(2000):
+        p, q = sorted(rng.integers(1, 9, size=2))
+        s1, s2 = np.exp(rng.normal(size=2) * 2)
+        if p == q or s1 == s2:
+            continue
+        assert S.two_level_tie_threshold(int(p), int(q), float(s1), float(s2)) <= 1.0
+
+    for bad in ((2, 2, 0.6, 1.6), (1, 2, 0.6, 0.6), (1, 2, -1.0, 1.6)):
+        with pytest.raises(ValueError):
+            S.two_level_tie_threshold(*bad)
+
+
+def test_surviving_degrees_are_finite_from_the_spectra_alone():
+    """P is finite whenever f_A contracts and ftilde_B is invertible."""
+    assert S.surviving_degree_bound(0.8, 0.64) == 2      # the witness: P subset {1,2}
+    assert S.surviving_degree_bound(0.8, 0.10) == 10
+    assert S.surviving_degree_bound(0.95, 0.5) == 13
+    # B decaying slower than A: no degree >= 1 resonates, so psi = 0 outright
+    assert S.surviving_degree_bound(0.5, 0.9) == 0
+
+    for bad in ((1.2, 0.5), (0.0, 0.5), (0.8, 0.0)):
+        with pytest.raises(ValueError):
+            S.surviving_degree_bound(*bad)
+
+
+def test_degree_zero_is_rejected_by_the_level_counter():
+    """(D1') must be applied before counting -- degree 0 has no sigma-dependence."""
+    with pytest.raises(ValueError):
+        S.required_behaviour_levels([0, 2])
+    with pytest.raises(ValueError):
+        S.required_behaviour_levels([])

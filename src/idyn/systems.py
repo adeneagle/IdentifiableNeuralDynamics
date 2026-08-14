@@ -40,6 +40,11 @@ __all__ = [
     "nonadditive_behavioural_escape",
     "lemma_d_witness",
     "gapless_resonant_coupling",
+    "multidegree_resonant_coupling",
+    "two_level_tie_threshold",
+    "required_behaviour_levels",
+    "surviving_degree_bound",
+    "asymptotic_phase",
     "torus_regrouping_counterexample",
     "sylvester_kernel_dim",
     "two_oscillator_system",
@@ -1085,6 +1090,209 @@ def gapless_resonant_coupling(
         "cross_derivative": float(abs(c) * np.sqrt(2.0)),
         "var_h_b": lambda sigma, tau=1.0: tau ** 2 + c ** 2 * sigma ** 2,
     }
+
+
+def multidegree_resonant_coupling(
+    mu: float = 0.80,
+    c1: float = 0.90,
+    c2: float = 0.70,
+    a_vec: Sequence[float] = (1.0, 0.5),
+) -> dict:
+    """Lemma D'' -- a coupling that survives at **two degrees at once**.
+
+    ``gapless_resonant_coupling`` and ``lemma_d_witness`` both have a ``psi``
+    homogeneous of a *single* degree, which is what identifiability.md 4.5
+    Step 4 silently assumes.  Step 2 permits several degrees to survive
+    simultaneously (different multi-indices resonating with different
+    eigenvalues of ``f~_B``), and then ``psi(sigma zeta)`` is not a single power
+    of ``sigma`` and Step 4's iteration does not run.  This is that case.
+
+    Take ``f_A = mu I_2`` (a scalar contraction, so ``|lambda_A^m| = mu^|m|``)
+    and ``f~_B = diag(mu, mu^2)``.  Then
+
+        psi(z) = ( c1 <a,z>,  c2 <a,z>^2 )
+
+    is an exact semiconjugacy ``psi . f_A = f~_B . psi`` whose degree set is
+    ``P = {1, 2}``: the first component resonates at ``mu``, the second at
+    ``mu^2``.  ``h(z_A, z_B) = (z_A, z_B + psi(z_A))`` is an exact modular
+    conjugacy with ``M_BA != 0``.
+
+    What the second-moment argument sees.  With ``z_A = sigma zeta`` the
+    functional ``V_t(sigma) = Var(<t, psi(sigma zeta)>)`` is the quadratic form
+    ``s(sigma)^T C s(sigma)`` in ``s(sigma)_p = sigma^p``, where ``C`` is the
+    covariance (Gram) matrix of ``A_p = <t, Psi_p(zeta)>``.  (D4) forces
+    ``V_t`` to take the same value at every behaviour level, and a polynomial
+    with no constant term that is constant on enough levels vanishes.
+
+    The count depends on ``mu_A`` through ``C``, which is the interesting part:
+
+    * ``mu_A`` **symmetric** (the canonical (D2) realisation, ``z_A ~
+      N(0, sigma_u^2 I)``): ``Cov(A_1, A_2)`` is an odd moment, hence exactly
+      ``0``, so ``V_t`` has non-negative coefficients and is strictly increasing
+      -- **two levels still suffice**, multi-degree notwithstanding.
+    * ``mu_A`` **skewed**: ``A_1`` and ``A_2`` can be nearly anticorrelated and
+      ``V_t`` becomes non-monotone, so a two-level tie exists.  It defeats the
+      second-moment *argument* only -- at the tie the mean and skewness of
+      ``h_B`` still move with ``sigma``, so (D4) itself is not satisfied.
+
+    Returns the pieces both facts are checked from.
+    """
+    a = np.asarray(a_vec, dtype=float)
+    if a.shape != (2,):
+        raise ValueError("a_vec must have length 2")
+    f_a = mu * np.eye(2)
+    f_b = np.diag([mu, mu ** 2])
+
+    def psi(z_a: np.ndarray) -> np.ndarray:
+        x = np.asarray(z_a, dtype=float) @ a
+        return np.stack([c1 * x, c2 * x ** 2], axis=-1)
+
+    def F(z: np.ndarray) -> np.ndarray:
+        z = np.asarray(z, dtype=float)
+        return np.concatenate([z[..., :2] @ f_a.T, z[..., 2:] @ f_b.T], axis=-1)
+
+    def h(z: np.ndarray) -> np.ndarray:
+        z = np.asarray(z, dtype=float)
+        return np.concatenate([z[..., :2], z[..., 2:] + psi(z[..., :2])], axis=-1)
+
+    def cross_derivative(z_a: np.ndarray) -> np.ndarray:
+        """M_BA(z_A) = d psi / d z_A, shape (..., 2, 2)."""
+        x = np.asarray(z_a, dtype=float) @ a
+        rows = np.stack([np.broadcast_to(c1, x.shape), 2.0 * c2 * x], axis=-1)
+        return rows[..., None] * a
+
+    return {
+        "F": F,
+        "h": h,
+        "psi": psi,
+        "cross_derivative": cross_derivative,
+        "f_A": f_a,
+        "f_B_tilde": f_b,
+        "a_vec": a,
+        "mu": mu,
+        "c1": c1,
+        "c2": c2,
+        "degrees": [1, 2],
+        # both components resonate exactly: mu^1 = mu and mu^2 = mu^2
+        "resonance_residuals": [abs(mu - mu), abs(mu ** 2 - mu ** 2)],
+        "spectra": [
+            np.array([np.log(mu), np.log(mu)]),
+            np.array([np.log(mu), 2.0 * np.log(mu)]),
+        ],
+        # (D1') needs 1 not in spec(f~_B)
+        "unit_eigenvalue_distance": float(min(abs(mu - 1.0), abs(mu ** 2 - 1.0))),
+    }
+
+
+def two_level_tie_threshold(p: int, q: int, sigma1: float, sigma2: float) -> float:
+    """Sharp two-degree criterion: how correlated the degrees must be to hide.
+
+    For ``P = {p, q}`` the second-moment functional is
+    ``V(sigma) = v_pp sigma^2p + 2 v_pq sigma^(p+q) + v_qq sigma^2q``.  Writing
+    ``D_j = sigma1^j - sigma2^j``, a two-level tie ``V(sigma1) = V(sigma2)``
+    exists for some relative scaling of the two degrees **iff**
+
+        corr(A_p, A_q)^2  >=  D_2p * D_2q / D_(p+q)^2,
+
+    the square root of which is what this returns.  So two levels suffice
+    whenever the degrees' contributions are less correlated than the threshold.
+
+    The threshold is close to 1 (typically 0.94-0.97), which is why the escape
+    is hard to realise: it needs the degree-``p`` and degree-``q`` parts of
+    ``psi`` to be *nearly perfectly anticorrelated* under ``mu_A``.  A symmetric
+    ``mu_A`` with ``p``, ``q`` of opposite parity gives correlation exactly 0;
+    a Gaussian with ``P = {1, 3}`` gives ``3/sqrt(15) = 0.775``.  Both are
+    comfortably under, so **two levels suffice in both cases** -- which
+    ``required_behaviour_levels`` cannot see, since it only counts terms.
+
+    The threshold always lies in ``[2 sqrt(pq)/(p+q), 1)``.  The upper end is
+    AM-GM: ``sigma2^2p sigma1^2q + sigma1^2p sigma2^2q >= 2 (sigma1 sigma2)^(p+q)``
+    gives ``D_2p D_2q <= D_(p+q)^2``, so a tie is never free.  The lower end is
+    attained as the two levels coincide, and the threshold rises to 1 as they
+    separate -- ``sigma2/sigma1 = 20`` already demands ``|corr| >= 0.9989``.
+
+    **So spread the behaviour levels**: separation is what makes the escape
+    hard, and it costs nothing.
+    """
+    if p == q:
+        raise ValueError("needs two distinct degrees")
+    if not (sigma1 > 0 and sigma2 > 0) or sigma1 == sigma2:
+        raise ValueError("needs two distinct positive levels")
+
+    def D(j: int) -> float:
+        return sigma1 ** j - sigma2 ** j
+
+    # clamped only against float error; AM-GM puts the exact value in [.., 1]
+    ratio = min(D(2 * p) * D(2 * q) / D(p + q) ** 2, 1.0)
+    return float(np.sqrt(max(ratio, 0.0)))
+
+
+def required_behaviour_levels(
+    degrees: Sequence[int], symmetric: bool = True
+) -> dict:
+    """How many behaviour levels **suffice** for Lemma D'' on a degree set ``P``.
+
+    Conservative: it counts terms and ignores the actual correlations between
+    degrees, so it can ask for more levels than are needed.  For ``|P| = 2``
+    use ``two_level_tie_threshold``, which is sharp.
+
+    The second-moment argument turns (D4) into "the polynomial
+    ``V(sigma) = sum_q gamma_q sigma^q``, ``q`` ranging over the sumset
+    ``P + P``, is constant across the levels".  It has no constant term
+    (every ``p >= 1``, which is exactly what (D1') buys), so constancy on more
+    points than its degree count forces it to vanish identically.
+
+    * unconditional: ``|P + P| + 1`` levels;
+    * ``symmetric=True`` (``mu_A`` symmetric, e.g. the Gaussian modulation
+      ``behavior.conditioned_initial_conditions`` draws): every ``gamma_q``
+      with ``q`` odd is an odd moment of a symmetric law, hence exactly zero,
+      so only the even part of the sumset counts;
+    * if no two *distinct* degrees share a parity, the surviving coefficients
+      are the diagonal ``Var(A_p) >= 0`` alone, ``V`` is strictly increasing,
+      and **two levels suffice** -- which is flagged as ``two_levels_suffice``.
+
+    ``P`` a singleton reproduces Lemma D's "two levels suffice" exactly.
+    """
+    P = sorted({int(p) for p in degrees})
+    if not P:
+        raise ValueError("degrees must be non-empty")
+    if P[0] < 1:
+        raise ValueError("degree 0 must be excluded by (D1') before counting levels")
+    sumset = sorted({p + q for p in P for q in P})
+    counted = [q for q in sumset if q % 2 == 0] if symmetric else sumset
+    # off-diagonal coefficients survive only between distinct same-parity degrees
+    monotone = symmetric and all(
+        (P[i] - P[j]) % 2 == 1 for i in range(len(P)) for j in range(i)
+    )
+    return {
+        "degrees": P,
+        "sumset": sumset,
+        "counted": counted,
+        "levels": 2 if monotone else len(counted) + 1,
+        "two_levels_suffice": monotone or len(P) == 1,
+        "unconditional_levels": len(sumset) + 1,
+    }
+
+
+def surviving_degree_bound(rho_A: float, rho_min_B: float) -> int:
+    """Largest degree that can resonate: ``P`` is finite, from the spectra alone.
+
+    Step 2 needs ``lambda_A^m in spec(f~_B)``.  If ``f_A`` is a contraction then
+    ``|lambda_A^m| <= rho_A^|m|``, which must be at least ``rho_min(f~_B) > 0``,
+    so ``|m| <= log rho_min(f~_B) / log rho_A``.  Hence only finitely many
+    degrees survive and Lemma D'''s level count is always finite -- no extra
+    hypothesis, and in particular no gap.
+
+    A bound below 1 means **no** degree ``>= 1`` can resonate, so ``psi = 0``
+    with no behaviour at all.
+    """
+    if not 0.0 < rho_A < 1.0:
+        raise ValueError("needs a contracting f_A: 0 < rho_A < 1")
+    if not 0.0 < rho_min_B:
+        raise ValueError("needs an invertible f~_B: rho_min_B > 0")
+    if rho_min_B >= 1.0:
+        return 0
+    return int(np.floor(np.log(rho_min_B) / np.log(rho_A) + 1e-12))
 
 
 def asymptotic_phase(blk: LimitCycleBlock, z: np.ndarray, n_max: int = 4000,

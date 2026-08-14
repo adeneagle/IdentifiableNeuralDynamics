@@ -510,21 +510,21 @@ remove it.** That is a complete answer for this class, and it is the first
 statement in this repo that separates two oscillators with a theorem rather than
 a measurement (cf. §6.5, where the rotation-number route is still `TODO(gap)`).
 
-> **A gap found while checking this, and it is pre-existing.** Step 4 writes
-> $\psi(\sigma\zeta) = \sigma^p\psi(\zeta)$ — it treats $\psi$ as homogeneous of
-> a *single* degree. Step 2 permits several degrees to survive at once
-> (different $m$ resonating with different eigenvalues of $\tilde f_B$), and then
-> $\Psi_\sigma = \sum_j \sigma^{p_j}\psi_{p_j}$ is not homogeneous and the
-> iteration does not run. **This is not a cost of dropping (D1)** — with (D1) the
-> surviving set is $\{|m|\ge2\}$, still not a singleton — so Lemma D as
-> previously stated has the same hole. It is not among the open items (a)–(c),
-> so it was unflagged. `TODO(gap)`
+> **A gap found while checking this, and it is pre-existing — now CLOSED in
+> §4.5b.** Step 4 writes $\psi(\sigma\zeta) = \sigma^p\psi(\zeta)$ — it treats
+> $\psi$ as homogeneous of a *single* degree. Step 2 permits several degrees to
+> survive at once (different $m$ resonating with different eigenvalues of
+> $\tilde f_B$), and then $\Psi_\sigma = \sum_j \sigma^{p_j}\psi_{p_j}$ is not
+> homogeneous and the iteration does not run. **This was not a cost of dropping
+> (D1)** — with (D1) the surviving set is $\{|m|\ge2\}$, still not a singleton —
+> so Lemma D as previously stated had the same hole.
 >
-> Not obviously fatal: with $k$ distinct surviving degrees, $k+1$ behaviour
-> levels should separate them by a Vandermonde argument in $\sigma^{p_j}$, which
-> would degrade the two-level economy gracefully and still sit far below Kong's
-> $2n_s+1$. **Not proved.** The witness above is single-degree, so it is
-> unaffected.
+> **My conjectured repair was the right shape and the wrong count.** I guessed
+> "$k$ degrees, $k+1$ levels, by a Vandermonde in $\sigma^{p_j}$". A Vandermonde
+> in $\sigma^{p_j}$ does appear, but at $k+1$ levels it only forces
+> $\mathbb{E}[\Psi_p(\zeta)] = 0$ for each $p$ — first moments, which do not give
+> $\Psi_p \equiv 0$. The argument has to run on **second** moments, and then the
+> relevant count is the size of the **sumset** $P+P$, not of $P$. §4.5b.
 
 > **Witness** (`systems.lemma_d_witness`, asserted in `tests/test_behavior.py`).
 > In complex coordinates $f_A(z) = s e^{i\alpha}z$, $\psi(z)=z^2$,
@@ -574,6 +574,158 @@ isotropically; a general covariance modulation makes $\psi(\sigma_u \zeta)$
 non-homogeneous in a single scalar and Step 4 needs replacing. `TODO(gap)`
 (c) *Nonlinear $f_A$, $\tilde f_B$*: read the above as the statement for the
 linear parts; the full nonlinear case needs the normal-form machinery of §5.3.
+
+### 4.5b Lemma D″ — several surviving degrees at once
+
+**New (2026-08-14).** This closes the `TODO(gap)` flagged in §4.5a. Steps 1–3
+never assumed $\psi$ homogeneous; only Step 4 did, when it wrote
+$\psi(\sigma\zeta) = \sigma^p\psi(\zeta)$. Replacing the characteristic-function
+iteration with a **second-moment** argument removes the assumption outright.
+
+**Setting.** As in Lemma D′, with $\psi = \sum_{p\in P}\Psi_p$ graded by total
+degree, $\Psi_p$ homogeneous of degree $p$, and $P \subset \mathbb{Z}_{\ge1}$
+(degree $0$ is excluded by (D1′), which is the one thing that hypothesis is for).
+Add:
+
+- **(D5) Finite second moments.** $\mathbb{E}\lVert\Psi_p(\zeta)\rVert^2 < \infty$
+  for each $p$. Automatic for polynomial $\psi$ and any $\mu_A$ with all moments
+  — in particular for `behavior.py`'s Gaussian modulation.
+
+**$P$ is automatically finite, from the spectra alone.** Step 2 needs
+$\lambda_A^{m} \in \operatorname{spec}(\tilde f_B)$. If $f_A$ contracts and
+$\tilde f_B$ is invertible then $\rho(f_A)^{|m|} \ge |\lambda_A^m| \ge
+\rho_{\min}(\tilde f_B) > 0$, so
+
+$$p \;\le\; \frac{\log \rho_{\min}(\tilde f_B)}{\log \rho(f_A)}.$$
+
+No gap and no ordering is used. A bound below $1$ means **no** degree can
+resonate and $\psi\equiv0$ with no behaviour at all — e.g. $\rho(f_A)=0.5$
+against $\rho_{\min}(\tilde f_B)=0.9$ gives $0$. (`systems.surviving_degree_bound`.)
+
+> **Lemma D″.** Assume (D1′), (D3), (D4), (D5), $h_B$ additive, and (D2) with
+> $L$ distinct levels. If
+> $$L \;\ge\; \lvert P + P\rvert + 1,$$
+> $P+P = \{p+p' : p,p'\in P\}$ the sumset, then $\psi \equiv 0$.
+
+**Proof.** Fix $t \in \mathbb{R}^{d_B}$ and put $A_p := \langle t, \Psi_p(\zeta)\rangle$,
+with Gram matrix $C_{pp'} := \operatorname{Cov}(A_p, A_{p'})$ — positive
+semidefinite. Under (D2), $z_A = \sigma_u\zeta$, so
+$\langle t,\psi(z_A)\rangle = \sum_p \sigma_u^{\,p}A_p$. By (D3) $z_B$ is
+independent of $\zeta$ with $u$-invariant law, so variances add:
+
+$$\operatorname{Var}\langle t, h_B\rangle \;=\; \operatorname{Var}\langle t, z_B\rangle \;+\; V_t(\sigma_u), \qquad V_t(\sigma) \;=\; \vec s(\sigma)^{\!\top} C\,\vec s(\sigma), \quad \vec s(\sigma)_p = \sigma^{p}.$$
+
+(D4) makes the left side $u$-invariant and (D3) makes the first right-hand term
+$u$-invariant, so $V_t$ takes the **same value $c$ at all $L$ levels**.
+
+$V_t$ is a polynomial whose exponents lie in $P+P \subset \mathbb{Z}_{\ge2}$, so
+it has at most $\lvert P+P\rvert$ terms and $V_t(0) = 0$. Then $V_t - c$ has at
+most $\lvert P+P\rvert + 1$ nonzero terms, hence by Descartes' rule at most
+$\lvert P+P\rvert$ positive roots. It has $L \ge \lvert P+P\rvert + 1$ of them,
+so $V_t \equiv c$ identically; evaluating at $0$ gives $c = 0$, so $V_t \equiv 0$
+and therefore $C = 0$.
+
+In particular $\operatorname{Var}(A_p) = 0$, so $\langle t,\Psi_p(\zeta)\rangle$
+is a.s. constant. It is a homogeneous polynomial of degree $p \ge 1$ and $\mu_A$
+has full-dimensional support, so it is constant on an open set, hence constant,
+hence $0$. This holds for every $t$, so $\Psi_p \equiv 0$ for every $p$. $\blacksquare$
+
+**Why second moments and not the characteristic function.** Step 4's iteration
+needs a *scaling* action on the argument, and with several degrees the map
+$\vec s \mapsto (r^{p}s_p)$ does not preserve the curve $\{\vec s(\sigma)\}$ —
+that is exactly the obstruction. Variances collapse the whole problem onto a
+single scalar polynomial in $\sigma$, where the level count is elementary.
+
+#### The two-level economy mostly survives
+
+The bound above is worst-case. Two refinements recover $L = 2$ in the cases that
+actually arise, and the second is sharp.
+
+**(R1) Symmetric $\mu_A$ kills the odd coefficients.** The coefficient of
+$\sigma^{q}$ is $\sum_{p+p'=q}\operatorname{Cov}(A_p,A_{p'})$, a moment of a
+homogeneous polynomial of degree $q$; for $\mu_A$ symmetric and $q$ odd it
+vanishes exactly. Only $(P+P)\cap 2\mathbb{Z}$ counts. *Verified*: for
+$P=\{1,2\}$ under $N(0,I)$ the entry $\operatorname{Cov}(A_1,A_2)$ is a pure
+sampling floor, RMS over 64 draws falling $4.19\times10^{-2} \to 2.07\times10^{-2}
+\to 9.17\times10^{-3} \to 4.48\times10^{-3}$ as $n$ goes $5\text{k}\to320\text{k}$
+— ratios $2.02, 2.26, 2.05$, i.e. $n^{-1/2}$, so the floor is checked and not
+assumed (§3.9).
+
+**(R2) Opposite parities give two levels.** If no two distinct elements of $P$
+share a parity, (R1) kills every off-diagonal term and
+$V_t(\sigma) = \sum_p \sigma^{2p}\operatorname{Var}(A_p)$ has non-negative
+coefficients and no constant term — strictly increasing on $(0,\infty)$. **Two
+levels suffice.** $\lvert P\rvert = 1$ is the special case, so Lemma D′ is
+recovered exactly.
+
+**(R3) For $\lvert P\rvert = 2$ the criterion is sharp, and it is a correlation
+threshold.** With $D_j := \sigma_1^{\,j} - \sigma_2^{\,j}$, a two-level tie
+exists for some relative scaling of the two degrees **iff**
+
+$$\operatorname{corr}(A_p, A_q)^2 \;\ge\; \frac{D_{2p}\,D_{2q}}{D_{p+q}^{\,2}}.$$
+
+The threshold is close to $1$, so hiding from two levels requires the two degrees
+to be **nearly perfectly anticorrelated** under $\mu_A$
+(`systems.two_level_tie_threshold`). Measured:
+
+| $P$ | levels | threshold on $\lvert\operatorname{corr}\rvert$ | realised under $\mu_A$ | tie? |
+|---|---|---|---|---|
+| $\{1,2\}$ | $0.6, 1.6$ | $0.9689$ | $-0.0004$ — Gaussian, opposite parity | no |
+| $\{1,3\}$ | $0.6, 1.6$ | $0.9444$ | $+0.7749 = 3/\sqrt{15}$ — Gaussian | **no** |
+| $\{2,3\}$ | $0.6, 1.6$ | $0.9961$ | $+0.0003$ — Gaussian | no |
+| $\{1,2\}$ | $0.6, 1.6$ | $0.9689$ | $+0.9782$ — skewed $N(1,0.3^2)$ | **yes** |
+
+Row 2 is the informative one: $P=\{1,3\}$ has *equal* parities, so (R2) does not
+apply and the counting bound asks for $4$ levels — but the realised correlation
+$3/\sqrt{15}$ falls well short of the threshold, so two levels do suffice.
+**The counting bound is conservative; (R3) is what is true.**
+
+**And (R3) says how to choose the levels.** By AM–GM,
+$\sigma_2^{2p}\sigma_1^{2q} + \sigma_1^{2p}\sigma_2^{2q} \ge
+2(\sigma_1\sigma_2)^{p+q}$, so $D_{2p}D_{2q}\le D_{p+q}^2$ and the threshold
+always lies in
+
+$$\left[\ \frac{2\sqrt{pq}}{p+q},\ 1\ \right) ,$$
+
+the lower end — the geometric-to-arithmetic mean ratio of the two degrees —
+attained as the levels coincide, and rising to $1$ as they separate:
+$\sigma_2/\sigma_1 = 1.5, 5, 20$ give $0.9488, 0.9869, 0.9989$. A tie is
+therefore never free, and **spreading the two behaviour levels strictly shrinks
+the escape**. That is a design instruction for any experiment imposing (D2), and
+it costs nothing.
+
+> **Witness** (`systems.multidegree_resonant_coupling`, asserted in
+> `tests/test_behavior.py`). $f_A = \mu I_2$ and $\tilde f_B =
+> \operatorname{diag}(\mu,\mu^2)$ with $\mu = 0.8$; then
+> $$\psi(z) = \big(c_1\langle a,z\rangle,\ c_2\langle a,z\rangle^2\big)$$
+> satisfies $\psi\circ f_A = \tilde f_B\circ\psi$ exactly with **two** surviving
+> degrees, $P = \{1,2\}$ (residuals $0$ and $0$ — both resonances are structural,
+> not numerical). $h(z_A,z_B) = (z_A, z_B + \psi(z_A))$ is an exact modular
+> conjugacy (residual $3.6\times10^{-15}$) with mean $\lVert M_{BA}\rVert_F = 1.84$,
+> and $\min\lvert\lambda_B - 1\rvert = 0.20$ so (D1′) holds. Measured
+> $V_t(\sigma)$ matches the Gram prediction to $2\times10^{-15}$ relative at
+> $\sigma \in \{0.6, 1.0, 1.6, 2.2\}$.
+
+**The honest boundary: a tie defeats the argument, not the lemma.** At the
+constructed two-level tie (skewed $\mu_A$, ratio $k = -0.1583$) the variance of
+$h_B$ agrees to $3\times10^{-17}$ — and the rest of the law does not:
+
+| $\sigma$ | mean | variance | skewness | kurtosis |
+|---|---|---|---|---|
+| $0.6$ | $+0.6888$ | $0.016842$ | $-0.267$ | $3.09$ |
+| $1.6$ | $+1.2983$ | $0.016842$ | $-1.770$ | $7.31$ |
+
+So (D4) — equality of *laws* — still fails there, and the coupling is still
+detectable at two levels by any statistic other than the variance. What Lemma D″
+establishes is the level count **for the second-moment argument**; whether two
+levels always suffice for (D4) itself is not settled here. `TODO(gap)`
+
+**Net effect on the economy claim.** Against Kong's $2n_s+1$ and Sun's $2\ell+1$
+(task 38), the behavioural half now costs: two levels whenever the degrees have
+distinct parities under a symmetric $\mu_A$ (R2), two levels for the two-degree
+cases that arise in practice (R3), and $\lvert P+P\rvert + 1$ in the worst case —
+with $\lvert P\rvert$ itself bounded by the spectra. The two-level economy is
+**not** lost to the multi-degree case.
 
 ---
 
