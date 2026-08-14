@@ -623,7 +623,16 @@ it has at most $\lvert P+P\rvert$ terms and $V_t(0) = 0$. Then $V_t - c$ has at
 most $\lvert P+P\rvert + 1$ nonzero terms, hence by Descartes' rule at most
 $\lvert P+P\rvert$ positive roots. It has $L \ge \lvert P+P\rvert + 1$ of them,
 so $V_t \equiv c$ identically; evaluating at $0$ gives $c = 0$, so $V_t \equiv 0$
-and therefore $C = 0$.
+as a polynomial, i.e. every coefficient
+$\gamma_q = \sum_{p+p'=q}C_{pp'}$ vanishes.
+
+*That forces $C = 0$, using positive semidefiniteness.* Induct up the degrees.
+The lowest exponent $q = 2p_1$ is attained only by the pair $(p_1,p_1)$, so
+$\gamma_{2p_1} = C_{p_1p_1} = 0$; a PSD matrix with a zero diagonal entry has
+that whole row and column zero. Having killed rows $p_1,\dots,p_{j-1}$, the
+exponent $q = 2p_j$ receives contributions only from $(p_j,p_j)$ and from pairs
+involving some $p_i$, $i<j$, which are now zero — so $C_{p_jp_j} = 0$ and row
+$p_j$ vanishes too.
 
 In particular $\operatorname{Var}(A_p) = 0$, so $\langle t,\Psi_p(\zeta)\rangle$
 is a.s. constant. It is a homogeneous polynomial of degree $p \ge 1$ and $\mu_A$
