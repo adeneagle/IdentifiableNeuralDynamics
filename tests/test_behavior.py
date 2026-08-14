@@ -598,3 +598,113 @@ def test_degree_zero_is_rejected_by_the_level_counter():
         S.required_behaviour_levels([0, 2])
     with pytest.raises(ValueError):
         S.required_behaviour_levels([])
+
+
+# --------------------------------------------------------------------------
+# Lemma D''' -- nonlinear modules via Koopman eigenfunctions (4.5c)
+#
+# Step 1's  psi . f_A = Btilde psi  says each component of psi is a Koopman
+# eigenfunction of f_A.  For linear f_A those are the monomials, recovering
+# Step 2.  So Step 2 needs no hypothesis on the dynamics at all.
+# --------------------------------------------------------------------------
+
+
+def test_additive_h_B_forces_ftilde_B_affine():
+    """Half of open item (c) is vacuous: nonlinear ftilde_B is out of the class.
+
+    Step 1 splits  f_B(z_B) + psi(f_A z_A) = ftilde_B(z_B + psi(z_A))  only if
+    ftilde_B is additive.  So this is not a gap in Lemma D.
+    """
+    rng = np.random.default_rng(11)
+    mu, c = 0.7, 0.9
+    za, zb = rng.normal(size=20_000) * 0.4, rng.normal(size=20_000) * 0.4
+
+    def defect(f_b):
+        return float(np.abs(f_b(zb) + c * mu * za - f_b(zb + c * za)).max())
+
+    assert defect(lambda w: mu * w) < 1e-12, "affine: the split holds exactly"
+    assert defect(lambda w: mu * w + 0.3 * w**2) > 0.5, "nonlinear: it fails outright"
+
+
+def test_koopman_witness_is_an_exact_conjugacy_with_a_nonlinear_module():
+    w = S.koopman_coupling_witness()
+    rng = np.random.default_rng(12)
+    z = np.column_stack([rng.normal(size=20_000) * 0.8, rng.normal(size=(20_000, 2))])
+    assert np.abs(w["h"](w["F"](z)) - w["F"](w["h"](z))).max() < 1e-12
+    assert w["unit_eigenvalue_distance"] > 0.1, "(D1'') holds"
+
+    # f_A is genuinely nonlinear, not a perturbation of a linear map
+    x = rng.normal(size=20_000) * 0.8
+    fit = np.polyfit(x, w["f_A"](x), 1)
+    resid = np.linalg.norm(w["f_A"](x) - np.polyval(fit, x)) / np.linalg.norm(w["f_A"](x))
+    assert resid > 0.1, f"f_A must be far from linear, got residual {resid}"
+
+
+def test_psi_components_are_koopman_eigenfunctions_of_f_A():
+    """The reframed Step 2: psi_i . f_A = lambda_i psi_i, no linearity used."""
+    w = S.koopman_coupling_witness(n_eig=3)
+    z = np.random.default_rng(13).normal(size=20_000) * 0.8
+    p0, p1 = w["phi"](z), w["phi"](w["f_A"](z))
+    for j, lam in enumerate(w["koopman_eigenvalues"], start=1):
+        assert np.abs(p1**j - lam * p0**j).max() < 1e-12, f"eigenfunction phi^{j}"
+    # and the assembled psi is an exact semiconjugacy
+    assert np.abs(w["psi"](w["f_A"](z)) - w["psi"](z) @ w["B_tilde"].T).max() < 1e-12
+
+
+def test_the_limit_cycle_asymptotic_phase_is_a_koopman_eigenfunction():
+    """Ties 4.5c to the torus counterexample: exp(i Theta) has eigenvalue e^{i omega}.
+
+    True at every shear, which is why the 7.1 regrouping was shear-insensitive.
+    """
+    rng = np.random.default_rng(14)
+    r = rng.uniform(0.5, 1.5, size=4000)
+    th = rng.uniform(-np.pi, np.pi, size=4000)
+    z = np.column_stack([r * np.cos(th), r * np.sin(th)])
+    for beta in (0.0, 0.5, 1.2):
+        blk = S.LimitCycleBlock(a=0.30, rho=1.0, omega=0.7, beta=beta)
+        t0 = S.asymptotic_phase(blk, z)
+        t1 = S.asymptotic_phase(blk, blk.step(z))
+        err = np.abs(np.exp(1j * t1) - np.exp(1j * 0.7) * np.exp(1j * t0)).max()
+        assert err < 1e-13, f"beta={beta}: {err}"
+
+
+def test_psi_is_not_polynomial_so_the_finite_degree_count_does_not_apply():
+    """tanh has infinitely many Taylor degrees -- Lemma D'''s P does not exist."""
+    w = S.koopman_coupling_witness()
+    assert w["psi_is_polynomial"] is False
+    # fit a high-order polynomial to phi and check the coefficients do not
+    # terminate: many orders carry real weight
+    x = np.linspace(-1.0, 1.0, 4001)
+    coef = np.polyfit(x, w["phi"](x), 21)
+    assert sum(abs(c) > 1e-7 for c in coef) >= 8, f"expected many live orders: {coef}"
+
+
+def test_k_koopman_eigenfunctions_tie_k_levels_so_no_finite_count_works():
+    """(D2'') is load-bearing: the level count must grow with dim z_B.
+
+    With k eigenfunctions there are k-1 free ratios, enough to tie k levels
+    while psi stays nonzero.  Solved directly rather than by search.
+    """
+    rng = np.random.default_rng(15)
+    zeta = rng.normal(size=400_000) * 0.5 + 0.9   # skewed, so parity does not save us
+
+    def W(sigma, c):
+        p = np.tanh(sigma * zeta)
+        return float(np.var(sum(cj * p ** (j + 1) for j, cj in enumerate(c))))
+
+    levels = (0.6, 1.0, 1.6)
+    # solve the 2 tie equations for the 2 free ratios (c_1 fixed to 1 by scale)
+    from scipy.optimize import fsolve
+
+    def eqs(v):
+        c = np.concatenate([[1.0], v])
+        return [W(levels[i + 1], c) - W(levels[0], c) for i in range(len(levels) - 1)]
+
+    sol = fsolve(eqs, -np.ones(2))
+    c = np.concatenate([[1.0], sol])
+    ws = [W(s, c) for s in levels]
+
+    assert np.linalg.norm(c) > 0.5, "psi must be genuinely nonzero"
+    assert max(ws) - min(ws) < 1e-10, f"three levels tied: {ws}"
+    # a fourth level still separates -- the tie is not a degeneracy of psi
+    assert abs(W(2.4, c) - ws[0]) > 1e-4

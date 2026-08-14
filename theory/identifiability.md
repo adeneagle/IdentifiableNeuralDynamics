@@ -572,8 +572,11 @@ factorisation uses independence, which fails when $c_m$ depends on $z_B$.
 > `systems.nonadditive_behavioural_escape()`, three tests in `tests/test_behavior.py`. (b) *Anisotropic modulation.* (D2) assumes $u$ scales $z_A$
 isotropically; a general covariance modulation makes $\psi(\sigma_u \zeta)$
 non-homogeneous in a single scalar and Step 4 needs replacing. `TODO(gap)`
-(c) *Nonlinear $f_A$, $\tilde f_B$*: read the above as the statement for the
-linear parts; the full nonlinear case needs the normal-form machinery of §5.3.
+(c) *Nonlinear $f_A$, $\tilde f_B$*: **CLOSED 2026-08-14 in §4.5b–c**, and not via
+§5.3. The $\tilde f_B$ half is vacuous — additive $h_B$ forces $\tilde f_B$
+affine — and the $f_A$ half needs no hypothesis on the dynamics at all once
+Step 2 is read as "$\psi$ is a Koopman eigenfunction of $f_A$". The cost is
+level richness, not regularity.
 
 ### 4.5b Lemma D″ — several surviving degrees at once
 
@@ -735,6 +738,121 @@ distinct parities under a symmetric $\mu_A$ (R2), two levels for the two-degree
 cases that arise in practice (R3), and $\lvert P+P\rvert + 1$ in the worst case —
 with $\lvert P\rvert$ itself bounded by the spectra. The two-level economy is
 **not** lost to the multi-degree case.
+
+### 4.5c Lemma D‴ — nonlinear modules, via Koopman eigenfunctions
+
+**New (2026-08-14).** This is open item (c). It turns out to be **half vacuous
+and half closed**, and neither half needs the normal-form machinery of §5.3 —
+which matters, because §5.3 is Poincaré-domain (fixed-point) only, and routing
+(c) through it would forfeit exactly the reach Lemma D′ was proved to gain.
+
+**The $\tilde f_B$ half is vacuous: additive $h_B$ *forces* $\tilde f_B$ affine.**
+Step 1 matches the $z_B$-free part of
+$f_B(z_B) + \psi(f_A(z_A)) = \tilde f_B\big(z_B + \psi(z_A)\big)$. That split is
+available only if $\tilde f_B$ is additive. So a nonlinear $\tilde f_B$ is not a
+gap in Lemma D — it is **outside the additive class by construction**. Measured:
+with $\tilde f_B(w) = \mu w + 0.3w^2$ the two sides differ by $1.17$, against
+$2.2\times10^{-16}$ for the affine one. (Non-additive $h_B$ is open item (a),
+which is separately obstructed — `nonadditive_behavioural_escape`.)
+
+**The $f_A$ half: Step 2 was never about linearity.** With $\tilde f_B$ affine,
+$\tilde f_B(w) = \tilde Bw + b$, Step 1 reads $\psi\circ f_A = \tilde B\,\psi$.
+In the eigenbasis of $\tilde B$ that says, componentwise,
+
+$$\psi_i \circ f_A \;=\; \tilde\lambda_{B,i}\,\psi_i,$$
+
+i.e. **each component of $\psi$ is a Koopman eigenfunction of $f_A$**, with
+eigenvalue the corresponding eigenvalue of $\tilde B$. For linear $f_A$ the
+Koopman eigenfunctions are the monomials $z^m$ with eigenvalue $\lambda_A^m$,
+which is Step 2 verbatim. **So Step 2 holds for arbitrary $f_A$** — no
+linearity, no hyperbolicity, no normal form, no Poincaré domain.
+
+> **The surviving coupling between two modules is a Koopman eigenfunction of the
+> driving module whose eigenvalue is an eigenvalue of the driven one.** That is
+> the statement to carry forward; the monomial/resonance form is the linear
+> special case.
+
+This also connects two results that looked unrelated. For an attracting limit
+cycle the asymptotic phase $\Theta$ of §7.1 satisfies $\Theta\circ f = \Theta +
+\omega$, so $e^{i\Theta}$ is a **unimodular Koopman eigenfunction** with
+eigenvalue $e^{i\omega}$ — verified to $2.0\times10^{-15}$ at shears
+$\beta = 0, 0.5, 1.2$. The torus regrouping of §7 was built out of Koopman
+eigenfunctions all along, which is why it was insensitive to shear.
+
+> **Lemma D‴.** Let $h_B(z_A,z_B) = z_B + \psi(z_A)$ with $\psi$ real-analytic,
+> $\tilde f_B$ affine with linear part $\tilde B$, and $f_A$ **arbitrary**.
+> Assume (D3), (D4), (D5),
+>
+> * **(D1″)** $0$ is the only fixed point of $\tilde f_B$ — equivalently, for
+>   affine $\tilde f_B$, $1 \notin \operatorname{spec}(\tilde B)$;
+> * **(D2″)** the level set $\{\sigma_u\}$ has a limit point in $(0,\infty)$.
+>
+> Then $\psi \equiv 0$, hence $M_{BA} \equiv 0$.
+
+**Proof.** Fix $t$ and put $W_t(\sigma) := \operatorname{Var}\langle t,
+\psi(\sigma\zeta)\rangle$. Exactly as in §4.5b, (D3) makes variances add and
+(D4) forces $W_t$ to take one value across the levels. Under (D5) and
+analyticity of $\psi$, $W_t$ is analytic in $\sigma$; being constant on a set
+with a limit point it is constant, and $W_t(0) = 0$ because $\psi(0)$ is
+deterministic. So $W_t \equiv 0$, hence $\langle t,\psi(\sigma\zeta)\rangle$ is
+a.s. constant for every $t$, hence $\psi$ is constant on $\operatorname{supp}
+\mu_A$ and therefore — analytic, full-dimensional support — constant everywhere,
+$\psi \equiv c$. Step 1 then gives $c = \tilde f_B(c)$, so $c$ is a fixed point
+of $\tilde f_B$, and (D1″) gives $c = 0$. $\blacksquare$
+
+Note the proof never touches $f_A$. **All the dynamics does is force $\psi$ to
+be a Koopman eigenfunction** — the killing is entirely distributional.
+
+#### The price is level richness, and it is genuinely necessary
+
+Lemma D″'s finite counts do **not** transfer, and the reason is structural: a
+Koopman eigenfunction of a nonlinear map is not homogeneous, so
+$W_t(\sigma)$ stops being a polynomial in $\sigma$ and there is nothing to
+count. In the witness $\psi$ involves $\tanh$, whose Taylor expansion has
+infinitely many degrees — $19$ above $10^{-9}$ by order $25$ — so
+`surviving_degree_bound` does not apply.
+
+**And no finite count can work.** With $\operatorname{spec}(\tilde B) =
+\{\mu,\dots,\mu^{k}\}$ there are $k$ eigenfunctions $\phi,\dots,\phi^{k}$, hence
+$k-1$ free ratios, and they can be solved to tie $k$ levels exactly:
+
+| eigenfunctions $k$ | levels tied | spread of $W_t$ across them | $\lVert c\rVert$ |
+|---|---|---|---|
+| $3$ | $0.6, 1.0, 1.6$ | $5.6\times10^{-14}$ | $1.14$ |
+| $4$ | $0.5, 0.9, 1.3, 1.8$ | $2.8\times10^{-15}$ | $2.58$ |
+
+$\lVert c\rVert \ne 0$, so these are genuine nonzero $\psi$. Since $k$ is bounded
+by the number of distinct eigenvalues of $\tilde B$, **the number of levels the
+second-moment argument needs grows with $\dim z_B$** — which is why (D2″) asks
+for a limit point rather than a count.
+
+**Same honest boundary as §4.5b.** These ties defeat the *argument*, not (D4):
+the variance agrees while the rest of the law does not. What is established is
+that the second-moment method cannot be pushed below $k+1$ levels, so (D2″) is
+load-bearing rather than an artefact of how the proof is written. `TODO(gap)`
+
+> **Witness** (`systems.koopman_coupling_witness`, asserted in
+> `tests/test_behavior.py`). $f_A(z) = \operatorname{artanh}(\mu\tanh z)$ with
+> $\mu = 0.7$ — analytic, contracting, and $16.75\%$ nonlinear against its best
+> linear fit — with $\tilde B = \operatorname{diag}(\mu,\mu^2)$ and
+> $\psi = (c_1\tanh, c_2\tanh^2)$. Koopman residuals
+> $1.7\times10^{-16}$ and $2.2\times10^{-16}$; semiconjugacy $2.2\times10^{-16}$;
+> full conjugacy $4.4\times10^{-16}$. Behaviour still kills it at two levels here
+> ($\operatorname{Var}\psi_1 = 0.181, 0.320, 0.457$ at $\sigma = 0.6, 1.0, 1.6$),
+> because $\tanh$ is odd and so (R1)'s parity argument survives verbatim —
+> $\operatorname{Cov}(\phi,\phi^2) = 2.2\times10^{-5}$, a sampling floor.
+
+**The trade, stated plainly.** Structure in the dynamics and richness in the
+behaviour are interchangeable. Linear modules impose a grading on $\psi$ and buy
+the two-level economy; nonlinear modules impose nothing and pay with a
+continuum of levels. For the applied claim this is a mild price — a continuously
+varying behavioural covariate (reach speed, angle) is *more* natural than two
+discrete conditions, not less.
+
+**What (c) leaves open.** Only the interaction with open item (a): both here and
+in §4.5b, $h_B$ is additive. Nonlinear *modules* are done; non-additive
+*couplings* are not, and §4.5a's escape witness shows that half cannot be closed
+from (D4) at all.
 
 ---
 

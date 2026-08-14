@@ -41,6 +41,7 @@ __all__ = [
     "lemma_d_witness",
     "gapless_resonant_coupling",
     "multidegree_resonant_coupling",
+    "koopman_coupling_witness",
     "two_level_tie_threshold",
     "required_behaviour_levels",
     "surviving_degree_bound",
@@ -1181,6 +1182,87 @@ def multidegree_resonant_coupling(
         ],
         # (D1') needs 1 not in spec(f~_B)
         "unit_eigenvalue_distance": float(min(abs(mu - 1.0), abs(mu ** 2 - 1.0))),
+    }
+
+
+def koopman_coupling_witness(
+    mu: float = 0.70, c1: float = 0.90, c2: float = 0.60, n_eig: int = 2
+) -> dict:
+    """Lemma D''' -- a surviving coupling with a **nonlinear** ``f_A``.
+
+    Step 1 gives ``psi . f_A = Btilde psi``.  Read componentwise in the
+    eigenbasis of ``Btilde`` that says each component of ``psi`` is a **Koopman
+    eigenfunction of f_A**, with eigenvalue the corresponding eigenvalue of
+    ``Btilde``.  For linear ``f_A`` the eigenfunctions are the monomials
+    ``z^m`` with eigenvalue ``lambda_A^m``, which is Step 2 verbatim -- so the
+    Koopman form is Step 2 with **no hypothesis on the dynamics at all**.
+
+    This witness instantiates it away from linearity.  Take
+
+        f_A(z) = artanh(mu tanh z),
+
+    analytic, contracting and genuinely nonlinear (~17% residual against its
+    best linear fit), conjugate to ``z -> mu z`` via ``phi = tanh``.  Then
+    ``phi`` is a Koopman eigenfunction with eigenvalue ``mu``, ``phi^j`` with
+    eigenvalue ``mu^j``, and with ``Btilde = diag(mu, ..., mu^n_eig)``
+
+        psi = (c_1 phi, c_2 phi^2, ...)
+
+    is an exact semiconjugacy.  ``h(z_A, z_B) = (z_A, z_B + psi(z_A))`` is then
+    an exact modular conjugacy with ``M_BA != 0``.
+
+    **Why this is the case Lemma D'' cannot count.** ``tanh`` is not a
+    polynomial, so ``psi`` has infinitely many Taylor degrees and the degree set
+    ``P`` is infinite -- ``surviving_degree_bound`` does not apply, because its
+    proof grades ``psi_m(f_A z) = lambda_A^m psi_m(z)``, which needs ``f_A``
+    linear.  More sharply, a Koopman eigenfunction of a nonlinear map is not
+    homogeneous, so ``V_t(sigma)`` stops being a polynomial in ``sigma`` and
+    there is nothing left to count.  What replaces the count is analyticity plus
+    a level set with a limit point; see ``theory/identifiability.md`` 4.5c.
+
+    ``ftilde_B`` is affine here and that is forced, not chosen: an additive
+    ``h_B`` requires ``ftilde_B(z_B + psi) = ftilde_B(z_B) + (...)``, so a
+    nonlinear ``ftilde_B`` is outside the additive class rather than a gap in
+    it.
+    """
+    if n_eig < 1:
+        raise ValueError("n_eig must be >= 1")
+    coeffs = np.array(([c1, c2] + [0.0] * n_eig)[:n_eig], dtype=float)
+    B_tilde = np.diag([mu ** (j + 1) for j in range(n_eig)])
+
+    def phi(z_a: np.ndarray) -> np.ndarray:
+        """The Koopman eigenfunction: phi(f_A z) = mu phi(z)."""
+        return np.tanh(np.asarray(z_a, dtype=float))
+
+    def f_A(z_a: np.ndarray) -> np.ndarray:
+        return np.arctanh(mu * np.tanh(np.asarray(z_a, dtype=float)))
+
+    def psi(z_a: np.ndarray) -> np.ndarray:
+        p = phi(z_a)
+        return np.stack([coeffs[j] * p ** (j + 1) for j in range(n_eig)], axis=-1)
+
+    def F(z: np.ndarray) -> np.ndarray:
+        z = np.asarray(z, dtype=float)
+        return np.concatenate([f_A(z[..., :1]), z[..., 1:] @ B_tilde.T], axis=-1)
+
+    def h(z: np.ndarray) -> np.ndarray:
+        z = np.asarray(z, dtype=float)
+        return np.concatenate([z[..., :1], z[..., 1:] + psi(z[..., 0])], axis=-1)
+
+    return {
+        "F": F,
+        "h": h,
+        "f_A": f_A,
+        "phi": phi,
+        "psi": psi,
+        "B_tilde": B_tilde,
+        "coeffs": coeffs,
+        "mu": mu,
+        "koopman_eigenvalues": np.array([mu ** (j + 1) for j in range(n_eig)]),
+        # (D1') restated for a nonlinear module: 0 is ftilde_B's only fixed
+        # point, which for an affine ftilde_B is exactly 1 not in spec(Btilde)
+        "unit_eigenvalue_distance": float(np.abs(np.diag(B_tilde) - 1.0).min()),
+        "psi_is_polynomial": False,
     }
 
 
