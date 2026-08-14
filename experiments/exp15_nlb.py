@@ -210,6 +210,21 @@ def tier1_error(fa: M.DynamicalFingerprint, fb: M.DynamicalFingerprint) -> float
     return float(np.abs(a - b).max())
 
 
+def rotation_separation(fp: M.DynamicalFingerprint) -> float:
+    """Smallest gap between this fit's own module rotation numbers.
+
+    The natural scale for a rotation *error*.  An absolute error of 0.002 is
+    unreadable on its own -- it is excellent if the modules sit 0.011 apart and
+    meaningless if they sit 0.002 apart.  Dividing by this asks the question the
+    claim actually rests on: **can the two halves tell the modules apart?**
+    Same role `order_margin` plays for the spectral ordering (§3.13(c)).
+    """
+    r = sorted(abs(x) for x in fp.rotations)
+    if len(r) < 2:
+        return float("inf")
+    return float(min(b - a for a, b in zip(r, r[1:])))
+
+
 def dump_fp(fp: M.DynamicalFingerprint) -> dict:
     """Everything needed to re-score offline without refitting (§3.13)."""
     return {
@@ -225,7 +240,8 @@ def dump_fp(fp: M.DynamicalFingerprint) -> dict:
 
 def pair_stats(fps_a, fps_b, screen: bool) -> dict:
     """All cross-half fingerprint comparisons, optionally duplicate-screened."""
-    rot, spec, agr, order, f3, lat, t1, n_skip = [], [], [], [], [], [], [], 0
+    rot, spec, agr, order, f3, lat, t1, rel = [], [], [], [], [], [], [], []
+    n_skip = 0
     for fa in fps_a:
         for fb in fps_b:
             if screen and (fa.duplicate_modules() or fb.duplicate_modules()):
@@ -238,6 +254,8 @@ def pair_stats(fps_a, fps_b, screen: bool) -> dict:
             order.append(bool(r.order_agrees))
             f3.append(bool(fa.is_filtration and fb.is_filtration))
             t1.append(tier1_error(fa, fb))
+            sep = min(rotation_separation(fa), rotation_separation(fb))
+            rel.append(r.rotation_error / sep if sep > 0 else float("inf"))
             lat.append(
                 SP.rotation_lattice_margin(
                     [abs(x) for x in fa.rotations], [abs(x) for x in fb.rotations]
@@ -252,6 +270,7 @@ def pair_stats(fps_a, fps_b, screen: bool) -> dict:
         "tier1_spectrum_error_median": float(np.median(t1)),
         "tier1_spectrum_error_iqr": [float(np.percentile(t1, 25)), float(np.percentile(t1, 75))],
         "rotation_error_median": float(np.median(rot)),
+        "rotation_error_rel_median": float(np.median(rel)),
         "rotation_error_iqr": [float(np.percentile(rot, 25)), float(np.percentile(rot, 75))],
         "spectrum_error_median": float(np.median(spec)),
         "spectrum_error_iqr": [float(np.percentile(spec, 25)), float(np.percentile(spec, 75))],
@@ -274,7 +293,9 @@ def cosmooth_score(X_in: np.ndarray, X_out: np.ndarray, res, ridge: float = 1e-3
     makes the score invariant only under linear h, so it implicitly rewards
     latents from which the population is linearly readable.
     """
-    z = np.asarray(res.z_fit, float).reshape(-1, D)
+    z = np.asarray(res.z_fit, float)
+    d = z.shape[-1]                      # the model's own latent dim, not D
+    z = z.reshape(-1, d)
     y = X_out.reshape(-1, X_out.shape[-1])
     n = z.shape[0]
     half = n // 2
@@ -282,7 +303,7 @@ def cosmooth_score(X_in: np.ndarray, X_out: np.ndarray, res, ridge: float = 1e-3
     # fit the readout on half the (condition, time) points, score on the rest
     A = np.c_[z[idx[:half]], np.ones(half)]
     B = np.c_[z[idx[half:]], np.ones(n - half)]
-    W = np.linalg.solve(A.T @ A + ridge * np.eye(D + 1), A.T @ y[idx[:half]])
+    W = np.linalg.solve(A.T @ A + ridge * np.eye(d + 1), A.T @ y[idx[:half]])
     pred = B @ W
     truth = y[idx[half:]]
     ss_res = float(((truth - pred) ** 2).sum())
@@ -305,7 +326,7 @@ def main() -> int:
     checks: list[tuple[str, bool]] = []
 
     # ------------------------------------------------------------------
-    banner("PART 1 -- the data, and what a d=6 model can possibly explain")
+    banner("PART 1 -- the data, and what a model at this d can possibly explain")
     td = nlb.load_trials(DATASET, bin_ms=BIN_MS, window_ms=WINDOW_MS)
     print(" ", td.summary())
     X, labels, n_per = prepare(td)
@@ -325,10 +346,46 @@ def main() -> int:
     print(f"  linear PCA ceiling at d={D}: VE = {pca_ve:.4f}")
     print(f"  modular model at d={D}:      VE = {model_ve:.4f}   dynamics residual = {dyn_res:.4f}")
     print(f"  -> modular constraint costs {100*(pca_ve-model_ve):+.2f} VE points against PCA")
+    # How nonlinear is the latent dynamics?  This qualifies everything below and
+    # is measured before any of it.  For a LINEAR system with distinct
+    # complex-conjugate eigenvalue pairs, block-diagonality is generic -- the
+    # eigen-decomposition supplies it -- so if the latent flow is essentially
+    # linear then "modular costs nothing" is a fact about linear algebra, and
+    # what a real-data result can validate is Theorem A (proved, `linear_case.md`)
+    # rather than Theorem B.
+    lin = {}
+    for k in (4, 6, 8):
+        Vt = np.linalg.svd(flat - flat.mean(0), full_matrices=False)[2][:k]
+        Z = ((flat - flat.mean(0)) @ Vt.T).reshape(X.shape[0], X.shape[1], k)
+        Z = Z / Z.std()
+        a_in, a_out = Z[:, :-1].reshape(-1, k), Z[:, 1:].reshape(-1, k)
+        W = np.linalg.lstsq(a_in, a_out, rcond=None)[0]
+        mse_lin = float(((a_out - a_in @ W) ** 2).mean())
+        feats = np.concatenate(
+            [a_in] + [a_in[:, i : i + 1] * a_in[:, j : j + 1]
+                      for i in range(k) for j in range(i, k)], axis=1
+        )
+        W2 = np.linalg.lstsq(feats, a_out, rcond=None)[0]
+        mse_quad = float(((a_out - feats @ W2) ** 2).mean())
+        var = float((a_out**2).mean())
+        lin[k] = {
+            "linear_r2": 1 - mse_lin / var,
+            "quadratic_r2": 1 - mse_quad / var,
+            "residual_reduction": (mse_lin - mse_quad) / mse_lin,
+        }
+        print(
+            f"  latent flow at d={k}: linear R2 {lin[k]['linear_r2']:.4f}, "
+            f"+quadratic {lin[k]['quadratic_r2']:.4f} "
+            f"(residual -{100*lin[k]['residual_reduction']:.0f}%)"
+        )
+    print("  -> the flow is overwhelmingly linear; see the write-up for what that")
+    print("     does and does not let a modularity result claim.")
+
     rec["part1"] = {
         "data": td.record(), "n_conditions": int(X.shape[0]),
         "split_half_reliability": rel, "pca_ve_at_d": pca_ve,
         "modular_ve_at_d": model_ve, "dynamics_residual": dyn_res,
+        "latent_linearity": lin,
     }
     # the modular fit must reach the linear ceiling: if it cannot, nothing below
     # is interpretable, because the latents would not describe the population.
@@ -367,6 +424,24 @@ def main() -> int:
     print(f"  -> unconstrained minus modular: {gap:+.4f} R2")
     rec["part2_ladder"]["unconstrained_minus_modular"] = float(gap)
 
+    # §3.11: a flat ladder is unattributable without an arm the metric CAN
+    # separate.  Latent dimension is that arm -- if co-smoothing moves with d
+    # but not with structure, then "structure is free" is a finding rather than
+    # a dead readout.
+    dim_sweep = {}
+    for part in ([2], [2, 2], [2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2, 2]):
+        res = fit_one(X_seen, SEED, part=part)
+        dim_sweep[sum(part)] = float(cosmooth_score(X_seen, X_held, res))
+    print(f"  sensitivity control -- co-smoothing vs latent dim: "
+          f"{ {k: round(v, 4) for k, v in dim_sweep.items()} }")
+    rec["part2_ladder"]["dimension_sweep"] = dim_sweep
+    span = max(dim_sweep.values()) - min(dim_sweep.values())
+    checks.append((
+        "co-smoothing separates latent dimension (so a flat ladder means something)",
+        span > 10 * (max(v["cosmooth_max"] - v["cosmooth_min"]
+                         for k, v in ladder.items() if isinstance(v, dict))),
+    ))
+
     # ------------------------------------------------------------------
     banner("PART 3 -- task 40: invariant agreement across DISJOINT neuron sets")
     treat_fps: list[tuple[list, list]] = []
@@ -394,6 +469,7 @@ def main() -> int:
     def pooled(pairs, screen):
         keys = (
             "tier1_spectrum_error_median", "rotation_error_median",
+            "rotation_error_rel_median",
             "spectrum_error_median", "lattice_margin_median",
         )
         acc: dict[str, list[float]] = {k: [] for k in keys}
@@ -444,7 +520,30 @@ def main() -> int:
     # ------------------------------------------------------------------
     banner("PART 4 -- negative controls: what SHOULD fail")
     controls: dict = {}
+    def _circshift(Z: np.ndarray) -> np.ndarray:
+        """Independently roll each neuron in time, within every condition.
+
+        **The strong control, and the one that matters.**  It preserves each
+        neuron's own time course exactly -- same smoothness, same
+        autocorrelation, same marginal statistics, so the fit still finds a
+        smooth low-dimensional trajectory -- while destroying the cross-neuron
+        alignment that makes a *shared* latent exist.  That is precisely the
+        null "these neurons have no common dynamics".
+
+        The other two controls are weaker and are kept for contrast.  Time
+        reversal in particular barely bites here: the fitted spectra sit at
+        |lambda| ~ 0.99, so reversing them moves the exponents by ~0.02, which
+        is the size of the fit noise.  Near-neutral dynamics is nearly
+        reversible, so that control cannot be the one a claim rests on.
+        """
+        out = Z.copy()
+        for c in range(out.shape[0]):
+            for j in range(out.shape[2]):
+                out[c, :, j] = np.roll(out[c, :, j], int(rng.integers(out.shape[1])))
+        return out
+
     for name, transform in (
+        ("neuron_circshift", _circshift),
         ("time_reversed", lambda Z: Z[:, ::-1, :].copy()),
         ("time_shuffled", None),
     ):
@@ -485,20 +584,24 @@ def main() -> int:
     print(f"\n  scoring on the '{which}' arm")
     for name in controls:
         c = controls[name][which]
+        # Only the circular-shift control is load-bearing; the other two are
+        # reported but not asserted, because near-neutral dynamics is nearly
+        # time-reversible and shuffling is trivially detectable.  Asserting
+        # against a control the metric cannot fail would be self-congratulation.
+        strong = name == "neuron_circshift"
         # Tier 1 first: it is the claim that costs no theorem, and the only one
         # the GL(K,Z) ambiguity cannot touch.
-        checks.append((
-            f"TIER 1: treatment beats {name} on the global spectrum ({which})",
-            _get(t, "tier1_spectrum_error_median") < _get(c, "tier1_spectrum_error_median"),
-        ))
-        checks.append((
-            f"tier 2: treatment beats {name} on rotation ({which})",
-            _get(t, "rotation_error_median") < _get(c, "rotation_error_median"),
-        ))
-        checks.append((
-            f"tier 2: treatment beats {name} on per-module spectra ({which})",
-            _get(t, "spectrum_error_median") < _get(c, "spectrum_error_median"),
-        ))
+        for label, key in (
+            ("TIER 1: global spectrum", "tier1_spectrum_error_median"),
+            ("tier 2: rotation", "rotation_error_median"),
+            ("tier 2: per-module spectra", "spectrum_error_median"),
+        ):
+            ok = _get(t, key) < _get(c, key)
+            if strong:
+                checks.append((f"{label} -- treatment beats {name} ({which})", ok))
+            else:
+                print(f"  (not asserted) {label} vs {name}: "
+                      f"{_get(t, key):.5f} vs {_get(c, key):.5f} -> {'better' if ok else 'WORSE'}")
     # and the lattice margin has to beat what a random rotation vector scores,
     # or the agreement is a property of Z^K rather than of the data
     checks.append((
@@ -549,6 +652,29 @@ def main() -> int:
         M.invariant_agreement(a[0], b[0], spec_tol=SPEC_TOL, rot_tol=ROT_TOL).order_margin
         for a, b in treat_fps
     ]
+    # How nonlinear is the fitted transition?  This qualifies BOTH results
+    # above.  For a *linear* system with distinct complex-conjugate eigenvalue
+    # pairs, block-diagonality is generic (the eigen-decomposition supplies it),
+    # so a flat ladder would be close to trivial and the identifiability
+    # question would be the one §3.5 says is already settled by the decoder.
+    # The claim only has teeth to the extent the learned map is not linear.
+    res_nl = fit_one(X, SEED)
+    dyn_nl = res_nl.model.double().dyn
+    ls_nl = LearnedSystem(dyn_nl, PART)
+    zs = np.asarray(res_nl.z_fit, float).reshape(-1, D)
+    nl_frac = []
+    for k, blk in enumerate(ls_nl.blocks):
+        a = sum(PART[:k])
+        zk = zs[:, a : a + PART[k]]
+        nxt = blk.step(zk)
+        J0 = blk.jacobian(zk.mean(0))
+        lin = (zk - zk.mean(0)) @ J0.T + blk.step(zk.mean(0))
+        nl_frac.append(
+            float(np.linalg.norm(nxt - lin) / max(np.linalg.norm(nxt - nxt.mean(0)), 1e-12))
+        )
+    print(f"  fitted transition, nonlinear residual per module: {np.round(nl_frac, 4)}")
+    rec["part5_hypotheses_nonlinearity"] = [float(v) for v in nl_frac]
+
     print(f"  (F3) ordered separation holds in {sum(f3_ok)} of {len(f3_ok)} fits")
     print(f"  chain gap: median {np.median(gaps):+.4f}  range [{np.min(gaps):+.4f}, {np.max(gaps):+.4f}]")
     print(f"  duplicate-module flag raised in {sum(1 for d in dup if d)} of {len(dup)} fits")

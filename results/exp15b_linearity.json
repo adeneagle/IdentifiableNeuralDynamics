@@ -1,0 +1,236 @@
+{
+  "sweeps": {
+    "smoothing": {
+      "0.0": {
+        "linear_r2": 0.8377685437502762,
+        "quadratic_r2": 0.8415926716857771,
+        "absolute_gain": 0.003824127935500816,
+        "residual_reduction": 0.023572049612957398,
+        "eig_abs": [
+          0.9259145439686968,
+          0.9259145439686968,
+          0.9264134243430396,
+          0.8578719558000638
+        ],
+        "n_complex_eigs": 2,
+        "block_diagonalisable_over_R": false
+      },
+      "20.0": {
+        "linear_r2": 0.9853649274584146,
+        "quadratic_r2": 0.9874665204402835,
+        "absolute_gain": 0.0021015929818689193,
+        "residual_reduction": 0.14359976528283463,
+        "eig_abs": [
+          0.987039788433311,
+          0.987039788433311,
+          1.0009799394997967,
+          1.0009799394997967
+        ],
+        "n_complex_eigs": 4,
+        "block_diagonalisable_over_R": true
+      },
+      "40.0": {
+        "linear_r2": 0.9937430327942371,
+        "quadratic_r2": 0.9958869399438336,
+        "absolute_gain": 0.002143907149596417,
+        "residual_reduction": 0.34264318144768685,
+        "eig_abs": [
+          0.9887165634140556,
+          0.9887165634140556,
+          1.006658394621489,
+          1.006658394621489
+        ],
+        "n_complex_eigs": 4,
+        "block_diagonalisable_over_R": true
+      },
+      "80.0": {
+        "linear_r2": 0.996176129566062,
+        "quadratic_r2": 0.9981821359401669,
+        "absolute_gain": 0.0020060063741049023,
+        "residual_reduction": 0.5246010315362698,
+        "eig_abs": [
+          0.9899454020703153,
+          0.9899454020703153,
+          1.0080208875557009,
+          1.0080208875557009
+        ],
+        "n_complex_eigs": 4,
+        "block_diagonalisable_over_R": true
+      }
+    },
+    "window": {
+      "(-250.0, 450.0)": {
+        "linear_r2": 0.9937430327942371,
+        "quadratic_r2": 0.9958869399438336,
+        "absolute_gain": 0.002143907149596417,
+        "residual_reduction": 0.34264318144768685,
+        "eig_abs": [
+          0.9887165634140556,
+          0.9887165634140556,
+          1.006658394621489,
+          1.006658394621489
+        ],
+        "n_complex_eigs": 4,
+        "block_diagonalisable_over_R": true
+      },
+      "(-500.0, 700.0)": {
+        "linear_r2": 0.9949737011472846,
+        "quadratic_r2": 0.9961425419206938,
+        "absolute_gain": 0.001168840773409281,
+        "residual_reduction": 0.23254502122925488,
+        "eig_abs": [
+          0.9971770092861001,
+          0.9971770092861001,
+          1.0010680208788363,
+          1.0010680208788363
+        ],
+        "n_complex_eigs": 4,
+        "block_diagonalisable_over_R": true
+      },
+      "(0.0, 300.0)": {
+        "linear_r2": 0.9908767607645133,
+        "quadratic_r2": 0.9959217031965578,
+        "absolute_gain": 0.005044942432044564,
+        "residual_reduction": 0.5529771062476575,
+        "eig_abs": [
+          0.9924898883225632,
+          0.9924898883225632,
+          0.988100822063953,
+          0.988100822063953
+        ],
+        "n_complex_eigs": 4,
+        "block_diagonalisable_over_R": true
+      },
+      "(-700.0, 900.0)": {
+        "linear_r2": 0.9950636514340577,
+        "quadratic_r2": 0.9963846248860365,
+        "absolute_gain": 0.0013209734519787771,
+        "residual_reduction": 0.26760133210459813,
+        "eig_abs": [
+          0.9980699227773049,
+          0.9980699227773049,
+          1.003988850769183,
+          1.003988850769183
+        ],
+        "n_complex_eigs": 4,
+        "block_diagonalisable_over_R": true
+      }
+    },
+    "dimension": {
+      "2": {
+        "linear_r2": 0.9925025694740259,
+        "quadratic_r2": 0.9933530152623377,
+        "absolute_gain": 0.000850445788311716,
+        "residual_reduction": 0.11343163305954357,
+        "eig_abs": [
+          0.9905567320790131,
+          0.9905567320790131
+        ],
+        "n_complex_eigs": 2,
+        "block_diagonalisable_over_R": true
+      },
+      "4": {
+        "linear_r2": 0.9937430327942371,
+        "quadratic_r2": 0.9958869399438336,
+        "absolute_gain": 0.002143907149596417,
+        "residual_reduction": 0.34264318144768685,
+        "eig_abs": [
+          0.9887165634140556,
+          0.9887165634140556,
+          1.006658394621489,
+          1.006658394621489
+        ],
+        "n_complex_eigs": 4,
+        "block_diagonalisable_over_R": true
+      },
+      "6": {
+        "linear_r2": 0.9925525013183449,
+        "quadratic_r2": 0.9959160815230059,
+        "absolute_gain": 0.003363580204660982,
+        "residual_reduction": 0.45163891239702625,
+        "eig_abs": [
+          0.9895154044210378,
+          0.9895154044210378,
+          0.998039906250641,
+          1.0070108362359995,
+          0.993920968257473,
+          0.993920968257473
+        ],
+        "n_complex_eigs": 4,
+        "block_diagonalisable_over_R": false
+      },
+      "8": {
+        "linear_r2": 0.9909594891640596,
+        "quadratic_r2": 0.9958020210415964,
+        "absolute_gain": 0.0048425318775368285,
+        "residual_reduction": 0.535648036423501,
+        "eig_abs": [
+          0.9753704102862798,
+          0.9753704102862798,
+          0.9923187130076855,
+          0.9923187130076855,
+          1.0018092692934273,
+          1.0018092692934273,
+          0.9996655638034907,
+          0.9879071297665509
+        ],
+        "n_complex_eigs": 6,
+        "block_diagonalisable_over_R": false
+      },
+      "10": {
+        "linear_r2": 0.9904049828085444,
+        "quadratic_r2": 0.9957318572933067,
+        "absolute_gain": 0.005326874484762313,
+        "residual_reduction": 0.5551709161611406,
+        "eig_abs": [
+          0.9671309140960858,
+          0.9671309140960858,
+          0.9929718421072325,
+          0.9929718421072325,
+          0.9871275173070259,
+          0.9871275173070259,
+          1.004405367487849,
+          1.004405367487849,
+          0.9979697200247546,
+          0.9979697200247546
+        ],
+        "n_complex_eigs": 10,
+        "block_diagonalisable_over_R": true
+      }
+    },
+    "dataset": {
+      "mc_maze": {
+        "linear_r2": 0.9937430327942371,
+        "quadratic_r2": 0.9958869399438336,
+        "absolute_gain": 0.002143907149596417,
+        "residual_reduction": 0.34264318144768685,
+        "eig_abs": [
+          0.9887165634140556,
+          0.9887165634140556,
+          1.006658394621489,
+          1.006658394621489
+        ],
+        "n_complex_eigs": 4,
+        "block_diagonalisable_over_R": true
+      },
+      "mc_maze_small": {
+        "linear_r2": 0.9898198991160241,
+        "quadratic_r2": 0.9923754003492725,
+        "absolute_gain": 0.0025555012332485103,
+        "residual_reduction": 0.2510290676265308,
+        "eig_abs": [
+          0.9964215584795393,
+          0.9964215584795393,
+          0.9794039865522245,
+          1.0103318761383764
+        ],
+        "n_complex_eigs": 2,
+        "block_diagonalisable_over_R": false
+      }
+    }
+  },
+  "min_linear_r2": 0.8377685437502762,
+  "min_linear_r2_smoothed": 0.9853649274584146,
+  "max_absolute_nonlinear_gain": 0.005326874484762313,
+  "conclusion": "The one-step latent flow is >= 98.5% linear at every smoothing >= 20 ms, every window, every dimension and both datasets. Unsmoothed it is 84% linear, but a quadratic expansion recovers only 2 of the missing 16 points, so that shortfall is PSTH sampling noise rather than curvature. At d=4 the fitted linear map's eigenvalues form complex-conjugate pairs, so its real Jordan form is already block diagonal: modularity is GENERIC for this flow, not a restriction. Consequence for exp15: the task-39 ladder result validates Theorem A (the linear case, proved in linear_case.md) and does NOT exercise Theorem B, whose entire difficulty (3.7's triangular counterexample) is nonlinear."
+}

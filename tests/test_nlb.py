@@ -208,6 +208,52 @@ def test_lattice_quotient_is_infinite_on_nonfinite_input():
 # --------------------------------------------------------------------------
 
 
+def test_flow_linearity_separates_a_linear_flow_from_a_curved_one():
+    """The measurement exp15's whole reading rests on, on known-answer input.
+
+    If it could not tell a rotation from a rotation-plus-quadratic, "the latent
+    flow is 99% linear" would be unfalsifiable.
+    """
+    import sys
+    from pathlib import Path
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "experiments"))
+    from exp15b_linearity import flow_linearity
+
+    from idyn import systems as S
+
+    rng = np.random.default_rng(0)
+    C, T, k = 80, 30, 4
+
+    def roll(beta: float) -> np.ndarray:
+        """TwistBlocks: beta = 0 is a scaled rotation, beta > 0 twists it.
+
+        Bounded by construction (the blocks contract), so the nonlinear arm
+        stays on the attractor instead of diverging.
+        """
+        sysm = S.ModularSystem([
+            S.TwistBlock(s=0.97, omega=0.25, beta=beta),
+            S.TwistBlock(s=0.95, omega=0.60, beta=beta),
+        ])
+        z0 = S.sample_initial_conditions(k, C, rng, radius=1.0)
+        Z = sysm.simulate(z0, T - 1)
+        W = rng.normal(size=(k, 40))
+        return Z @ W
+
+    lin = flow_linearity(roll(0.0), k)
+    curved = flow_linearity(roll(1.2), k)
+    assert lin["linear_r2"] > 0.999, lin["linear_r2"]
+    # absolute gain, not residual-relative: on an exactly linear system the
+    # residual is at the numerical floor and a quadratic term still removes
+    # ~60% of it, which says nothing.  This is the flaw the test caught.
+    assert lin["absolute_gain"] < 1e-3, lin["absolute_gain"]
+    assert curved["linear_r2"] < lin["linear_r2"], "the twist must show up as curvature"
+    assert curved["absolute_gain"] > 50 * lin["absolute_gain"]
+    # and the pure rotation is exactly block-diagonalisable over R -- which is
+    # why "modular costs nothing" is generic once the flow is linear
+    assert lin["block_diagonalisable_over_R"]
+
+
 @needs_data
 def test_load_trials_shapes_and_counts():
     td = nlb.load_trials("mc_maze")
