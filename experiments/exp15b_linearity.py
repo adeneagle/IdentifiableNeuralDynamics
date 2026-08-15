@@ -16,12 +16,14 @@ essentially linear then
     are indecomposable with disjoint spectra -- and *not* Theorem B, whose
     whole difficulty (§3.7, the triangular counterexample) is nonlinear.
 
-Three knobs, because each is a candidate artefact:
+Five knobs, because each is a candidate artefact:
   smoothing   -- a wide kernel low-passes the trajectories and could linearise
                  them outright;
   window      -- a short window sees less of the trajectory's curvature;
   dataset     -- MC_Maze is a stereotyped reach; MC_RTT is continuous random
-                 target pursuit, with no trial structure to average into.
+                 target pursuit, with no trial structure to average into;
+  averaging   -- condition averaging could itself be smoothing curvature
+                 away across repeats, so single trials are run too.
 
 Reported as: linear R2 of the one-step latent map, and the share of TOTAL
 latent variance a quadratic term adds.  The second is the honest statistic;
@@ -85,6 +87,33 @@ def flow_linearity(X: np.ndarray, k: int) -> dict:
     }
 
 
+def _smooth(X: np.ndarray, bin_ms: float, smooth_ms: float) -> np.ndarray:
+    if smooth_ms <= 0:
+        return X
+    s = smooth_ms / bin_ms
+    hw = int(np.ceil(3 * s))
+    k = np.exp(-0.5 * (np.arange(-hw, hw + 1) / s) ** 2)
+    k /= k.sum()
+    pad = np.pad(X, ((0, 0), (hw, hw), (0, 0)), mode="edge")
+    return np.apply_along_axis(lambda v: np.convolve(v, k, "valid"), 1, pad)
+
+
+def single_trial(td: nlb.TrialData, smooth_ms: float) -> np.ndarray:
+    """Per-trial rates, with NO averaging over repeats.
+
+    The control for "condition averaging is hiding the nonlinearity".  It is
+    noisy, which is exactly why `absolute_gain` is the statistic to read: noise
+    is not explained by quadratic features, so curvature still shows up even
+    when the linear R2 is depressed.
+    """
+    X = td.spikes.astype(float) / (td.bin_ms / 1000.0)
+    X = np.sqrt(np.maximum(_smooth(X, td.bin_ms, smooth_ms), 0.0))
+    rng_ = X.max(axis=(0, 1)) - X.min(axis=(0, 1))
+    X = X / (rng_ + 0.5)
+    X = X - X.mean(axis=(0, 1), keepdims=True)
+    return X / X.std()
+
+
 def prep(td: nlb.TrialData, smooth_ms: float) -> np.ndarray:
     R, _, _ = td.condition_average(smooth_ms=smooth_ms)
     rng_ = R.max(axis=(0, 1)) - R.min(axis=(0, 1))
@@ -146,6 +175,29 @@ def main() -> int:
             print(f"  {name:16}: skipped ({type(e).__name__}: {e})")
     rec["sweeps"]["dataset"] = ds_rows
 
+    # The two escapes a sceptic would reach for, closed explicitly.
+    #   (i) condition averaging could be smoothing curvature away across trials;
+    #  (ii) MC_Maze is a stereotyped reach -- a continuous, unstructured task
+    #       might drive the population somewhere more nonlinear.
+    # Both are testable, and both fail.
+    print("\n--- single trial (no condition averaging), and a second task ---")
+    st_rows = {}
+    for name, kw in (
+        ("mc_maze", {}),
+        ("mc_rtt", dict(window_ms=(0.0, 600.0), align="start_time")),
+    ):
+        t = nlb.load_trials(name, bin_ms=20.0, **kw)
+        for sm in (20.0, 40.0, 80.0):
+            X = single_trial(t, sm)
+            r = flow_linearity(X, 4)
+            st_rows[f"{name}@{sm:g}"] = r
+            print(f"  {name:9} single-trial smooth {sm:3.0f} ms "
+                  f"({X.shape[0]:4d} segments): linear R2 {r['linear_r2']:.4f}  "
+                  f"nonlin {100*r['absolute_gain']:5.2f}%")
+    rec["sweeps"]["single_trial"] = st_rows
+    print("  -> single trials are no more nonlinear than condition averages, and")
+    print("     MC_RTT is LESS nonlinear than MC_Maze.  Neither escape works.")
+
     every = [v for grp in rec["sweeps"].values() for v in grp.values()]
     worst = min(v["linear_r2"] for v in every)
     worst_gain = max(v["absolute_gain"] for v in every)
@@ -173,7 +225,12 @@ def main() -> int:
         "for this flow, not a restriction. Consequence for exp15: the task-39 "
         "ladder result validates Theorem A (the linear case, proved in "
         "linear_case.md) and does NOT exercise Theorem B, whose entire difficulty "
-        "(3.7's triangular counterexample) is nonlinear."
+        "(3.7's triangular counterexample) is nonlinear. "
+        "The two obvious escapes are closed: SINGLE TRIALS are no more nonlinear "
+        "than condition averages (0.15-0.23% for mc_maze), so averaging is not "
+        "hiding curvature; and MC_RTT, a continuous unstructured task, is LESS "
+        "nonlinear (0.04-0.12%), not more. The nonlinear identifiability theory "
+        "cannot be tested on these benchmarks because the phenomenon is not there."
     )
 
     OUT.parent.mkdir(exist_ok=True)

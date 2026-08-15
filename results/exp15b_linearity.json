@@ -227,6 +227,92 @@
         "n_complex_eigs": 2,
         "block_diagonalisable_over_R": false
       }
+    },
+    "single_trial": {
+      "mc_maze@20": {
+        "linear_r2": 0.9178355301298571,
+        "quadratic_r2": 0.9201619312601544,
+        "absolute_gain": 0.002326401130297447,
+        "residual_reduction": 0.028313955338289322,
+        "eig_abs": [
+          0.957967132648256,
+          0.957967132648256,
+          0.9690384618433147,
+          0.928547394149897
+        ],
+        "n_complex_eigs": 2,
+        "block_diagonalisable_over_R": false
+      },
+      "mc_maze@40": {
+        "linear_r2": 0.9807737522058166,
+        "quadratic_r2": 0.9827500872140812,
+        "absolute_gain": 0.0019763350082646017,
+        "residual_reduction": 0.10279358871378486,
+        "eig_abs": [
+          0.982567950718256,
+          0.982567950718256,
+          1.0043382232853106,
+          0.9868591968358869
+        ],
+        "n_complex_eigs": 2,
+        "block_diagonalisable_over_R": false
+      },
+      "mc_maze@80": {
+        "linear_r2": 0.9930486614533366,
+        "quadratic_r2": 0.9945786782063044,
+        "absolute_gain": 0.0015300167529678267,
+        "residual_reduction": 0.22010390411818337,
+        "eig_abs": [
+          0.9897423236297843,
+          0.9897423236297843,
+          1.0104091931001764,
+          0.9959576083082483
+        ],
+        "n_complex_eigs": 2,
+        "block_diagonalisable_over_R": false
+      },
+      "mc_rtt@20": {
+        "linear_r2": 0.9089794563186537,
+        "quadratic_r2": 0.9101981081997569,
+        "absolute_gain": 0.0012186518811031586,
+        "residual_reduction": 0.01338875633801459,
+        "eig_abs": [
+          0.94467219613689,
+          0.94467219613689,
+          0.9326824386957644,
+          0.9326824386957644
+        ],
+        "n_complex_eigs": 4,
+        "block_diagonalisable_over_R": true
+      },
+      "mc_rtt@40": {
+        "linear_r2": 0.9724531047548901,
+        "quadratic_r2": 0.9731795009290913,
+        "absolute_gain": 0.0007263961742012203,
+        "residual_reduction": 0.026369439014372005,
+        "eig_abs": [
+          0.983803183425906,
+          0.983803183425906,
+          0.9843565069209546,
+          0.9843565069209546
+        ],
+        "n_complex_eigs": 4,
+        "block_diagonalisable_over_R": true
+      },
+      "mc_rtt@80": {
+        "linear_r2": 0.9891202617826897,
+        "quadratic_r2": 0.9895011287512833,
+        "absolute_gain": 0.00038086696859352325,
+        "residual_reduction": 0.03500699750179142,
+        "eig_abs": [
+          0.9945569051609766,
+          0.9945569051609766,
+          0.9953989020070461,
+          0.9953989020070461
+        ],
+        "n_complex_eigs": 4,
+        "block_diagonalisable_over_R": true
+      }
     }
   },
   "min_linear_r2": 0.8377685437502762,

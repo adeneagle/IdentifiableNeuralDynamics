@@ -1441,12 +1441,22 @@ as a share of total latent variance:
 | window (4 settings) | $[-700,900]$ ms to $[0,300]$ ms | $0.12\%$–$0.50\%$ |
 | dimension $d = 2 \dots 10$ | — | $0.09\%$–$0.53\%$ |
 | dataset | MC_Maze, MC_Maze_Small | $0.21\%,\ 0.26\%$ |
+| **single trial**, no averaging | MC_Maze | $0.15\%$–$0.23\%$ |
+| **single trial, second task** | MC_RTT | $0.04\%$–$0.12\%$ |
 
 **Smoothing is not manufacturing it, and the unsmoothed row is what shows that.**
 At $0$ ms the linear $R^2$ falls to $0.838$ — but the quadratic expansion
 recovers only $0.38$ of the missing $16$ points, so the shortfall there is PSTH
 sampling noise, not curvature. Wherever the noise is controlled the flow is
 $\ge 98.5\%$ linear.
+
+**The two escapes a sceptic would reach for are closed, and both fail in the
+same direction.** (i) *Condition averaging might be smoothing curvature away
+across repeats* — but single trials give $0.15\%$–$0.23\%$, indistinguishable
+from the averaged $0.21\%$. (ii) *A stereotyped reach might simply not visit the
+nonlinear part of state space* — but MC_RTT, continuous random target pursuit
+with no trial structure at all, is **less** nonlinear ($0.04\%$–$0.12\%$), not
+more.
 
 > **Consequence, and it is a hard limit on the empirical claim.** For a real
 > matrix whose eigenvalues are distinct complex-conjugate pairs, the real Jordan
@@ -1457,7 +1467,17 @@ $\ge 98.5\%$ linear.
 > (§4.3's triangular counterexample) is nonlinear.
 >
 > Stated plainly: *the regime where this project's hard theorems bite is not the
-> regime condition-averaged motor cortex PSTHs are in.*
+> regime these motor cortex recordings are in* — and after the single-trial and
+> MC_RTT arms, that is a statement about the **data**, not about the
+> preprocessing. **The nonlinear identifiability theory cannot be tested on
+> these benchmarks, because the phenomenon it is about is not present in them.**
+>
+> That is a useful negative. It says the next real-data step is not a better
+> estimator but a *different regime* — a longer horizon, an area with genuine
+> multistability, or a task that leaves the near-linear operating point — and
+> that for motor cortex in the movement epoch, the already-proved linear theory
+> is not a stepping stone to the interesting case but very nearly the whole
+> story.
 
 A methodological note of the CLAUDE.md §3.9 family, found here. Reporting the quadratic
 gain *relative to the residual* is unreliable: on an exactly linear system the

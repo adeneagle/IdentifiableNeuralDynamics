@@ -254,6 +254,42 @@ def test_flow_linearity_separates_a_linear_flow_from_a_curved_one():
     assert lin["block_diagonalisable_over_R"]
 
 
+def test_single_trial_prep_does_not_average():
+    """The control for 'condition averaging hid the nonlinearity' must not average."""
+    import sys
+    from pathlib import Path
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "experiments"))
+    from exp15b_linearity import single_trial
+
+    rng = np.random.default_rng(0)
+    td = nlb.TrialData(
+        spikes=rng.poisson(1.0, size=(37, 12, 5)).astype(np.int32),
+        hand_vel=np.zeros((37, 12, 2)),
+        condition=np.array(["a"] * 37),
+        unit_ids=np.arange(5),
+        heldout=np.zeros(5, dtype=bool),
+        bin_ms=20.0,
+        window_ms=(0.0, 240.0),
+        align="start_time",
+        dataset="synthetic",
+    )
+    X = single_trial(td, 0.0)
+    assert X.shape == (37, 12, 5), "one row per TRIAL, not per condition"
+
+
+@needs_data
+def test_rtt_loads_despite_a_different_behaviour_convention():
+    """MC_RTT stores behaviour as a regular series, MC_Maze as timestamps.
+
+    Both are read; the loader would otherwise silently return zeros for RTT.
+    """
+    td = nlb.load_trials("mc_rtt", bin_ms=20.0, window_ms=(0.0, 600.0), align="start_time")
+    assert td.n_bins == 30 and td.n_trials > 500
+    speed = np.linalg.norm(td.hand_vel, axis=-1)
+    assert np.isfinite(speed).all() and speed.mean() > 0, "behaviour must not be zeros"
+
+
 @needs_data
 def test_load_trials_shapes_and_counts():
     td = nlb.load_trials("mc_maze")

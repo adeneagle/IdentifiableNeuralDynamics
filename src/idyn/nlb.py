@@ -270,15 +270,29 @@ def load_trials(
             cum = np.searchsorted(st, flat).reshape(edges.shape)
             counts[:, :, j] = np.diff(cum, axis=1)
 
-        # hand velocity, differentiated from position on the same bin edges
+        # Hand velocity on the same bin edges.  Two storage conventions appear
+        # across the benchmark and both are handled: MC_Maze carries explicit
+        # `timestamps`, MC_RTT a regularly sampled series with `starting_time`
+        # and a `rate` attribute.
         beh = f["processing/behavior"]
-        pos = np.asarray(beh["hand_pos/data"][:], dtype=float)
-        ts = np.asarray(beh["hand_pos/timestamps"][:], dtype=float)
         centres = (edges[:, :-1] + edges[:, 1:]) / 2.0
-        idx = np.clip(np.searchsorted(ts, centres.ravel()), 1, ts.size - 1)
-        dt = ts[idx] - ts[idx - 1]
-        vel = (pos[idx] - pos[idx - 1]) / np.where(dt > 0, dt, np.nan)[:, None]
-        hand_vel = vel.reshape(*centres.shape, 2)
+        if "hand_pos" in beh:
+            pos = np.asarray(beh["hand_pos/data"][:], dtype=float)
+            ts = np.asarray(beh["hand_pos/timestamps"][:], dtype=float)
+            idx = np.clip(np.searchsorted(ts, centres.ravel()), 1, ts.size - 1)
+            dt = ts[idx] - ts[idx - 1]
+            vel = (pos[idx] - pos[idx - 1]) / np.where(dt > 0, dt, np.nan)[:, None]
+            hand_vel = vel.reshape(*centres.shape, 2)
+        elif "finger_vel" in beh:
+            node = beh["finger_vel"]
+            v = np.asarray(node["data"][:], dtype=float)
+            v = v * float(node["data"].attrs.get("conversion", 1.0))
+            t0 = float(node["starting_time"][()])
+            rate = float(node["starting_time"].attrs["rate"])
+            idx = np.clip(np.rint((centres.ravel() - t0) * rate).astype(int), 0, v.shape[0] - 1)
+            hand_vel = v[idx].reshape(*centres.shape, v.shape[1])
+        else:                                        # pragma: no cover
+            hand_vel = np.zeros((*centres.shape, 2))
 
         provenance = {
             "dandiset": DATASETS[dataset]["dandiset"],
