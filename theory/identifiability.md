@@ -1409,3 +1409,183 @@ where the §3.1 swap scores $\mathrm{MCC} = 1.0$ and on-block fraction $0.5$.
 - Autonomy was previously flagged as the main disanalogy with LFADS. Under §0 it
   is **out of scope by decision**, not an open threat. If input drive is added
   later, Vahidi et al. 2024 is the entry point (CLAUDE.md §4.3).
+
+---
+
+## 10. What real data says — MC_Maze
+
+**New (2026-08-14), `exp15_nlb.py` / `exp15b_linearity.py`.** The first
+contact between this theory and a recording. Neural Latents Benchmark
+**MC_Maze** (DANDI 000128): macaque M1+PMd, 1721 training trials of a delayed
+reach through a maze, 182 sorted units, 108 reach conditions.
+
+Preprocessing, and each choice is a hypothesis rather than a default:
+
+| choice | value | why |
+|---|---|---|
+| alignment | movement onset, $[-250, +450]$ ms | the epoch in which motor cortex is standardly modelled as autonomous — §0's scope, imposed by the window rather than argued for |
+| bins | 20 ms | $T = 35$, comparable to the synthetic experiments |
+| observable | condition-averaged PSTHs, $\sqrt{\text{rate}}$ | §1 fixes the target as a *deterministic* flow from a random initial condition, and a **condition is an initial condition**. Averaging its repeats removes the Poisson noise the target class does not model. Single trials would force the distributional equivalence CLAUDE.md §3.8 puts out of scope |
+| smoothing | 40 ms Gaussian | split-half PSTH reliability $r = 0.658$. A wide kernel could in principle manufacture smooth low-dimensional dynamics, so it is controlled twice: §10.1 sweeps it, and §10.3's neuron halves are **disjoint**, so their PSTH noise is independent and smoothing cannot create agreement between them |
+
+### 10.1 The latent flow is linear, and that governs everything below
+
+Measured before anything was interpreted, because it decides what a modularity
+result on this data is *allowed* to claim. Fit the best one-step linear map on
+the top-$k$ principal components, then ask what a full quadratic expansion adds,
+as a share of total latent variance:
+
+| swept | range | nonlinear share |
+|---|---|---|
+| smoothing $0/20/40/80$ ms | — | $0.38\%,\ 0.21\%,\ 0.21\%,\ 0.20\%$ |
+| window (4 settings) | $[-700,900]$ ms to $[0,300]$ ms | $0.12\%$–$0.50\%$ |
+| dimension $d = 2 \dots 10$ | — | $0.09\%$–$0.53\%$ |
+| dataset | MC_Maze, MC_Maze_Small | $0.21\%,\ 0.26\%$ |
+
+**Smoothing is not manufacturing it, and the unsmoothed row is what shows that.**
+At $0$ ms the linear $R^2$ falls to $0.838$ — but the quadratic expansion
+recovers only $0.38$ of the missing $16$ points, so the shortfall there is PSTH
+sampling noise, not curvature. Wherever the noise is controlled the flow is
+$\ge 98.5\%$ linear.
+
+> **Consequence, and it is a hard limit on the empirical claim.** For a real
+> matrix whose eigenvalues are distinct complex-conjugate pairs, the real Jordan
+> form is *already block diagonal* — and at $d=4$ the fitted map's eigenvalues
+> are exactly such pairs. So on this data **modularity is generic, not a
+> restriction**. What a MC_Maze result can validate is **Theorem A**, the linear
+> case proved in `linear_case.md`, and *not* Theorem B, whose entire difficulty
+> (§4.3's triangular counterexample) is nonlinear.
+>
+> Stated plainly: *the regime where this project's hard theorems bite is not the
+> regime condition-averaged motor cortex PSTHs are in.*
+
+A methodological note of the CLAUDE.md §3.9 family, found here. Reporting the quadratic
+gain *relative to the residual* is unreliable: on an exactly linear system the
+linear residual is already at the numerical floor and a quadratic term still
+removes $\approx 60\%$ of it. Sixty per cent of nothing. Only the share of total
+variance separates "curved" from "clean", and the known-answer test asserts on
+that.
+
+### 10.2 Adequacy — the constraint is free (task 39)
+
+Nested ladder, scored by held-out-**neuron** co-smoothing: 126 units fitted, 32
+held out, a fresh linear readout refitted from the latents to the held-out units
+and scored on unseen $(\text{condition}, \text{time})$ points.
+
+| rung | co-smoothing $R^2$, median | range over 5 restarts |
+|---|---|---|
+| unconstrained | $0.2979$ | $[0.2977, 0.2989]$ |
+| triangular | $0.2981$ | $[0.2978, 0.2991]$ |
+| modular | $0.2983$ | $[0.2979, 0.2997]$ |
+
+The three are indistinguishable, with the *most* constrained marginally ahead —
+consistent with equal bias and lower variance. **Imposing block-diagonal
+autonomous dynamics costs nothing in population reconstruction.**
+
+**And the metric is not dead**, which CLAUDE.md §3.11 insists on checking before
+reading a null: the same score moves cleanly with latent dimension, $0.159 \to 0.292 \to
+0.341 \to 0.371 \to 0.420$ for $d = 2,4,6,8,10$ — a span two orders of magnitude
+larger than the restart spread that separates the rungs.
+
+Two caveats, and the first is fatal to over-reading this:
+
+1. **§10.1 makes it nearly a statement of linear algebra.** A flat ladder is
+   what a linear flow with paired complex eigenvalues *must* produce. The
+   constraint is not falsified; it is also barely tested.
+2. Co-smoothing is **gauge-invariant by construction** — if $\hat z = h(z)$ the
+   refitted readout is $D \circ h$ and the score is unchanged. It is an adequacy
+   gate and can never be an identifiability test. Same mechanism as §2: a
+   full-column-rank decoder absorbs $h$.
+
+### 10.3 Identifiability — invariant agreement across disjoint neurons (task 40)
+
+Fit independently on **disjoint** neuron halves (79/79, rate-stratified so the
+halves are comparable populations), 3 independent splits $\times$ 6 restarts a
+side, then compare the fits *to each other* — no ground truth anywhere. Three
+negative controls, each altering only half B:
+
+| control | what it preserves | what it destroys |
+|---|---|---|
+| **per-neuron circular shift** | every neuron's own time course, smoothness, autocorrelation | the cross-neuron alignment that makes a *shared* latent exist |
+| time reversal | everything | the arrow of time |
+| within-condition time shuffle | marginal rates | all temporal structure |
+
+Only the circular shift is load-bearing, and this was decided before scoring.
+The other two are too easy: near-neutral dynamics ($\lvert\lambda\rvert \approx
+0.99$) is nearly time-*reversible*, so reversal moves the exponents by about the
+fit noise; and shuffling is detectable by anything. **Asserting against a control
+the metric cannot fail is self-congratulation.**
+
+**The result is per-invariant, and the two halves of the fingerprint disagree.**
+
+| invariant | treatment | circshift null | ratio |
+|---|---|---|---|
+| rotation number | $0.00208$ | $0.02173$ | $\mathbf{10.4\times}$ |
+| rotation, relative to module separation | $0.112$ | $36.9$ | $\mathbf{330\times}$ |
+| GL(2,$\mathbb{Z}$) lattice margin | $0.00151$ | $0.01553$ | $\mathbf{10.3\times}$ |
+| global Lyapunov spectrum | $0.02645$ | $0.02536$ | **none** |
+| per-module Lyapunov spectra | $0.02880$ | $0.02710$ | **none** |
+
+So: **the rotation number is recovered; the Lyapunov spectrum is not.** Two
+disjoint neuron halves agree on rotation to $11\%$ of the gap between the two
+modules' own rotation numbers, and the lattice margin also clears the
+random-rotation-vector null ($0.00151$ against $0.00228$). On the spectra they
+agree no better than a half compared against circularly-shifted junk.
+
+> **This inverts the expectation, and the inversion is the interesting part.**
+> The spectrum is the *theoretically* cleaner invariant — it is Tier 1, it costs
+> no theorem, and §6.5's $GL(K,\mathbb{Z})$ ambiguity cannot touch it. The
+> rotation number is the one carrying a caveat. Empirically it is the other way
+> round.
+>
+> The mechanism is CLAUDE.md §3.13(b) — recoverability tracks where the orbits
+> spend time — arriving in a new form. Over 35 bins at $\lvert\lambda\rvert
+> \approx 0.99$ the system contracts by $30\%$ in total, so there is almost **no
+> contraction to measure** and the exponents are weakly determined. Phase, by
+> contrast, advances all the way through the window. A quantity is identifiable
+> only if the data moves along it.
+
+**A ground-truth-free validity flag, found by accident.**
+`DynamicalFingerprint.duplicate_modules` flags **18 of 18** circshift-control
+fits and **1 of 36** treatment fits. §3.13(e) introduced it as a mode-collapse
+detector for individual fits; it turns out to separate real population dynamics
+from the null outright, using only the fitted model. That is worth more on real
+data than any tolerance, because nothing else here is checkable without truth.
+
+**(F3) holds in 2 of 36 fits**, chain gap median $-0.042$. So the best empirical
+result again sits **outside** the best theorem — the same pattern `exp14` found
+on synthetic cycles (0 of 24), and for the same reason: the module spectra
+overlap, so Theorem F never applies. (F3) is sufficient, not necessary.
+
+> **A bug in my own scoring, corrected and recorded.** The checks first read
+> $6/6$. Three of them were vacuous: the circular-shift control screens out
+> *completely* (all 18 fits duplicate-flagged), leaving its screened arm empty,
+> and the helper mapped `NaN` to $+\infty$ so "treatment $<$ control" passed
+> against nothing. `NaN` now fails, and the two arms are compared like-for-like.
+> The corrected score is $7/9$, with the two spectrum comparisons failing — as
+> they should. Same family as CLAUDE.md §3.9: **a comparison that cannot fail is
+> not a test.** The checks were re-derived offline from the dumped fingerprints
+> without refitting, which is what §3.13 keeps them for.
+
+### 10.4 What this licenses, and what it does not
+
+**Licensed.** On MC_Maze, in the movement epoch, at $d = 4$: two disjoint halves
+of the population independently recover the *same pair of rotation numbers*,
+$10\times$ better than a null that preserves every single-neuron statistic. The
+modular constraint costs nothing in held-out-neuron prediction. That is a real
+identifiability result about a real recording, and it is the first in this repo.
+
+**Not licensed, and the gap is not small:**
+
+1. **It validates Theorem A, not Theorem B.** §10.1: the flow is $\ge 99\%$
+   linear, so modularity is generic rather than restrictive here.
+2. **The rotation numbers are pinned only up to $GL(2,\mathbb{Z})$** (§6.5, task
+   23). The margin clears its null, so the agreement is not an artefact of the
+   lattice — but what is identified is the *orbit*, not the pair.
+3. **The Lyapunov spectrum is not recovered at all**, so the filtration half of
+   Theorem F is untested here rather than confirmed.
+4. One dataset, one area, one epoch, one monkey.
+
+The honest one-line summary: *the structure is there and one of its two
+invariants is identifiable, in a regime where the theory that applies is the
+one that was already proved.*

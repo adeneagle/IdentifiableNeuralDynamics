@@ -436,11 +436,15 @@ def main() -> int:
           f"{ {k: round(v, 4) for k, v in dim_sweep.items()} }")
     rec["part2_ladder"]["dimension_sweep"] = dim_sweep
     span = max(dim_sweep.values()) - min(dim_sweep.values())
+    restart_spread = max(
+        ladder[s]["cosmooth_max"] - ladder[s]["cosmooth_min"]
+        for s in ("unconstrained", "triangular", "modular")
+    )
     checks.append((
         "co-smoothing separates latent dimension (so a flat ladder means something)",
-        span > 10 * (max(v["cosmooth_max"] - v["cosmooth_min"]
-                         for k, v in ladder.items() if isinstance(v, dict))),
+        span > 10 * restart_spread,
     ))
+    rec["part2_ladder"]["restart_spread"] = float(restart_spread)
 
     # ------------------------------------------------------------------
     banner("PART 3 -- task 40: invariant agreement across DISJOINT neuron sets")
@@ -576,37 +580,80 @@ def main() -> int:
     # Read per-invariant (§3.13(b)) -- one boolean would hide which half of the
     # fingerprint the data actually constrained, and here they differ.
     def _get(d, k):
-        v = d.get(k, float("nan"))
-        return float("inf") if v != v else float(v)
+        """NaN must FAIL a check, never pass it.
 
-    which = "screened" if rec["part3_treatment"]["screened"]["n_pairs_ok"] else "raw"
-    t = rec["part3_treatment"][which]
-    print(f"\n  scoring on the '{which}' arm")
+        The first version mapped NaN to +inf so that "treatment < control"
+        succeeded whenever the control had no pairs left.  The circular-shift
+        control screens out completely -- every one of its fits is
+        duplicate-flagged -- so three checks passed against nothing.  Same
+        family as CLAUDE.md §3.9: a comparison that cannot fail is not a test.
+        """
+        v = d.get(k, float("nan"))
+        return None if v != v else float(v)
+
+    def _beats(t_arm, c_arm, key):
+        a, b = _get(t_arm, key), _get(c_arm, key)
+        return a is not None and b is not None and a < b
+
+    print(f"\n  treatment duplicate-flag rate: "
+          f"{rec['part3_treatment']['raw']['n_pairs_ok']} split(s) scored")
     for name in controls:
-        c = controls[name][which]
+        # Compare LIKE FOR LIKE.  If either side's screened set is empty the
+        # comparison falls back to raw on *both* sides; scoring a screened
+        # treatment against an unscreened control would flatter the treatment.
+        which = (
+            "screened"
+            if rec["part3_treatment"]["screened"]["n_pairs_ok"]
+            and controls[name]["screened"]["n_pairs_ok"]
+            else "raw"
+        )
+        t, c = rec["part3_treatment"][which], controls[name][which]
         # Only the circular-shift control is load-bearing; the other two are
         # reported but not asserted, because near-neutral dynamics is nearly
         # time-reversible and shuffling is trivially detectable.  Asserting
         # against a control the metric cannot fail would be self-congratulation.
         strong = name == "neuron_circshift"
-        # Tier 1 first: it is the claim that costs no theorem, and the only one
-        # the GL(K,Z) ambiguity cannot touch.
         for label, key in (
-            ("TIER 1: global spectrum", "tier1_spectrum_error_median"),
-            ("tier 2: rotation", "rotation_error_median"),
-            ("tier 2: per-module spectra", "spectrum_error_median"),
+            ("global Lyapunov spectrum", "tier1_spectrum_error_median"),
+            ("rotation number", "rotation_error_median"),
+            ("rotation, relative to module separation", "rotation_error_rel_median"),
+            ("per-module spectra", "spectrum_error_median"),
+            ("GL(K,Z) lattice margin", "lattice_margin_median"),
         ):
-            ok = _get(t, key) < _get(c, key)
+            ok = _beats(t, c, key)
+            a, b = _get(t, key), _get(c, key)
+            shown = f"{a:.5f} vs {b:.5f}" if a is not None and b is not None else "n/a"
             if strong:
-                checks.append((f"{label} -- treatment beats {name} ({which})", ok))
+                checks.append((f"{label}: treatment beats {name} [{which}] ({shown})", ok))
             else:
-                print(f"  (not asserted) {label} vs {name}: "
-                      f"{_get(t, key):.5f} vs {_get(c, key):.5f} -> {'better' if ok else 'WORSE'}")
+                print(f"  (not asserted) {label} vs {name} [{which}]: {shown}"
+                      f" -> {'better' if ok else 'WORSE'}")
     # and the lattice margin has to beat what a random rotation vector scores,
     # or the agreement is a property of Z^K rather than of the data
+    tl = _get(rec["part3_treatment"]["raw"], "lattice_margin_median")
     checks.append((
-        "treatment lattice margin beats the GL(K,Z) null median",
-        _get(t, "lattice_margin_median") < null_k["median"],
+        f"treatment lattice margin beats the GL(K,Z) random null "
+        f"({tl:.5f} vs {null_k['median']:.5f})",
+        tl is not None and tl < null_k["median"],
+    ))
+    # the duplicate-module screen is itself a ground-truth-free discriminator:
+    # it should flag the null far more often than the data
+    dup_t = sum(
+        1 for b in rec["part3_treatment"]["fingerprints"]
+        for k in ("half_a", "half_b") for f in b[k] if f["duplicate_modules"]
+    )
+    n_t = sum(len(b[k]) for b in rec["part3_treatment"]["fingerprints"]
+              for k in ("half_a", "half_b"))
+    dup_c = sum(1 for g in controls["neuron_circshift"]["fingerprints_b"]
+                for f in g if f["duplicate_modules"])
+    n_c = sum(len(g) for g in controls["neuron_circshift"]["fingerprints_b"])
+    print(f"  duplicate-module flag: treatment {dup_t}/{n_t}, "
+          f"circshift control {dup_c}/{n_c}")
+    rec["duplicate_flag_rates"] = {"treatment": [dup_t, n_t], "neuron_circshift": [dup_c, n_c]}
+    checks.append((
+        f"duplicate_modules flags the null far more than the data "
+        f"({dup_c}/{n_c} vs {dup_t}/{n_t})",
+        dup_c / max(n_c, 1) > 3 * dup_t / max(n_t, 1),
     ))
 
     # ------------------------------------------------------------------
