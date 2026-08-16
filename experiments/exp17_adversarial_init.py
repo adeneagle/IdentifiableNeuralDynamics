@@ -17,6 +17,35 @@ start and the invariants reconverge.  If they do not, it stays, and the protocol
 finally returns the "not identifiable" that arm C should always have produced.
 That converts a necessary condition into something close to sufficient.
 
+---------------------------------------------------------------- the readout --
+
+The scored quantity is **not** a fit-to-fit comparison.  exp16's entire finding
+is that fit-to-fit agreement answers a different question, so reusing it here
+would inherit the defect being repaired.  What is scored is direct:
+
+    is this fit nearer R1 or nearer R2?
+
+measured against the two analytic targets, on the invariant and the modules the
+*construction* says separate them -- fixed before any fit runs, since h is
+written down.  Restricting to those modules is required in both directions.  A
+module where R1 and R2 agree cannot say which representative a fit picked, and
+on a contracting system it is precisely the module the data does not constrain:
+measured here, the module the lattice map moves comes back to 3e-4 at every
+donor rate while the donor's own rotation number is never recovered (0.0039
+against a true 0.1751 at s=0.55, still 0.1101 at s=0.80).  Since
+`invariant_agreement` reports a max over modules, an unrestricted comparison
+would decide arm A entirely on an invariant nobody measured -- §3.13(b), and the
+mirror image of exp16 §11.3(f)'s comparison that cannot fail.
+
+"Nearer to" is also scale-free, which a threshold on the distance to R1 is not:
+on arm B the estimator's own error is 0.040 against a 0.108 separation, so any
+fixed multiple of the former exceeds the latter.  `resolving_power` reports that
+ratio next to every verdict, because below ~2 an arm cannot answer its own
+question whatever the verdict says.
+
+The fit-to-fit numbers are still reported, and their blindness is part of the
+result rather than a footnote to it.
+
 ---------------------------------------------------------------- the design --
 
 Four arms.  Each supplies a *true* representative R1 and an *alternative* R2
@@ -30,7 +59,8 @@ reached by an explicit map h, and each has a known right answer:
                 stays O(1) and (F1) holds.  Non-identifiable, provably.
                              -> R2 SHOULD survive
   B  regroup    §3.1: four distinct exponents, h is a coordinate permutation,
-                ||Dh|| = 1.  Non-identifiable, provably.
+                ||Dh|| = 1.  Non-identifiable, provably.  Scored on spectra,
+                since a real-eigenvalue system has no rotation to score on.
                              -> R2 SHOULD survive
   E  escape     arm A's data, h(z1,z2) = (z1 + c z2, z2).  Expressible by the
                 model, and NOT a modular conjugacy.

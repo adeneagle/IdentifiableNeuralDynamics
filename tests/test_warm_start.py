@@ -175,3 +175,99 @@ def test_the_escape_map_is_not_a_modular_conjugacy():
     # and it really is the difference of the blocks that survives
     assert np.allclose(C[:2, 2:], c * (F[2:, 2:] - F[:2, :2]), atol=1e-12)
     assert np.allclose(C[2:, :2], 0.0, atol=1e-12)
+
+
+# --------------------------------------------------------------------------
+# exp17's scoring rules, which decide the verdict and so have to be right
+# --------------------------------------------------------------------------
+
+
+def _exp17():
+    import sys
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    sys.path.insert(0, str(root / "experiments"))
+    import exp17_adversarial_init as E
+    return E
+
+
+def test_informative_modules_picks_the_module_the_map_actually_moves():
+    """The lattice map moves module 0's rotation and leaves module 1 alone.
+
+    Scoring on module 1 would be a comparison that cannot distinguish the two
+    representatives at all, so the restriction is not tuning -- it is the
+    difference between measuring the question and measuring noise.
+    """
+    E = _exp17()
+    from idyn import metrics as MT
+    r1 = MT.DynamicalFingerprint(
+        partition=[2, 2], spectra=[np.array([-0.083, -0.083]), np.array([-0.598, -0.598])],
+        rotations=[0.0557, 0.1751], coherences=[1.0, 1.0])
+    r2 = MT.DynamicalFingerprint(
+        partition=[2, 2], spectra=[np.array([-0.083, -0.083]), np.array([-0.598, -0.598])],
+        rotations=[0.2308, 0.1751], coherences=[1.0, 1.0])
+    keep, kind = E.informative_modules(r1, r2)
+    assert kind == "rotation"
+    assert keep == [0]
+
+
+def test_informative_modules_falls_to_spectra_when_nothing_rotates():
+    """The §3.1 regrouping has no rotation at all, so the rule must not pick it."""
+    E = _exp17()
+    from idyn import systems as S
+    reg = S.regrouping_counterexample(lams=E.ARM_B_LAMS)
+    z0 = E.annulus_z0(np.random.default_rng(0), 60, 0.5, 1.2)
+    keep, kind = E.informative_modules(E.fingerprint(reg["system"], z0),
+                                       E.fingerprint(reg["system_tilde"], z0))
+    assert kind == "spectrum"
+    assert keep == [0, 1]        # the swap moves both modules
+
+
+def test_restricted_distance_quotients_out_the_module_order():
+    """Module labels carry no meaning (§3.10 trap 2), so a relabelling is zero."""
+    E = _exp17()
+    from idyn import metrics as MT
+    a = MT.DynamicalFingerprint(
+        partition=[2, 2], spectra=[np.array([0.0, -0.9]), np.array([0.0, -0.9])],
+        rotations=[0.0796, 0.2069], coherences=[1.0, 1.0])
+    swapped = MT.DynamicalFingerprint(
+        partition=[2, 2], spectra=[np.array([0.0, -0.9]), np.array([0.0, -0.9])],
+        rotations=[0.2069, 0.0796], coherences=[1.0, 1.0])
+    assert E.restricted_distance(swapped, a, [0, 1], "rotation") == pytest.approx(0.0, abs=1e-12)
+
+
+def test_restricted_distance_treats_an_unmeasured_invariant_as_maximally_far():
+    """NaN must never read as a match -- the exp15 vacuous-check failure mode."""
+    E = _exp17()
+    from idyn import metrics as MT
+    tgt = MT.DynamicalFingerprint(
+        partition=[2, 2], spectra=[np.array([0.0, -0.9]), np.array([0.0, -0.9])],
+        rotations=[0.0796, 0.2069], coherences=[1.0, 1.0])
+    blind = MT.DynamicalFingerprint(
+        partition=[2, 2], spectra=[np.array([0.0, -0.9]), np.array([0.0, -0.9])],
+        rotations=[float("nan"), float("nan")], coherences=[0.0, 0.0])
+    assert np.isinf(E.restricted_distance(blind, tgt, [0], "rotation"))
+
+
+def test_whitening_a_warm_start_target_moves_no_invariant():
+    """It is a block-diagonal change of basis, i.e. exactly what §7 declines to
+    identify -- applied so ordinary training has no reason to rescale the target
+    and any later drift is attributable."""
+    E = _exp17()
+    from idyn import metrics as MT
+    from idyn import systems as S
+    sysm = S.ModularSystem([S.TwistBlock(s=0.92, omega=0.35, beta=0.0),
+                            S.TwistBlock(s=0.55, omega=1.10, beta=0.0)])
+    rng = np.random.default_rng(0)
+    Z = sysm.simulate(E.annulus_z0(rng, 200, 0.5, 1.2), 30)
+    W = E.whiten_modules(Z)
+    for off, k in ((0, 2), (2, 2)):
+        blk = W[..., off:off + k].reshape(-1, k)
+        cov = np.cov(blk.T)
+        assert np.allclose(cov, np.eye(k), atol=1e-8), cov
+    # and it is block-diagonal in the strong sense: changing module 0's data
+    # leaves module 1's whitened coordinates untouched, so no invariant of
+    # module 1 can have been moved by anything module 0 did
+    Z2 = Z.copy()
+    Z2[..., :2] *= 3.0
+    assert np.allclose(E.whiten_modules(Z2)[..., 2:], W[..., 2:], atol=1e-10)
