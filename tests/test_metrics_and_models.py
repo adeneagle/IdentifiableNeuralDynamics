@@ -884,3 +884,31 @@ def test_canonical_order_puts_the_autonomous_module_first():
     assert fp.spectra[0][0] > fp.spectra[1][0]
     assert fp.spectra[0][0] == pytest.approx(np.log(0.90), abs=1e-6)
     assert fp.spectra[1][0] == pytest.approx(np.log(0.55), abs=1e-6)
+
+
+def test_per_module_errors_expose_what_the_max_hides():
+    """§3.13(b): recoverability is per-module, so a max is the wrong summary.
+
+    One module recovered perfectly and one missed entirely gives exactly the same
+    ``rotation_error`` as *both* being missed.  In a contracting system the
+    dominated module is always the one that fails, so the max reports it forever
+    and the recovered module never appears at all -- the reading that made
+    ``exp14``'s per-module numbers differ by 100x on a single fit.
+    """
+    good = MT.DynamicalFingerprint(
+        partition=[2, 2], spectra=[np.array([0.0, -0.9]), np.array([0.0, -0.9])],
+        rotations=[0.0796, 0.2069], coherences=[0.98, 0.97])
+    # module 0 identical, module 1 badly wrong.  Kept away from a value that
+    # would tie the Hungarian cost, or the pairing -- not the summary -- would be
+    # what the test measured.
+    half = MT.DynamicalFingerprint(
+        partition=[2, 2], spectra=[np.array([0.0, -0.9]), np.array([0.0, -0.9])],
+        rotations=[0.0796, 0.3500], coherences=[0.98, 0.97])
+    r = MT.invariant_agreement(good, half, spec_tol=0.05, rot_tol=0.01)
+
+    assert r.rotation_error == pytest.approx(0.3500 - 0.2069, abs=1e-6)
+    assert len(r.per_module_rotation) == 2
+    assert min(r.per_module_rotation) == pytest.approx(0.0, abs=1e-9)
+    assert max(r.per_module_rotation) == pytest.approx(r.rotation_error, abs=1e-12)
+    # the per-module list is aligned with `matching`, so a caller can say which
+    assert len(r.matching) == len(r.per_module_rotation) == len(r.per_module_spectrum)

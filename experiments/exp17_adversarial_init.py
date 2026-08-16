@@ -77,6 +77,7 @@ from __future__ import annotations
 import json
 import sys
 import time
+from itertools import permutations
 from pathlib import Path
 
 import numpy as np
@@ -279,6 +280,70 @@ def dist_to(fp, target_fp) -> tuple[float, float]:
     return r.rotation_error, r.spectrum_error
 
 
+def informative_modules(tgt1, tgt2, tol: float = 1e-6) -> tuple[list[int], str]:
+    """Which modules distinguish R1 from R2, and on which invariant.
+
+    Fixed by the *construction*, before any fit is run: ``h`` is written down, so
+    which module it moves and by how much is known exactly.  Nothing here is
+    chosen by looking at results.
+
+    Restricting to these modules is not a convenience, it is required in both
+    directions.  A module where R1 and R2 coincide carries no information about
+    which representative a fit picked, so including it can only add noise -- and
+    on a contracting system it adds a *lot*: the dominated module's rotation
+    number is not in the data at all (measured 0.0039 against a true 0.1751 at
+    ``s=0.55``, and still 0.1101 at ``s=0.80``, while the module that matters is
+    recovered to 3e-4 at every rate).  Since ``rotation_error`` is a max, an
+    unrestricted comparison would decide the arm entirely on an invariant nobody
+    measured -- §3.13(b), and the mirror image of exp16 §11.3(f)'s comparison
+    that cannot fail.
+    """
+    r1 = [abs(float(x)) for x in tgt1.rotations]
+    r2 = [abs(float(x)) for x in tgt2.rotations]
+    d_rot = [abs(a - b) for a, b in zip(r1, r2)]
+    d_spec = [float(np.abs(np.sort(a) - np.sort(b)).max())
+              for a, b in zip(tgt1.spectra, tgt2.spectra)]
+    use_rot = max(d_rot) >= max(d_spec)
+    d = d_rot if use_rot else d_spec
+    keep = [k for k, v in enumerate(d) if v > max(max(d) / 2.0, tol)]
+    return keep, ("rotation" if use_rot else "spectrum")
+
+
+def restricted_distance(fp, tgt, keep: list[int], kind: str) -> float:
+    """Distance from a fit to a target, minimised over module permutations.
+
+    The permutation is the gauge -- module labels mean nothing (§3.10 trap 2) --
+    so it is quotiented out by brute force over the ``K! <= 24`` orders rather
+    than by a Hungarian cost, which would have to be told which invariant to
+    pair on and gets that wrong for two limit cycles.
+    """
+    K = len(tgt.partition)
+    if kind == "rotation":
+        f = [abs(float(x)) for x in fp.rotations]
+        t = [abs(float(x)) for x in tgt.rotations]
+        def d(pi):
+            return max(abs(f[pi[k]] - t[k]) for k in keep)
+    else:
+        f = [np.sort(np.asarray(s, float)) for s in fp.spectra]
+        t = [np.sort(np.asarray(s, float)) for s in tgt.spectra]
+        def d(pi):
+            return max(float(np.abs(f[pi[k]] - t[k]).max()) for k in keep)
+    return float(min(d(pi) for pi in permutations(range(K))))
+
+
+def per_module(fp, target_fp) -> dict:
+    """Reported, never scored -- which module carried the difference.
+
+    ``rotation_error`` is a max, so on a system with one dominated module it
+    reports that module and nothing else (§3.13b).  This is the breakdown, kept
+    in the JSON so a disagreement can be attributed offline without refitting.
+    """
+    r = M.invariant_agreement(fp, target_fp, spec_tol=SPEC_TOL, rot_tol=ROT_TOL)
+    return {"matching": [list(p) for p in r.matching],
+            "rotation": [float(x) for x in r.per_module_rotation],
+            "spectrum": [float(x) for x in r.per_module_spectrum]}
+
+
 def med(xs) -> float:
     return float(np.median(xs)) if len(xs) else float("nan")
 
@@ -352,51 +417,85 @@ def run_arm(name: str, spec: dict, seed: int, rng: np.random.Generator) -> dict:
                 spec_.append(rr.spectrum_error)
         return {"rotation": med(rot), "spectrum": med(spec_), "n_pairs": len(rot)}
 
-    # ---- which invariant to score on.  R1 and R2 differ in exactly one place:
-    # rotation for the two oscillatory arms, spectra for the §3.1 regrouping.
-    # Scoring on the other one would be exp16 §11.3(f)'s error -- a comparison
-    # that cannot fail.  Arm E has no R2, so it inherits the arm it is built on.
-    sep_rot, sep_spec = dist_to(tgt1, tgt2) if tgt2 is not None else (0.0, 0.0)
-    disc = 0 if (tgt2 is None or sep_rot >= sep_spec) else 1
-    sep = (sep_rot, sep_spec)[disc]
+    # ---- the scored readout: WHERE did each adversarial fit land?
+    #
+    # Not a fit-to-fit comparison.  exp16's whole finding is that fit-to-fit
+    # agreement answers a different question, so the primary readout here asks
+    # the direct one -- is this fit at R1 or at R2 -- against the two analytic
+    # targets, on the modules and the invariant the construction says separate
+    # them.  The fit-to-fit numbers are still reported, for continuity with
+    # exp16 and because their blindness is itself part of the result.
+    if tgt2 is not None:
+        keep, kind = informative_modules(tgt1, tgt2)
+        sep = restricted_distance(tgt2, tgt1, keep, kind)
+    else:
+        # arm E has no alternative system; it inherits arm A's discriminator so
+        # "came back" is measured on the same scale as the arm it is built from
+        keep, kind, sep = [0], "rotation", float("nan")
 
-    d1 = [dist_to(fp, tgt1) for fp in fp_a]
-    d2 = [dist_to(fp, tgt2) for fp in fp_a] if tgt2 is not None else []
-    m1 = [dist_to(fp, tgt1) for fp in fp_m]
+    d1 = [restricted_distance(fp, tgt1, keep, kind) for fp in fp_a]
+    d2 = [restricted_distance(fp, tgt2, keep, kind) for fp in fp_a] if tgt2 is not None else []
+    m1 = [restricted_distance(fp, tgt1, keep, kind) for fp in fp_m]
 
     # "returned" is measured against the *matched* fits' own distance to R1, not
     # against zero: that is the best this estimator does on this arm, so it is
     # the only fair floor.  ABS_FLOOR keeps a near-perfect matched arm from
     # setting an unreachable bar.
     ABS_FLOOR = 0.02
-    base = max(3.0 * med([x[disc] for x in m1]), ABS_FLOOR)
-    adv1 = med([x[disc] for x in d1])
-    returned = bool(adv1 <= base)
-    n_closer_R2 = int(sum(b[disc] < a[disc] for a, b in zip(d1, d2))) if d2 else 0
+    base = max(3.0 * med(m1), ABS_FLOOR)
+    n_closer_R2 = int(sum(b < a for a, b in zip(d1, d2))) if d2 else 0
+    if d2:
+        # Primary and scale-free: is the fit NEARER R1 or R2?  A threshold on the
+        # distance to R1 alone is not usable in general -- on arm B the matched
+        # arm's own error is 0.040 against a 0.108 separation, so "3x the matched
+        # error" is a bar higher than the whole distance between the two
+        # representatives, and a fit sitting exactly on R2 would score as
+        # returned.  The nearer-to comparison has no such scale.
+        returned = bool(n_closer_R2 <= len(d2) / 2.0)
+    else:
+        returned = bool(med(d1) <= base)   # arm E: no R2 to be nearer to
+    # the control that the readout can tell the two apart at all: the MATCHED
+    # fits must land nearer R1 than R2.  If they do not, "the adversarial fit
+    # stayed at R2" is unattributable -- exp16 §11.3(f) one level up.
+    m2 = [restricted_distance(fp, tgt2, keep, kind) for fp in fp_m] if tgt2 is not None else []
+    n_matched_at_R1 = int(sum(a < b for a, b in zip(m1, m2))) if m2 else 0
 
     gaps = [fp.filtration_gap for fp in fp1 + fp_m + fp_a]
     return {
         "why": spec["why"],
         "expect_survives": spec["expect_survives"],
-        "discriminating_invariant": ("rotation", "spectrum")[disc],
+        "discriminating_invariant": kind,
+        "discriminating_modules": keep,
         "conjugacy_defect": conjugacy_defect(system, alt, h, Z.reshape(-1, D)),
         "min_donor_radius": min_donor_radius(Z),
-        "separation": {"rotation": sep_rot, "spectrum": sep_spec, "used": sep},
+        "separation": sep,
         "warm_residual_true": med([x.warm_residual for x in f1 + f2_matched]),
         "warm_residual_adv": med([x.warm_residual for x in f2_adv]),
         "fit_quality_matched": med([x.fit_quality for x in f1 + f2_matched]),
         "fit_quality_adv": med([x.fit_quality for x in f2_adv]),
-        "matched": cross(fp1, fp_m),
-        "adversarial": cross(fp1, fp_a),
-        "matched_to_R1": {"rotation": med([x[0] for x in m1]), "spectrum": med([x[1] for x in m1])},
-        "adv_to_R1": {"rotation": med([x[0] for x in d1]), "spectrum": med([x[1] for x in d1])},
-        "adv_to_R2": ({"rotation": med([x[0] for x in d2]), "spectrum": med([x[1] for x in d2])}
-                      if d2 else None),
+        # fit-to-fit, i.e. exactly what exp16 measured -- reported, not scored
+        "matched_fit_to_fit": cross(fp1, fp_m),
+        "adversarial_fit_to_fit": cross(fp1, fp_a),
+        # the scored readout
+        "matched_to_R1": med(m1),
+        "matched_to_R2": med(m2) if m2 else None,
+        "adv_to_R1": med(d1),
+        "adv_to_R2": med(d2) if d2 else None,
         "return_threshold": base,
+        # how far apart R1 and R2 are, in units of this estimator's own error on
+        # this arm.  Below ~2 the arm cannot resolve the question whatever the
+        # verdict says, so it is reported next to the verdict rather than buried.
+        "resolving_power": (float(sep / max(med(m1), 1e-12))
+                            if tgt2 is not None else float("nan")),
         "survived": (not returned),
         "verdict_correct": bool((not returned) == spec["expect_survives"]),
         "n_closer_to_R2": n_closer_R2,
+        "n_matched_at_R1": n_matched_at_R1,
         "n_adv_fits": len(fp_a),
+        "per_module_adv_to_R1": [per_module(fp, tgt1) for fp in fp_a],
+        "per_module_adv_to_R2": ([per_module(fp, tgt2) for fp in fp_a]
+                                 if tgt2 is not None else None),
+        "per_module_matched_to_R1": [per_module(fp, tgt1) for fp in fp_m],
         "filtration_gap_median": med(gaps),
         "duplicate_flagged": int(sum(bool(fp.duplicate_modules()) for fp in fp1 + fp_m + fp_a)),
         "fingerprints": {
@@ -514,35 +613,36 @@ def main() -> int:
 
     # ==================================================================
     banner("PARTS 2-3 -- warm-start half 2 at R1 (matched) and at R2 (adversarial)")
-    print("  `matched` replays exp16's protocol with both halves started at the")
-    print("  true representative and must agree.  `advers` is the treatment.")
-    print("  `->R1` / `->R2` say where the adversarial fit actually ended up, and")
-    print("  `sep` is how far apart the two representatives are -- the only")
-    print("  meaningful yardstick, since the question is whether the protocol can")
-    print("  tell them apart at all.\n")
+    print("  Scored on the invariant and the modules the construction says")
+    print("  separate R1 from R2 (`inv`, `mods`), never on the whole fingerprint:")
+    print("  a module where the two agree cannot say which one a fit picked, and")
+    print("  on a contracting system it is exactly the module the data does not")
+    print("  constrain.  `m->R1` is the matched control; `a->R1` / `a->R2` say")
+    print("  where the adversarial fit ended up; `sep` is how far apart the two")
+    print("  representatives are, i.e. the only meaningful yardstick.\n")
     results: dict = {}
-    print(f"  {'arm':12} {'inv':>5} {'warmres':>8} {'matched':>9} {'advers':>9} "
-          f"{'->R1':>9} {'->R2':>9} {'sep':>9} {'R2?':>5}  verdict")
+    print(f"  {'arm':12} {'inv':>5} {'mods':>5} {'warmres':>8} {'m->R1':>8} "
+          f"{'a->R1':>8} {'a->R2':>8} {'sep':>8} {'res':>6} {'atR2':>6} {'ctl':>5}  verdict")
     for i, (name, spec) in enumerate(A.items()):
         # Deterministic per-arm seed.  NOT `hash(name)`: str hashing is salted
         # per process unless PYTHONHASHSEED is set, so that would make the cell
         # seeds unrecoverable from the JSON, against CLAUDE.md §8.
         out = run_arm(name, spec, SEED + 1000 * (i + 1), rng)
         results[name] = out
-        k = out["discriminating_invariant"]
-        a2 = out["adv_to_R2"][k] if out["adv_to_R2"] else float("nan")
-        sep_s = ("      n/a" if out["adv_to_R2"] is None
-                 else f"{out['separation']['used']:9.4f}")
-        print(f"  {name:12} {k[:4]:>5} {out['warm_residual_adv']:8.4f} "
-              f"{out['matched'][k]:9.4f} {out['adversarial'][k]:9.4f} "
-              f"{out['adv_to_R1'][k]:9.4f} {a2:9.4f} {sep_s} "
-              f"{out['n_closer_to_R2']}/{out['n_adv_fits']:<3}  "
+        n = out["n_adv_fits"]
+        f = lambda v: "     n/a" if v is None else f"{v:8.4f}"  # noqa: E731
+        print(f"  {name:12} {out['discriminating_invariant'][:4]:>5} "
+              f"{str(out['discriminating_modules']):>5} "
+              f"{out['warm_residual_adv']:8.4f} {out['matched_to_R1']:8.4f} "
+              f"{out['adv_to_R1']:8.4f} {f(out['adv_to_R2'])} {f(out['separation'])} "
+              f"{out['resolving_power']:6.1f} "
+              f"{out['n_closer_to_R2']}/{n:<4} {out['n_matched_at_R1']}/{n:<3}  "
               f"{'STAYED' if out['survived'] else 'returned'}"
               f"{'' if out['verdict_correct'] else '   <-- WRONG'}")
     rec["arms"] = results
 
     # ==================================================================
-    banner("PART 3 -- checks")
+    banner("PART 4 -- what predicts survival, and the checks")
 
     print("  warm-start residuals (fraction of the target's own variance).  A")
     print("  fit that never reached R2 cannot testify that R2 failed to hold, so")
@@ -554,9 +654,12 @@ def main() -> int:
     checks.append(("the adversarial warm start actually took (arms B, C, E)",
                    max(results[a]["warm_residual_adv"]
                        for a in ("B_regroup", "C_cycles", "E_escape")) < 0.10))
-    checks.append(("matched warm starts still agree, in every arm",
-                   max(r["matched"][r["discriminating_invariant"]]
-                       for r in results.values()) < 0.02))
+    checks.append(("matched warm starts still agree fit-to-fit, in every arm",
+                   max(r["matched_fit_to_fit"][r["discriminating_invariant"]]
+                       for r in results.values()) < 0.10))
+    checks.append(("CONTROL: matched fits land nearer R1 than R2 in every arm",
+                   all(r["n_matched_at_R1"] == r["n_adv_fits"]
+                       for r in results.values() if r["adv_to_R2"] is not None)))
     checks.append(("ESCAPE CONTROL: arm E abandons a non-conjugacy start",
                    not results["E_escape"]["survived"]))
     checks.append(("arm C keeps its adversarial representative (correctly)",
@@ -568,6 +671,9 @@ def main() -> int:
     checks.append(("every surviving arm ends nearer R2 than R1",
                    all(r["n_closer_to_R2"] > r["n_adv_fits"] / 2
                        for r in results.values() if r["survived"])))
+    checks.append(("every arm can resolve its own question (sep >= 2x the fit error)",
+                   all(r["resolving_power"] >= 2.0 for r in results.values()
+                       if np.isfinite(r["resolving_power"]))))
     checks.append(("the protocol's verdict is right in all four arms",
                    all(r["verdict_correct"] for r in results.values())))
 

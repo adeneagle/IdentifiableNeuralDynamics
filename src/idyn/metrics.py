@@ -1161,6 +1161,16 @@ class AgreementReport:
     matching: list[tuple[int, int]]
     agree: bool
     notes: list[str] = field(default_factory=list)
+    # ``spectrum_error`` and ``rotation_error`` are maxima over the matched
+    # modules, and a maximum hides *which* module carried the disagreement.  In
+    # a system with one dominated module that is always the same module: §3.13(b)
+    # measured a 100x difference in recovery between a module retaining 2.7e-3 of
+    # its variance and one retaining 2.6e-16, so the max reports the second one
+    # forever and never the first.  These lists are the same quantities per
+    # matched pair, in ``matching`` order, so a caller whose question concerns a
+    # particular module can ask about that module instead of about the worst one.
+    per_module_spectrum: list[float] = field(default_factory=list)
+    per_module_rotation: list[float] = field(default_factory=list)
 
     def summary(self) -> str:
         head = "AGREE" if self.agree else "DISAGREE"
@@ -1245,9 +1255,8 @@ def invariant_agreement(
     order_agrees = all(i == j for i, j in matching)
     # Recomputed from the spectra, NOT read off `cost` -- the cost now carries a
     # rotation term and would silently inflate the reported spectral error.
-    spec_err = float(
-        max(np.abs(fa.spectra[i] - fb.spectra[j]).max() for i, j in matching)
-    )
+    per_spec = [float(np.abs(fa.spectra[i] - fb.spectra[j]).max()) for i, j in matching]
+    spec_err = float(max(per_spec))
 
     def rot_diff(x: float, y: float, dx: int, dy: int) -> float:
         """|rho| difference, distinguishing "cannot rotate" from "could not measure".
@@ -1265,12 +1274,11 @@ def invariant_agreement(
             return float("inf")
         return abs(ax - ay)
 
-    rot_err = float(
-        max(
-            rot_diff(fa.rotations[i], fb.rotations[j], fa.partition[i], fb.partition[j])
-            for i, j in matching
-        )
-    )
+    per_rot = [
+        rot_diff(fa.rotations[i], fb.rotations[j], fa.partition[i], fb.partition[j])
+        for i, j in matching
+    ]
+    rot_err = float(max(per_rot))
     if np.isinf(rot_err):
         notes.append(
             "a module of dimension >= 2 has no measurable rotation number "
@@ -1346,4 +1354,6 @@ def invariant_agreement(
         matching=matching,
         agree=agree,
         notes=notes,
+        per_module_spectrum=per_spec,
+        per_module_rotation=[float(x) for x in per_rot],
     )
