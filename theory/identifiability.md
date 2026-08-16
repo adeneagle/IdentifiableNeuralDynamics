@@ -1742,3 +1742,59 @@ Both alternative representatives already exist in code
 known-answer case that says whether the fix works. Until that is run, **§10.3's
 MC_Maze conclusion should be stated as estimator reproducibility across neuron
 samples, not as identifiability.**
+
+### 11.6 What actually protects a contracting module: (F1), not (F3)
+
+**Found while designing the adversarial-initialisation test (2026-08-15), and it
+refines §7/task 23.** The natural reading of §7 is that the $GL(K,\mathbb{Z})$
+ambiguity is a pathology of *limit cycles*. It is not.
+
+Take arm A — two contracting spirals, $s = 0.92$ and $0.55$, spectra
+comfortably separated so **(F3) holds at $+0.50$**. The lattice map
+$h(z_1,z_2) = (z_1z_2/\lvert z_2\rvert,\ z_2)$ is an **exact conjugacy** there,
+carrying $\omega_1 \mapsto \omega_1+\omega_2$: residual $6.7\times10^{-16}$,
+measured at donor radii $1$, $10^{-2}$ and $10^{-6}$ alike. So spectral
+separation does **not** protect the rotation numbers.
+
+What protects them is **(F1)**. The conjugacy has
+$\lVert Dh\rVert \sim 1/\lvert z_2\rvert$, and the two arms differ entirely in
+how small the donor gets on the visited region:
+
+| system | $\min\lvert z_2\rvert$ over the trial | $\sup\lVert Dh\rVert$ | (F1)? |
+|---|---|---|---|
+| two contracting spirals ($s_2 = 0.55$) | $1.6\times10^{-8}$ | $6\times10^{7}$ | **fails** |
+| two limit cycles | $0.80$ | $1.2$ | holds |
+
+> **The lattice ambiguity bites exactly when the donor module does not decay.**
+> A contracting module is protected because the regrouping map blows up where
+> its orbits actually go — §0's support caveat doing real work rather than
+> hedging. Two neutral or oscillatory modules have no such protection, which is
+> why §7's counterexample is built from limit cycles and why `exp15`'s MC_Maze
+> fits ($\lvert\lambda\rvert \approx 0.99$, contracting only $30\%$ over the
+> window) sit on the wrong side of it.
+
+**Checkable, and it should be reported alongside any rotation claim:** compute
+$\min\lvert z_i\rvert$ over the visited region for each module. Bounded away from
+zero means the lattice ambiguity is live for that module; decaying to zero means
+(F1) excludes it. This is a *different* diagnostic from `filtration_gap`, and
+§11.3(a) shows (F3) alone is not enough.
+
+### 11.7 Why §11.5's fix needs a nonlinear encoder
+
+A correction to §11.3(a)'s diagnosis. I attributed arm C's false positive to
+"both fits landing on the same lattice representative" — the optimiser failing
+to explore. That is at most half of it.
+
+The fitted model in `exp16` has a **linear encoder**, so its latents are
+$\hat z = L\,g(z)$. Under a linear generating decoder that is *linear in $z$*,
+and the lattice map is not — so the alternative representative is **outside the
+fitted model class**, and the protocol could not have detected it whatever the
+optimiser did. Under the MLP generating decoder it becomes partially reachable,
+and the fits still agreed; there the "optimiser did not explore it" reading does
+apply.
+
+Consequence for the adversarial test: it is only meaningful when the fitted
+class can *represent* the alternative. Warm-starting a linear encoder at a
+nonlinear representative measures how fast the projection back onto the linear
+class happens, not whether the data pins the representation. **`encoder="mlp"`
+is therefore a requirement of the test, not a variant of it.**

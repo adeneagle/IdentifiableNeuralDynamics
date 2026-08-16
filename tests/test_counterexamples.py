@@ -425,3 +425,82 @@ def test_lattice_margin_sees_through_the_regrouping_but_not_past_a_real_change()
     assert naive == pytest.approx(0.06366, abs=1e-4)
     assert quotient == pytest.approx(0.01592, abs=1e-4)
     assert 0.0 < quotient < naive, "the control still rejects, with less headroom"
+
+
+# --------------------------------------------------------------------------
+# What protects a contracting module from the lattice ambiguity: (F1), not (F3)
+# (identifiability.md 11.6)
+# --------------------------------------------------------------------------
+
+
+def test_the_lattice_regrouping_also_conjugates_two_contracting_spirals():
+    """The GL(2,Z) ambiguity is NOT special to limit cycles.
+
+    Two contracting spirals with well-separated spectra -- (F3) holds
+    comfortably -- still admit the exact regrouping h(z1,z2) = (z1 z2/|z2|, z2)
+    carrying omega_1 -> omega_1 + omega_2.  So spectral separation does not
+    protect the rotation numbers, and 7's counterexample is not about
+    neutrality per se.
+
+    NOTE `beta=0.0` is passed explicitly: TwistBlock's default beta is 0.6, and
+    a sheared block is a different system.  That default silently broke an
+    earlier version of this check.
+    """
+    w1, w2 = 0.35, 1.10
+    A = S.ModularSystem([S.TwistBlock(s=0.92, omega=w1, beta=0.0),
+                         S.TwistBlock(s=0.55, omega=w2, beta=0.0)])
+    At = S.ModularSystem([S.TwistBlock(s=0.92, omega=w1 + w2, beta=0.0),
+                          S.TwistBlock(s=0.55, omega=w2, beta=0.0)])
+
+    def lattice(Z):
+        z1 = Z[..., 0] + 1j * Z[..., 1]
+        z2 = Z[..., 2] + 1j * Z[..., 3]
+        w = z1 * z2 / np.maximum(np.abs(z2), 1e-300)
+        return np.stack([w.real, w.imag, z2.real, z2.imag], -1)
+
+    rng = np.random.default_rng(0)
+    for donor_radius in (1.0, 1e-2, 1e-6):
+        th = rng.uniform(-np.pi, np.pi, 500)
+        r = rng.uniform(0.5, 1.2, 500)
+        th2 = rng.uniform(-np.pi, np.pi, 500)
+        Z = np.concatenate([
+            np.stack([r * np.cos(th), r * np.sin(th)], -1),
+            donor_radius * np.stack([np.cos(th2), np.sin(th2)], -1),
+        ], -1)
+        resid = np.abs(lattice(A.step(Z)) - At.step(lattice(Z))).max()
+        assert resid < 1e-12, f"donor radius {donor_radius}: {resid}"
+
+    # and (F3) holds for this system, so it is not what rules the map out
+    from idyn import spectra as SP
+    gap = SP.filtration_gap([np.array([np.log(0.92)] * 2), np.array([np.log(0.55)] * 2)])
+    assert gap.ordered and gap.gap > 0.4
+
+
+def test_F1_is_what_excludes_the_regrouping_for_a_contracting_module():
+    """||Dh|| ~ 1/|z_donor|, so (F1) bites iff the donor decays to zero.
+
+    This is the checkable diagnostic: bounded away from zero => the lattice
+    ambiguity is live; decaying => (F1) excludes it.  It is a *different*
+    quantity from `filtration_gap`.
+    """
+    rng = np.random.default_rng(1)
+
+    def min_donor_radius(sysm, lo, hi, T=30):
+        out = []
+        for _ in range(2):
+            th = rng.uniform(-np.pi, np.pi, 200)
+            r = rng.uniform(lo, hi, 200)
+            out.append(np.stack([r * np.cos(th), r * np.sin(th)], -1))
+        Z = sysm.simulate(np.concatenate(out, -1), T)
+        return float(np.hypot(Z[..., 2], Z[..., 3]).min())
+
+    spirals = S.ModularSystem([S.TwistBlock(s=0.92, omega=0.35, beta=0.0),
+                               S.TwistBlock(s=0.55, omega=1.10, beta=0.0)])
+    cycles = S.torus_regrouping_counterexample()["system"]
+
+    r_spiral = min_donor_radius(spirals, 0.5, 1.2)
+    r_cycle = min_donor_radius(cycles, 0.8, 1.2)
+    assert r_spiral < 1e-6, f"a contracting donor must reach ~0, got {r_spiral}"
+    assert r_cycle > 0.5, f"a limit-cycle donor must stay away from 0, got {r_cycle}"
+    # sup||Dh|| differs by seven orders of magnitude between the two
+    assert (1.0 / r_spiral) / (1.0 / r_cycle) > 1e6
