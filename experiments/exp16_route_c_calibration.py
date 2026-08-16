@@ -317,10 +317,20 @@ def main() -> int:
     hdr = (f"  {'arm':14} {'decoder':8} {'obs-nl':>7} {'F3 gap':>9} {'rot':>9} "
            f"{'rot null':>9} {'tier1':>9} {'t1 null':>9} {'dup':>5}  verdict")
     print(hdr)
-    for arm, sysm in arms.items():
-        for dk in ("linear", "mlp"):
+    for i, (arm, sysm) in enumerate(arms.items()):
+        for j, dk in enumerate(("linear", "mlp")):
             key = f"{arm}|{dk}"
-            c = run_cell(sysm, dk, SEED + abs(hash(key)) % 10_000, rng)
+            # Deterministic cell seed.  This used to be `abs(hash(key))`, and
+            # Python salts str hashing per process unless PYTHONHASHSEED is set,
+            # so the per-cell seeds were not recoverable from the JSON --
+            # against CLAUDE.md §8's reproducibility rule.  The committed
+            # `results/exp16_route_c.json` predates this fix and therefore
+            # records a run whose cell seeds cannot be reconstructed; a re-run
+            # will land on different seeds and, being a fitted structural
+            # readout (§3.11), slightly different numbers.  Every *verdict* in
+            # §11 is a sign or an order-of-magnitude comparison, so none of them
+            # turns on it.
+            c = run_cell(sysm, dk, SEED + 1000 * (i + 1) + 100 * j, rng)
             cells[key] = c
             v = ("ROT+SPEC" if c["identified_rotation"] and c["identified_spectrum"]
                  else "ROT only" if c["identified_rotation"]

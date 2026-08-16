@@ -29,6 +29,7 @@ __all__ = [
     "make_behavioural_dataset",
     "fit",
     "fit_many",
+    "warm_start_to_latents",
 ]
 
 
@@ -52,6 +53,11 @@ class TrainConfig:
     # block rather than by making it u-invariant.  False reproduces the exp11 /
     # exp12 runs, whose behavioural conclusions are void for that reason.
     behavior_whiten: bool = True
+    # Task 41: steps of supervised pretraining onto a designated latent
+    # representative before the ordinary objective takes over.  Ignored unless
+    # ``fit`` is given ``warm_z``.
+    warm_steps: int = 0
+    warm_lr: float = 3e-3
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -68,6 +74,11 @@ class FitResult:
     fit_quality: float = float("nan")
     history: list[float] = field(default_factory=list, repr=False)
     seed: int = 0
+    # Task 41: how well the warm start reached its designated representative,
+    # as a fraction of that representative's own variance.  NaN when no warm
+    # start ran.  Read it before reading anything else off an adversarial fit:
+    # if the warm start did not take, "the fit stayed put" is vacuous.
+    warm_residual: float = float("nan")
 
     def __repr__(self) -> str:
         return f"FitResult(seed={self.seed}, fit_quality={self.fit_quality:.4e})"
@@ -134,14 +145,79 @@ def make_behavioural_dataset(
     return X, Z, sample.U, dec
 
 
+def warm_start_to_latents(
+    model: LatentDynamicsModel,
+    Xt: torch.Tensor,
+    Zt: torch.Tensor,
+    steps: int,
+    lr: float,
+    gen: torch.Generator,
+    batch: int,
+) -> float:
+    """Drive ``model`` to a designated latent representative, then hand it back.
+
+    Task 41.  ``exp16`` showed that cross-split agreement is **necessary but not
+    sufficient** for identifiability: two halves fitted from random inits landed
+    on the same representative even for a system where non-identifiability is
+    proved, so the agreement measured estimator reproducibility rather than a
+    property of the data.  The repair is to stop letting the optimiser choose:
+    start the two fits at *deliberately different* representatives and let the
+    ordinary objective decide whether the data pulls them back together.
+
+    All three parts of the model are pushed at once, because a representative is
+    a property of the whole triple and pinning only one leaves the others free to
+    absorb the difference:
+
+    * the encoder is regressed onto ``Zt`` -- this is what actually *selects*
+      the representative;
+    * the decoder is teacher-forced from ``Zt`` back to ``Xt``;
+    * the transition is teacher-forced along ``Zt``, so the fitted dynamics start
+      out conjugate to the intended ones rather than to whatever the encoder's
+      initialisation implies.
+
+    Returns the final encoder residual as a fraction of ``Var(Zt)`` -- the
+    diagnostic that the warm start took.  **Read it first.**  A fit that never
+    reached its adversarial representative cannot testify that the data failed to
+    pull it away from one, and reporting "it stayed" off such a fit would be the
+    §3.9 family's error one more time: a number that describes the setup rather
+    than the system.
+    """
+    if steps <= 0:
+        return float("nan")
+    opt = torch.optim.Adam(model.parameters(), lr=lr)
+    n = Xt.shape[0]
+    for _ in range(steps):
+        idx = torch.randint(0, n, (min(batch, n),), generator=gen).to(Xt.device)
+        x, z = Xt[idx], Zt[idx]
+        enc = torch.mean((model.encode(x) - z) ** 2)
+        dec = torch.mean((model.dec(z) - x) ** 2)
+        dyn = torch.mean((model.dyn(z[:, :-1]) - z[:, 1:]) ** 2)
+        opt.zero_grad(set_to_none=True)
+        (enc + dec + dyn).backward()
+        opt.step()
+    with torch.no_grad():
+        num = torch.mean((model.encode(Xt) - Zt) ** 2)
+        den = torch.mean((Zt - Zt.mean(dim=(0, 1), keepdim=True)) ** 2)
+    return float((num / den.clamp_min(1e-12)).item())
+
+
 def fit(
-    X: np.ndarray, model_cfg: ModelConfig, cfg: TrainConfig, U: np.ndarray | None = None
+    X: np.ndarray,
+    model_cfg: ModelConfig,
+    cfg: TrainConfig,
+    U: np.ndarray | None = None,
+    warm_z: np.ndarray | None = None,
 ) -> FitResult:
     """Fit one model.  Returns the model and the latents it assigns to X.
 
     ``U`` (per-trajectory behaviour labels) is required when ``cfg.w_behavior > 0``:
     the behavioural penalty then drives the ``cfg.invariant_slice`` coordinates to
     be u-invariant (Route B).
+
+    ``warm_z`` (shape as ``X`` but with ``d`` channels) runs ``cfg.warm_steps`` of
+    supervised pretraining onto that latent representative first -- task 41's
+    adversarial initialisation.  The ordinary objective then runs unchanged, from
+    a fresh optimiser, so nothing about the fit itself is special-cased.
     """
     torch.manual_seed(cfg.seed)
     dev = torch.device(cfg.device)
@@ -153,8 +229,21 @@ def fit(
     Ut = None if U is None else torch.as_tensor(np.asarray(U), device=dev)
 
     model = LatentDynamicsModel(model_cfg).to(dev)
-    opt = torch.optim.Adam(model.parameters(), lr=cfg.lr, weight_decay=cfg.weight_decay)
     gen = torch.Generator(device="cpu").manual_seed(cfg.seed + 12345)
+
+    warm_residual = float("nan")
+    if warm_z is not None and cfg.warm_steps > 0:
+        Zw = torch.as_tensor(np.asarray(warm_z, dtype=np.float32), device=dev)
+        if Zw.shape[:2] != Xt.shape[:2] or Zw.shape[-1] != model_cfg.d:
+            raise ValueError(
+                f"warm_z has shape {tuple(Zw.shape)}; expected {tuple(Xt.shape[:2])} + (d={model_cfg.d},)"
+            )
+        warm_residual = warm_start_to_latents(
+            model, Xt, Zw, cfg.warm_steps, cfg.warm_lr, gen, cfg.batch
+        )
+
+    # A fresh optimiser, so no warm-start momentum leaks into the real fit.
+    opt = torch.optim.Adam(model.parameters(), lr=cfg.lr, weight_decay=cfg.weight_decay)
 
     n = Xt.shape[0]
     history: list[float] = []
@@ -188,6 +277,7 @@ def fit(
         fit_quality=float(full["fit_quality"].item()),
         history=history,
         seed=cfg.seed,
+        warm_residual=warm_residual,
     )
 
 

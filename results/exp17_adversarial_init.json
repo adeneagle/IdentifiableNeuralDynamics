@@ -1,0 +1,1081 @@
+{
+  "seed": 20260816,
+  "predictions": {
+    "1_C_keeps_its_adversarial_start": "arm C is provably non-identifiable, so the R2 fits stay at R2",
+    "2_B_keeps_its_adversarial_start": "same for the \u00a73.1 regrouping, where h is a permutation",
+    "3_A_returns": "arm A's alternative has ||Dh|| ~ 1e8, so it cannot be held: the fits return to R1",
+    "4_E_returns": "arm E's target is not a conjugacy at all, so the data must reject it",
+    "5_min_radius_predicts_survival_and_F3_does_not": "min|z_donor| separates A from C; filtration_gap orders them the other way",
+    "6_matched_warm_starts_still_agree": "warm-starting BOTH halves at R1 reproduces exp16's agreement"
+  },
+  "params": {
+    "partition": [
+      2,
+      2
+    ],
+    "n_obs": 24,
+    "n_traj": 40,
+    "T": 30,
+    "steps": 60,
+    "warm_steps": 40,
+    "n_restarts": 2,
+    "spec_tol": 0.05,
+    "rot_tol": 0.01,
+    "escape_c": 0.8,
+    "generating_decoder": "linear",
+    "fitted_encoder": "mlp",
+    "fitted_decoder": "mlp"
+  },
+  "part0_analytic": {
+    "A_spirals": {
+      "conjugacy_defect": 6.111645010016778e-16,
+      "min_donor_radius": 8.125927666155447e-09
+    },
+    "C_cycles": {
+      "conjugacy_defect": 1.0667812654602304e-15,
+      "min_donor_radius": 0.8000146467401558
+    },
+    "B_regroup": {
+      "conjugacy_defect": 0.0,
+      "min_donor_radius": 1.0606172281618248e-09
+    },
+    "E_escape": {
+      "conjugacy_defect": NaN,
+      "min_donor_radius": 8.125927666155447e-09,
+      "offblock_mass": 0.43052082597336055
+    }
+  },
+  "arms": {
+    "A_spirals": {
+      "why": "exact conjugacy, but (F1) fails: donor decays, ||Dh|| ~ 1e8",
+      "expect_survives": false,
+      "discriminating_invariant": "rotation",
+      "conjugacy_defect": 4.2617472631911947e-16,
+      "min_donor_radius": 8.215742292111618e-09,
+      "separation": {
+        "rotation": 0.17507043740108486,
+        "spectrum": 0.0,
+        "used": 0.17507043740108486
+      },
+      "warm_residual_true": 0.09886472299695015,
+      "warm_residual_adv": 0.5074116885662079,
+      "fit_quality_matched": 0.057454800233244896,
+      "fit_quality_adv": 0.10613102838397026,
+      "matched": {
+        "rotation": 0.05177539950115444,
+        "spectrum": 0.0227846962115976,
+        "n_pairs": 4
+      },
+      "adversarial": {
+        "rotation": 0.029680519101000377,
+        "spectrum": 0.04258494104157201,
+        "n_pairs": 4
+      },
+      "matched_to_R1": {
+        "rotation": 0.10701720903878002,
+        "spectrum": 0.40065335786511624
+      },
+      "adv_to_R1": {
+        "rotation": 0.13235059348663597,
+        "spectrum": 0.3826350124004926
+      },
+      "adv_to_R2": {
+        "rotation": 0.16717564225059317,
+        "spectrum": 0.3826350124004926
+      },
+      "return_threshold": 0.32105162711634005,
+      "survived": false,
+      "verdict_correct": true,
+      "n_closer_to_R2": 0,
+      "n_adv_fits": 2,
+      "filtration_gap_median": 0.14304500037944054,
+      "duplicate_flagged": 0,
+      "fingerprints": {
+        "half1_R1": [
+          {
+            "partition": [
+              2,
+              2
+            ],
+            "spectra": [
+              [
+                -0.04504057761382614,
+                -0.06278467599145375
+              ],
+              [
+                -0.17496858402504017,
+                -0.1793992969083003
+              ]
+            ],
+            "rotations": [
+              0.048210196933913985,
+              0.08105895453485057
+            ],
+            "coherences": [
+              0.9638033135224437,
+              0.6622239205186686
+            ]
+          },
+          {
+            "partition": [
+              2,
+              2
+            ],
+            "spectra": [
+              [
+                -0.042383181256883014,
+                -0.05477562113834976
+              ],
+              [
+                -0.17781756213147606,
+                -0.18112062233705178
+              ]
+            ],
+            "rotations": [
+              0.0468584871855518,
+              0.04501031507550304
+            ],
+            "coherences": [
+              0.9602741182961642,
+              0.7384073695904247
+            ]
+          }
+        ],
+        "half2_R1": [
+          {
+            "partition": [
+              2,
+              2
+            ],
+            "spectra": [
+              [
+                -0.04148640494939399,
+                -0.05503757843590813
+              ],
+              [
+                -0.21384198514943192,
+                -0.21587307406342626
+              ]
+            ],
+            "rotations": [
+              0.05349899066980178,
+              0.016277828861150416
+            ],
+            "coherences": [
+              0.9864373747761872,
+              0.8512524340196524
+            ]
+          },
+          {
+            "partition": [
+              2,
+              2
+            ],
+            "spectra": [
+              [
+                -0.04066528588738629,
+                -0.05323970658621441
+              ],
+              [
+                -0.18052530063157168,
+                -0.18409149780619044
+              ]
+            ],
+            "rotations": [
+              0.0538138989412541,
+              0.1198286278634593
+            ],
+            "coherences": [
+              0.987008484487912,
+              0.647563851133982
+            ]
+          }
+        ],
+        "half2_R2": [
+          {
+            "partition": [
+              2,
+              2
+            ],
+            "spectra": [
+              [
+                -0.023747903106445856,
+                -0.03517900875143244
+              ],
+              [
+                -0.1950221997356522,
+                -0.19893899418066127
+              ]
+            ],
+            "rotations": [
+              0.0548387662975037,
+              0.047198713315104474
+            ],
+            "coherences": [
+              0.9921789028246,
+              0.7330042359877091
+            ]
+          },
+          {
+            "partition": [
+              2,
+              2
+            ],
+            "spectra": [
+              [
+                -0.04346400995219986,
+                -0.05317638955211031
+              ],
+              [
+                -0.23538177697459878,
+                -0.2361144457199925
+              ]
+            ],
+            "rotations": [
+              0.07235928416780646,
+              0.038240974513793324
+            ],
+            "coherences": [
+              0.9907386702071059,
+              0.789877096395954
+            ]
+          }
+        ],
+        "target_R1": {
+          "partition": [
+            2,
+            2
+          ],
+          "spectra": [
+            [
+              -0.08338160893905025,
+              -0.08338160893905025
+            ],
+            [
+              -0.5978370007556181,
+              -0.5978370007556181
+            ]
+          ],
+          "rotations": [
+            0.055704230082163395,
+            0.17507043740108488
+          ],
+          "coherences": [
+            0.9999999999999999,
+            1.0
+          ]
+        },
+        "target_R2": {
+          "partition": [
+            2,
+            2
+          ],
+          "spectra": [
+            [
+              -0.08338160893905025,
+              -0.08338160893905025
+            ],
+            [
+              -0.5978370007556181,
+              -0.5978370007556181
+            ]
+          ],
+          "rotations": [
+            0.23077466748324826,
+            0.17507043740108488
+          ],
+          "coherences": [
+            1.0000000000000002,
+            1.0
+          ]
+        }
+      }
+    },
+    "C_cycles": {
+      "why": "exact conjugacy with (F1) holding: donor stays on its cycle",
+      "expect_survives": true,
+      "discriminating_invariant": "rotation",
+      "conjugacy_defect": 1.080660450709402e-15,
+      "min_donor_radius": 0.8001234693475268,
+      "separation": {
+        "rotation": 0.20690142601946393,
+        "spectrum": 1.33920652345408e-18,
+        "used": 0.20690142601946393
+      },
+      "warm_residual_true": 0.006611556280404329,
+      "warm_residual_adv": 0.2764246314764023,
+      "fit_quality_matched": 0.0006871617515571415,
+      "fit_quality_adv": 0.011663710698485374,
+      "matched": {
+        "rotation": 0.0007079405978882014,
+        "spectrum": 0.02755272025618774,
+        "n_pairs": 4
+      },
+      "adversarial": {
+        "rotation": 0.06658033401391061,
+        "spectrum": 0.2113876813868767,
+        "n_pairs": 4
+      },
+      "matched_to_R1": {
+        "rotation": 0.0003786248846636142,
+        "spectrum": 0.8751194416738517
+      },
+      "adv_to_R1": {
+        "rotation": 0.06687724438496508,
+        "spectrum": 0.6807732125362183
+      },
+      "adv_to_R2": {
+        "rotation": 0.10317381738260256,
+        "spectrum": 0.6807732125362183
+      },
+      "return_threshold": 0.02,
+      "survived": true,
+      "verdict_correct": true,
+      "n_closer_to_R2": 1,
+      "n_adv_fits": 2,
+      "filtration_gap_median": -0.05181667838644445,
+      "duplicate_flagged": 0,
+      "fingerprints": {
+        "half1_R1": [
+          {
+            "partition": [
+              2,
+              2
+            ],
+            "spectra": [
+              [
+                0.012654026601010745,
+                -0.04689685247687358
+              ],
+              [
+                -0.005235204449021437,
+                -0.42216467079268033
+              ]
+            ],
+            "rotations": [
+              0.07956491963896711,
+              0.20687176520514233
+            ],
+            "coherences": [
+              0.9997346384921568,
+              0.9994790039610277
+            ]
+          },
+          {
+            "partition": [
+              2,
+              2
+            ],
+            "spectra": [
+              [
+                0.008745878277672193,
+                -0.051571726839156805
+              ],
+              [
+                0.003465974695456911,
+                -0.3896855141705205
+              ]
+            ],
+            "rotations": [
+              0.08014163147373499,
+              0.2062724554073364
+            ],
+            "coherences": [
+              0.9999047707421547,
+              0.9997822112640647
+            ]
+          }
+        ],
+        "half2_R1": [
+          {
+            "partition": [
+              2,
+              2
+            ],
+            "spectra": [
+              [
+                0.009824193150608267,
+                -0.04991316665522013
+              ],
+              [
+                -0.0013175114169449403,
+                -0.391655790844044
+              ]
+            ],
+            "rotations": [
+              0.07967573348381285,
+              0.20710771136959555
+            ],
+            "coherences": [
+              0.9998863209958866,
+              0.9992400857723436
+            ]
+          },
+          {
+            "partition": [
+              2,
+              2
+            ],
+            "spectra": [
+              [
+                0.012110263857409296,
+                -0.03242941374536655
+              ],
+              [
+                -0.0013225993740306045,
+                -0.4467612313564195
+              ]
+            ],
+            "rotations": [
+              0.07947022299611603,
+              0.2074523904386596
+            ],
+            "coherences": [
+              0.9999919603106708,
+              0.9997715161885357
+            ]
+          }
+        ],
+        "half2_R2": [
+          {
+            "partition": [
+              2,
+              2
+            ],
+            "spectra": [
+              [
+                -0.0025427269236195306,
+                -0.7906606760911232
+              ],
+              [
+                0.0008549810738999134,
+                -0.41416378661923536
+              ]
+            ],
+            "rotations": [
+              0.28616613429861876,
+              0.20681420901744996
+            ],
+            "coherences": [
+              0.992733107310434,
+              0.9969421748210301
+            ]
+          },
+          {
+            "partition": [
+              2,
+              2
+            ],
+            "spectra": [
+              [
+                0.013150048028471324,
+                -0.056871252056618235
+              ],
+              [
+                -0.0010073428631695047,
+                -0.36788531331736984
+              ]
+            ],
+            "rotations": [
+              0.08044402606699934,
+              0.20038367472103608
+            ],
+            "coherences": [
+              0.993747599881672,
+              0.8312775728066886
+            ]
+          }
+        ],
+        "target_R1": {
+          "partition": [
+            2,
+            2
+          ],
+          "spectra": [
+            [
+              2.925668966350751e-17,
+              -0.9162907318741451
+            ],
+            [
+              2.870389111582956e-17,
+              -0.9162907318741451
+            ]
+          ],
+          "rotations": [
+            0.07957747154594767,
+            0.20690142601946396
+          ],
+          "coherences": [
+            1.0000000000000002,
+            1.0000000000000002
+          ]
+        },
+        "target_R2": {
+          "partition": [
+            2,
+            2
+          ],
+          "spectra": [
+            [
+              3.059589618696159e-17,
+              -0.9162907318741451
+            ],
+            [
+              2.870389111582956e-17,
+              -0.9162907318741451
+            ]
+          ],
+          "rotations": [
+            0.2864788975654116,
+            0.20690142601946396
+          ],
+          "coherences": [
+            1.0,
+            1.0000000000000002
+          ]
+        }
+      }
+    },
+    "B_regroup": {
+      "why": "h is a permutation: ||Dh|| = 1, the \u00a73.1 counterexample",
+      "expect_survives": true,
+      "discriminating_invariant": "spectrum",
+      "conjugacy_defect": 0.0,
+      "min_donor_radius": 2.799854113817773e-08,
+      "separation": {
+        "rotation": 3.8329217599945937e-13,
+        "spectrum": 0.22314355131420555,
+        "used": 0.22314355131420555
+      },
+      "warm_residual_true": 0.12716516107320786,
+      "warm_residual_adv": 0.11816111207008362,
+      "fit_quality_matched": 0.07858284562826157,
+      "fit_quality_adv": 0.07080313563346863,
+      "matched": {
+        "rotation": 0.0014559197794670525,
+        "spectrum": 0.11720137833105193,
+        "n_pairs": 4
+      },
+      "adversarial": {
+        "rotation": 0.0017339237597263073,
+        "spectrum": 0.26193276220684264,
+        "n_pairs": 4
+      },
+      "matched_to_R1": {
+        "rotation": 0.0019747424368501444,
+        "spectrum": 0.3063590664010666
+      },
+      "adv_to_R1": {
+        "rotation": 0.0019992814075805447,
+        "spectrum": 0.42103838804684146
+      },
+      "adv_to_R2": {
+        "rotation": 0.0019992814077721965,
+        "spectrum": 0.42103838804684146
+      },
+      "return_threshold": 0.9190771992031997,
+      "survived": false,
+      "verdict_correct": false,
+      "n_closer_to_R2": 0,
+      "n_adv_fits": 2,
+      "filtration_gap_median": 0.2713047913400133,
+      "duplicate_flagged": 0,
+      "fingerprints": {
+        "half1_R1": [
+          {
+            "partition": [
+              2,
+              2
+            ],
+            "spectra": [
+              [
+                -0.09482667584815932,
+                -0.2735108944660857
+              ],
+              [
+                -0.5627187922014504,
+                -1.042638296675951
+              ]
+            ],
+            "rotations": [
+              0.0012076027952041912,
+              0.000313203012622536
+            ],
+            "coherences": [
+              0.999495885700497,
+              0.9996617686474518
+            ]
+          },
+          {
+            "partition": [
+              2,
+              2
+            ],
+            "spectra": [
+              [
+                -0.1061356554201717,
+                -0.2801816351852524
+              ],
+              [
+                -0.5335833201299143,
+                -1.112652318500173
+              ]
+            ],
+            "rotations": [
+              -0.004119442354138296,
+              -0.00019852123268107908
+            ],
+            "coherences": [
+              0.9997467612954614,
+              0.9998711931142255
+            ]
+          }
+        ],
+        "half2_R1": [
+          {
+            "partition": [
+              2,
+              2
+            ],
+            "spectra": [
+              [
+                -0.07922529951162202,
+                -0.22023039419667184
+              ],
+              [
+                -0.5684970413893363,
+                -0.9876653842877834
+              ]
+            ],
+            "rotations": [
+              -0.002873163822965451,
+              -4.6706399708243856e-05
+            ],
+            "coherences": [
+              0.9997067157858575,
+              0.9999673508111232
+            ]
+          },
+          {
+            "partition": [
+              2,
+              2
+            ],
+            "spectra": [
+              [
+                -0.08675812322531348,
+                -0.23265806884302428
+              ],
+              [
+                -0.5956559285524757,
+                -1.2220681409498872
+              ]
+            ],
+            "rotations": [
+              0.001076321051501422,
+              0.00010144333376487713
+            ],
+            "coherences": [
+              0.9997891230294023,
+              0.9999124582488608
+            ]
+          }
+        ],
+        "half2_R2": [
+          {
+            "partition": [
+              2,
+              2
+            ],
+            "spectra": [
+              [
+                -0.10098522589189174,
+                -0.5387790270325117
+              ],
+              [
+                -0.30110049144151796,
+                -1.0983218942604096
+              ]
+            ],
+            "rotations": [
+              -0.0021684773188037692,
+              0.0006272090463361423
+            ],
+            "coherences": [
+              0.9998207943772139,
+              0.9999240545669077
+            ]
+          },
+          {
+            "partition": [
+              2,
+              2
+            ],
+            "spectra": [
+              [
+                -0.11075378112391614,
+                -0.5110220420830959
+              ],
+              [
+                -0.2909765622697203,
+                -1.3407702742688108
+              ]
+            ],
+            "rotations": [
+              -0.00011977390966886247,
+              0.0018300854967406239
+            ],
+            "coherences": [
+              0.9997177558071559,
+              0.9997726935486579
+            ]
+          }
+        ],
+        "target_R1": {
+          "partition": [
+            2,
+            2
+          ],
+          "spectra": [
+            [
+              -0.10536051565782664,
+              -0.2876820724517832
+            ],
+            [
+              -0.5108256237659887,
+              -0.7985076962177687
+            ]
+          ],
+          "rotations": [
+            3.8329217599945937e-13,
+            1.1197506765646247e-17
+          ],
+          "coherences": [
+            1.0,
+            1.0
+          ]
+        },
+        "target_R2": {
+          "partition": [
+            2,
+            2
+          ],
+          "spectra": [
+            [
+              -0.10536051565782664,
+              -0.5108256237659887
+            ],
+            [
+              -0.2876820724517832,
+              -0.7985076962177687
+            ]
+          ],
+          "rotations": [
+            0.0,
+            0.0
+          ],
+          "coherences": [
+            1.0,
+            1.0
+          ]
+        }
+      }
+    },
+    "E_escape": {
+      "why": "not a modular conjugacy at all -- the data must reject it",
+      "expect_survives": false,
+      "discriminating_invariant": "rotation",
+      "conjugacy_defect": NaN,
+      "min_donor_radius": 8.536533469003502e-09,
+      "separation": {
+        "rotation": 0.0,
+        "spectrum": 0.0,
+        "used": 0.0
+      },
+      "warm_residual_true": 0.0923176109790802,
+      "warm_residual_adv": 0.10076626762747765,
+      "fit_quality_matched": 0.05493602156639099,
+      "fit_quality_adv": 0.05613958090543747,
+      "matched": {
+        "rotation": 0.045777276134558856,
+        "spectrum": 0.04557985977541555,
+        "n_pairs": 4
+      },
+      "adversarial": {
+        "rotation": 0.045777276134558856,
+        "spectrum": 0.04145086692977468,
+        "n_pairs": 4
+      },
+      "matched_to_R1": {
+        "rotation": 0.12808073112367063,
+        "spectrum": 0.4473829874288825
+      },
+      "adv_to_R1": {
+        "rotation": 0.12044543097969189,
+        "spectrum": 0.4311571743182672
+      },
+      "adv_to_R2": null,
+      "return_threshold": 0.3842421933710119,
+      "survived": false,
+      "verdict_correct": true,
+      "n_closer_to_R2": 0,
+      "n_adv_fits": 2,
+      "filtration_gap_median": 0.09512285080265678,
+      "duplicate_flagged": 0,
+      "fingerprints": {
+        "half1_R1": [
+          {
+            "partition": [
+              2,
+              2
+            ],
+            "spectra": [
+              [
+                -0.029454401578517454,
+                -0.042872935271420574
+              ],
+              [
+                -0.22140682093677758,
+                -0.22166968636030737
+              ]
+            ],
+            "rotations": [
+              0.05913376507980608,
+              0.018483346893983288
+            ],
+            "coherences": [
+              0.997135476521329,
+              0.850259146086055
+            ]
+          },
+          {
+            "partition": [
+              2,
+              2
+            ],
+            "spectra": [
+              [
+                -0.03134127624435865,
+                -0.0436837072078704
+              ],
+              [
+                -0.13850508707722822,
+                -0.14687081028833618
+              ]
+            ],
+            "rotations": [
+              0.05805860278808915,
+              0.110037899163101
+            ],
+            "coherences": [
+              0.9981624058677482,
+              0.6002361984199753
+            ]
+          }
+        ],
+        "half2_R1": [
+          {
+            "partition": [
+              2,
+              2
+            ],
+            "spectra": [
+              [
+                -0.05064043368304373,
+                -0.06683845400877893
+              ],
+              [
+                -0.14645734394100318,
+                -0.1530595132022657
+              ]
+            ],
+            "rotations": [
+              0.06211088016346204,
+              0.056232328378520866
+            ],
+            "coherences": [
+              0.9983830212061868,
+              0.684775376277992
+            ]
+          },
+          {
+            "partition": [
+              2,
+              2
+            ],
+            "spectra": [
+              [
+                -0.05554485757088011,
+                -0.06713163859595668
+              ],
+              [
+                -0.15445068271246792,
+                -0.1600871145019335
+              ]
+            ],
+            "rotations": [
+              0.056619362250754146,
+              0.03774708417630763
+            ],
+            "coherences": [
+              0.9923052342590313,
+              0.7374390841859071
+            ]
+          }
+        ],
+        "half2_R2": [
+          {
+            "partition": [
+              2,
+              2
+            ],
+            "spectra": [
+              [
+                -0.05143553206852473,
+                -0.05269811869117617
+              ],
+              [
+                -0.19216825207442473,
+                -0.1938047636009561
+              ]
+            ],
+            "rotations": [
+              0.057359080777644254,
+              0.019108387388109844
+            ],
+            "coherences": [
+              0.998188929732543,
+              0.826659744659894
+            ]
+          },
+          {
+            "partition": [
+              2,
+              2
+            ],
+            "spectra": [
+              [
+                -0.03938568145286535,
+                -0.04576707906432123
+              ],
+              [
+                -0.14119140080027698,
+                -0.1490513467482082
+              ]
+            ],
+            "rotations": [
+              0.05829109920310527,
+              0.09014162545467613
+            ],
+            "coherences": [
+              0.9947475095679348,
+              0.6312457563155589
+            ]
+          }
+        ],
+        "target_R1": {
+          "partition": [
+            2,
+            2
+          ],
+          "spectra": [
+            [
+              -0.08338160893905025,
+              -0.08338160893905025
+            ],
+            [
+              -0.5978370007556181,
+              -0.5978370007556181
+            ]
+          ],
+          "rotations": [
+            0.055704230082163395,
+            0.17507043740108488
+          ],
+          "coherences": [
+            0.9999999999999999,
+            1.0
+          ]
+        },
+        "target_R2": null
+      }
+    }
+  },
+  "part3_predictor": {
+    "survived": {
+      "A_spirals": false,
+      "C_cycles": true,
+      "B_regroup": false,
+      "E_escape": false
+    },
+    "min_donor_radius": {
+      "A_spirals": 8.215742292111618e-09,
+      "C_cycles": 0.8001234693475268,
+      "B_regroup": 2.799854113817773e-08,
+      "E_escape": 8.536533469003502e-09
+    },
+    "filtration_gap": {
+      "A_spirals": 0.14304500037944054,
+      "C_cycles": -0.05181667838644445,
+      "B_regroup": 0.2713047913400133,
+      "E_escape": 0.09512285080265678
+    }
+  },
+  "checks": [
+    {
+      "name": "A and C's alternatives are exact conjugacies",
+      "ok": true
+    },
+    {
+      "name": "the \u00a73.1 permutation is an exact conjugacy",
+      "ok": true
+    },
+    {
+      "name": "(F1) separates A from C by >=6 orders of magnitude",
+      "ok": true
+    },
+    {
+      "name": "arm E's map is provably not a modular conjugacy",
+      "ok": true
+    },
+    {
+      "name": "the adversarial warm start actually took (arms B, C, E)",
+      "ok": false
+    },
+    {
+      "name": "matched warm starts still agree, in every arm",
+      "ok": false
+    },
+    {
+      "name": "ESCAPE CONTROL: arm E abandons a non-conjugacy start",
+      "ok": true
+    },
+    {
+      "name": "arm C keeps its adversarial representative (correctly)",
+      "ok": true
+    },
+    {
+      "name": "arm B keeps its adversarial representative (correctly)",
+      "ok": false
+    },
+    {
+      "name": "arm A returns to the true one (correctly)",
+      "ok": true
+    },
+    {
+      "name": "every surviving arm ends nearer R2 than R1",
+      "ok": false
+    },
+    {
+      "name": "the protocol's verdict is right in all four arms",
+      "ok": false
+    },
+    {
+      "name": "min|z_donor| predicts survival for the A/C pair and (F3) does not",
+      "ok": true
+    }
+  ],
+  "n_pass": 8,
+  "n_checks": 13,
+  "runtime_s": 155.3
+}
