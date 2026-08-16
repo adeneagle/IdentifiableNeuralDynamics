@@ -300,6 +300,27 @@ def min_donor_radius(Z: np.ndarray) -> float:
     return min_module_radius(Z)[1]
 
 
+def sup_dh(h, Z: np.ndarray, eps: float = 1e-7, n: int = 4000,
+           seed: int = 0) -> float:
+    """sup ||Dh|| over the visited region, by finite differences.
+
+    (F1)'s quantity, measured rather than inferred.  ``1/min|z_donor|`` is the
+    right estimate for the *lattice* map and for nothing else -- a coordinate
+    permutation has ``||Dh|| = 1`` however small its blocks get -- so a single
+    formula applied across arms would report an ambiguity where there is none.
+    """
+    Z = np.asarray(Z, float).reshape(-1, D)
+    r = np.random.default_rng(seed)
+    idx = r.choice(Z.shape[0], size=min(n, Z.shape[0]), replace=False)
+    P = Z[idx]
+    J = np.empty((P.shape[0], D, D))
+    for j in range(D):
+        e = np.zeros(D)
+        e[j] = eps
+        J[:, :, j] = (h(P + e) - h(P - e)) / (2.0 * eps)
+    return float(np.linalg.svd(J, compute_uv=False)[:, 0].max())
+
+
 def fingerprint(system, z0s, T=400, warmup=100):
     return M.dynamical_fingerprint(system, z0s, T=T, warmup=warmup, T_rotation=T)
 
@@ -633,27 +654,36 @@ def main() -> int:
     print("  No fitting.  A map that is not an exact modular conjugacy is not an")
     print("  alternative representation of the same observations, and an arm built")
     print("  on one would be testing nothing.\n")
-    print(f"  {'arm':12} {'conj defect':>12} {'min|z_donor|':>13} {'sup||Dh||~':>11}  expectation")
+    print(f"  {'arm':12} {'conj defect':>12} {'min|z_mod|':>22} {'sup||Dh||':>11}  expectation")
     pre: dict = {}
     for name, spec in A.items():
         r = np.random.default_rng(SEED + 7)
         lo, hi = spec["radius"]
         Z = spec["system"].simulate(annulus_z0(r, 200, lo, hi), T_STEPS)
         cd = conjugacy_defect(spec["system"], spec["alt"], spec["h"], Z.reshape(-1, D))
-        mr = min_donor_radius(Z)
-        pre[name] = {"conjugacy_defect": cd, "min_donor_radius": mr}
-        print(f"  {name:12} {cd:12.2e} {mr:13.2e} {1.0 / max(mr, 1e-300):11.1e}  "
+        mods = min_module_radius(Z)
+        dh = sup_dh(spec["h"], Z)
+        pre[name] = {"conjugacy_defect": cd, "min_module_radius": mods,
+                     "min_donor_radius": mods[1], "sup_dh": dh}
+        radii = "  ".join(f"{v:.1e}" for v in mods)
+        print(f"  {name:12} {cd:12.2e} {radii:>22} {dh:11.1e}  "
               f"{'survives' if spec['expect_survives'] else 'must not'}")
     rec["part0_analytic"] = pre
+    print("\n  (F1) is about sup||Dh||, and only for the lattice map is that")
+    print("  1/min|z_donor|.  Arm B's h is a permutation and arm E's is affine, so")
+    print("  their derivatives stay O(1) however small their blocks get -- which")
+    print("  is why the bound is measured per arm rather than inferred from one")
+    print("  formula.  A and C are the pair the comparison is about.")
 
     checks.append(("A and C's alternatives are exact conjugacies",
                    max(pre["A_spirals"]["conjugacy_defect"],
                        pre["C_cycles"]["conjugacy_defect"]) < 1e-10))
     checks.append(("the sec-3.1 permutation is an exact conjugacy",
                    pre["B_regroup"]["conjugacy_defect"] < 1e-12))
-    checks.append(("(F1) separates A from C by >=6 orders of magnitude",
-                   pre["A_spirals"]["min_donor_radius"]
-                   < 1e-6 * pre["C_cycles"]["min_donor_radius"]))
+    checks.append(("(F1) separates A from C by >=5 orders of magnitude in sup||Dh||",
+                   pre["A_spirals"]["sup_dh"] > 1e5 * pre["C_cycles"]["sup_dh"]))
+    checks.append(("arm B's permutation has ||Dh|| = 1 however small its blocks get",
+                   abs(pre["B_regroup"]["sup_dh"] - 1.0) < 1e-3))
 
     off = escape_offblock()
     pre["E_escape"]["offblock_mass"] = off
