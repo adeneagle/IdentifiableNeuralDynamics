@@ -1739,9 +1739,17 @@ optimiser explores the ambiguity. It should instead be made to:
 Both alternative representatives already exist in code
 (`regrouping_counterexample` returns `system_tilde`,
 `torus_regrouping_counterexample` returns the lattice image), and arm C is the
-known-answer case that says whether the fix works. Until that is run, **§10.3's
-MC_Maze conclusion should be stated as estimator reproducibility across neuron
-samples, not as identifiability.**
+known-answer case that says whether the fix works.
+
+> **BUILT AND RUN — see §12 (`exp17`, 2026-08-16). It works.** Under adversarial
+> initialisation arm C's cross-split agreement goes $0.00018 \to 0.1271$ on the
+> *same* metric, i.e. the false positive above becomes a correct rejection, and
+> the escape control still returns to the truth at $0.0001$. Verdict correct in
+> all four arms.
+>
+> **§10.3's MC_Maze conclusion is still estimator reproducibility, not
+> identifiability**, because the adversarial test has not been run on that data —
+> §12.6 says how it can be, using the lattice image of the *fitted* latents.
 
 ### 11.6 What actually protects a contracting module: (F1), not (F3)
 
@@ -1798,3 +1806,169 @@ class can *represent* the alternative. Warm-starting a linear encoder at a
 nonlinear representative measures how fast the projection back onto the linear
 class happens, not whether the data pins the representation. **`encoder="mlp"`
 is therefore a requirement of the test, not a variant of it.**
+
+---
+
+## 12. Adversarial initialisation — `exp17`, and task 41 closed
+
+**NEW (2026-08-16).** §11.3(a) left the method with a hole: the split-and-compare
+protocol returned *identified* on arm C, two limit cycles, where
+non-identifiability is **proved**. Both fits happened to land on the same
+lattice representative, so what §10.3 measured was estimator reproducibility
+across neuron samples. This section closes that.
+
+### 12.1 The fix, and why the readout had to change too
+
+Stop letting the optimiser choose the representative:
+
+> warm-start the two halves at **deliberately different** representatives, then
+> train normally and see whether the data pulls them back together.
+
+`train.warm_start_to_latents` drives encoder, decoder and transition onto a
+designated latent representative; ordinary training then runs unchanged from a
+fresh optimiser.
+
+The scored quantity is **not** fit-to-fit agreement. Reusing it would inherit
+the defect being repaired, so the primary readout asks the direct question —
+*is this fit nearer R1 or nearer R2* — against the two analytic targets, on the
+invariant and the modules the construction says separate them. Those are fixed
+before any fit runs, because $h$ is written down.
+
+**Restricting to the informative modules is required, not a convenience.** A
+module where R1 and R2 agree cannot say which representative a fit picked, and
+on a contracting system it is exactly the module the data does not constrain.
+Measured: the module the lattice map moves comes back to $3\times10^{-4}$ at
+every donor rate, while the donor's own rotation number is never recovered
+($0.0039$ against a true $0.1751$ at $s=0.55$, still $0.1101$ at $s=0.80$).
+`invariant_agreement` reports a **max** over modules, so an unrestricted
+comparison would have decided arm A entirely on an invariant nobody measured —
+§3.13(b), and the mirror image of §11.3(f)'s comparison that cannot fail.
+`AgreementReport` now also carries `per_module_spectrum` / `per_module_rotation`.
+
+### 12.2 The arms, and the analytic pre-flight
+
+| arm | $h$ | conjugacy defect | $\sup\lVert Dh\rVert$ | truth |
+|---|---|---|---|---|
+| A spirals | lattice $z_1\mapsto z_1z_2/\lvert z_2\rvert$ | $6.1\times10^{-16}$ | $1.3\times10^{6}$ | (F1) fails |
+| C cycles | same | $1.1\times10^{-15}$ | $1.9$ | (F1) holds; **not identifiable** |
+| B regroup | coordinate permutation | $0$ | $1.0000$ | (F1) holds; **not identifiable** |
+| E escape | $(z_1+cz_2,\ z_2)$ | — | $1.477$ | **not a conjugacy** |
+
+Arm E is the load-bearing control (§3.11): $HFH^{-1}$ carries **0.4305** of its
+mass off-block, so no modular $\tilde F$ conjugates through that $h$. Without
+it, "the fit stayed at R2" would be unattributable — it could be inertia.
+
+> $\sup\lVert Dh\rVert$ is now **measured**, not inferred. $1/\min\lvert z_2\rvert$
+> is the right estimate for the lattice map and for nothing else: arm B's blocks
+> decay to $1.2\times10^{-5}$ and its permutation still has $\lVert Dh\rVert=1$
+> exactly. Arm E's $1.477$ matches $\lVert[[I,0.8I],[0,I]]\rVert$ analytically,
+> which is what makes the measurement a measurement.
+
+### 12.3 Reachability: (F1) as an empirical statement
+
+Warm-start residual against warm-start budget, no main training — and, at the
+largest budget, what the warm-started model's **fingerprint** reads:
+
+| arm | at R1 | at R2 (200 / 800 / 3200) | ratio | fingerprint reads |
+|---|---|---|---|---|
+| A | $0.0013$ | $0.1922 \to 0.0912 \to 0.0589$ | $45\times$ | **R1** ($0.0556$ vs $0.0881$) |
+| C | $0.0001$ | $0.0012 \to 0.0004 \to 0.0003$ | $3\times$ | **R2** ($0.0043$ vs $0.1313$) |
+| B | $0.0039$ | $0.0144 \to 0.0243 \to 0.0033$ | $0.85\times$ | **R2** ($0.0743$ vs $0.1208$) |
+
+**My pre-registered prediction here was wrong and the check fails** (1 of 19):
+I predicted arm A's alternative would stay unreachable at $>0.25$, and it
+reaches $0.0589$. The correct statement is sharper. Arm A's alternative is
+reachable *in latent values* to $6\%$ and is still not reachable **as a model** —
+the warm-started dynamics read R1. So (F1) does not make the alternative
+unrepresentable pointwise; it makes it unrepresentable as a *conjugacy*, which
+is where (F1) actually lives.
+
+Checking the fingerprint and not only the encoder residual is what made that
+visible. An encoder sitting on R2 with a transition still at its initialisation
+would have made every downstream verdict meaningless.
+
+### 12.4 The result
+
+Four arms, 4 restarts each, 3 conditions (half 1 at R1; half 2 at R1 matched;
+half 2 at R2 adversarial). 63 minutes, 48 fits.
+
+| arm | verdict | at R2 | $a\to$R1 | $a\to$R2 | sep | resolving | correct? |
+|---|---|---|---|---|---|---|---|
+| A spirals | returned | 0/4 | $0.0207$ | $0.1652$ | $0.1194$ | $81\times$ | yes |
+| C cycles | **STAYED** | **4/4** | $0.1271$ | $0.0001$ | $0.1273$ | $917\times$ | yes |
+| B regroup | **STAYED** | **4/4** | $0.1249$ | $0.0372$ | $0.1079$ | $3.1\times$ | yes |
+| E escape | returned | 0/4 | $0.0001$ | — | — | — | yes |
+
+**The verdict is right in all four arms**, and the matched control lands nearer
+R1 in 4/4 in every arm, so the readout can tell the two apart at all.
+
+**The cleanest way to see the repair is on `exp16`'s own metric.** Same data,
+same fits, same measurement — only the initialisation differs:
+
+| arm | fit-to-fit, matched init | fit-to-fit, adversarial init |
+|---|---|---|
+| A spirals | $0.0049$ | $0.0207$ |
+| **C cycles** | $\mathbf{0.00018}$ | $\mathbf{0.1271}$ |
+| B regroup (spectra) | $0.0211$ | $0.1165$ |
+| E escape | $0.0020$ | $0.0033$ |
+
+Under matched initialisation every arm agrees — **reproducing §11.3(b)'s false
+positive for C**. Under adversarial initialisation the two arms where
+non-identifiability is *proved* disagree, and the two that should agree still
+do. That is the whole of task 41 in one table.
+
+### 12.5 Neither (F3) nor min|z_i| is a universal predictor
+
+| arm | survived | $\min\lvert z_{\text{donor}}\rvert$ | (F3) gap |
+|---|---|---|---|
+| A | no | $8.1\times10^{-9}$ | $\mathbf{+0.5146}$ |
+| C | **yes** | $8.1\times10^{-1}$ | $\mathbf{-0.1453}$ |
+| B | **yes** | $1.2\times10^{-5}$ | $+0.1011$ |
+| E | no | $8.2\times10^{-9}$ | $+0.5159$ |
+
+Two readings, and both matter.
+
+**For the lattice family — arms A and C, the *same* $h$ — §11.6 is confirmed
+exactly.** $\min\lvert z_{\text{donor}}\rvert$ separates them by eight orders of
+magnitude and predicts the outcome; **(F3) orders them backwards**, positive
+where the alternative dies and negative where it survives.
+
+**But arm B breaks both as universal rules.** It has (F3) $=+0.10$ *and* a donor
+radius of $10^{-5}$, and its alternative survives anyway — because its $h$ is a
+permutation, whose derivative is $1$ however small the blocks get. So
+$\min\lvert z_i\rvert$ is the checkable diagnostic **for the lattice family**,
+not a map-independent one, and **(F3) $>0$ does not imply the representation is
+pinned.** Theorem F's hypothesis buys the filtration; it does not buy the
+representative.
+
+### 12.6 What this licenses, and what it does not
+
+**Licensed.** Adversarial initialisation converts cross-split agreement from a
+necessary condition into something much closer to sufficient: it returns the
+right answer on three systems where the answer is proved and on one control that
+must be rejected, and it flips exactly the cases §11.3(b) got wrong.
+
+**Not licensed, and these are real.**
+
+1. **Arm A's negative is weaker than arm C's positive.** The warm start never
+   put arm A *at* R2 (§12.3), so for that arm the test partly did not apply. The
+   two readings — "the data pulled it back" and "the class cannot hold it" —
+   coexist, and only the second is established.
+2. **Arm B resolves its own question by only $3.1\times$.** Its separation is
+   $0.108$ against an estimator error of $0.035$. The verdict is unanimous
+   across restarts, but the margin is thin, and it is scored on spectra, the
+   invariant §10.3 found least recoverable.
+3. **Four restarts.** Every arm came out $4/4$ or $0/4$, so restart noise is not
+   what is at issue, but §3.11 asks for more before a *continuous* readout.
+4. **This is synthetic.** It has not been run on MC_Maze.
+
+**Consequence for §10.3, and it is not yet discharged.** The MC_Maze conclusion
+must still be read as estimator reproducibility, because the adversarial test
+has not been run there. It now *can* be: the fitted model supplies modules, so
+the lattice image of the **fitted** latents is constructible without knowing the
+true $h$ — apply $z_1 \mapsto z_1z_2/\lvert z_2\rvert$ to the fit's own latents,
+warm-start a second fit there, and refit. §12.5 says what to report beside it:
+$\min\lvert z_i\rvert$ per module, **not** `filtration_gap`. On MC_Maze that
+number is the concerning one — $\lvert\lambda\rvert \approx 0.99$ over 35 bins
+means nothing decays, which is precisely the regime where the lattice ambiguity
+is live.
