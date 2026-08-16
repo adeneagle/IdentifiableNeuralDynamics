@@ -1592,8 +1592,17 @@ overlap, so Theorem F never applies. (F3) is sufficient, not necessary.
 **Licensed.** On MC_Maze, in the movement epoch, at $d = 4$: two disjoint halves
 of the population independently recover the *same pair of rotation numbers*,
 $10\times$ better than a null that preserves every single-neuron statistic. The
-modular constraint costs nothing in held-out-neuron prediction. That is a real
-identifiability result about a real recording, and it is the first in this repo.
+modular constraint costs nothing in held-out-neuron prediction.
+
+> **WEAKENED by §11.3(a) (2026-08-15).** This paragraph originally called that
+> "a real identifiability result". It is not, quite. `exp16` runs the same
+> protocol on two limit cycles — where non-identifiability is *proved*, only the
+> $GL(2,\mathbb{Z})$ orbit being pinned — and the protocol still returns
+> "identified", because both fits happen to land on the same lattice
+> representative. So what is demonstrated here is **estimator reproducibility
+> across disjoint neuron samples**: real, non-trivial, and decisively failed by
+> the shuffle null, but strictly weaker than identifiability. Read every claim
+> below in those terms until §11.5's adversarial-initialisation test is run.
 
 **Not licensed, and the gap is not small:**
 
@@ -1603,9 +1612,133 @@ identifiability result about a real recording, and it is the first in this repo.
    23). The margin clears its null, so the agreement is not an artefact of the
    lattice — but what is identified is the *orbit*, not the pair.
 3. **The Lyapunov spectrum is not recovered at all**, so the filtration half of
-   Theorem F is untested here rather than confirmed.
-4. One dataset, one area, one epoch, one monkey.
+   Theorem F is untested here rather than confirmed. §11.3(c) shows this
+   reproduces under *known* ground truth with a nonlinear decoder, so it is an
+   estimator property rather than a fact about MC_Maze.
+4. **Agreement is reproducibility, not identifiability** — §11.3(a).
+5. One dataset, one area, one epoch, one monkey.
 
 The honest one-line summary: *the structure is there and one of its two
 invariants is identifiable, in a regime where the theory that applies is the
 one that was already proved.*
+
+---
+
+## 11. Calibrating the Route C instrument — `exp16`
+
+**New (2026-08-15).** §10 ran the split-and-compare protocol on data where
+nobody knows the right answer. This runs it where the answer is **certain, in
+both directions**, on the three systems this repo owns whose non-identifiability
+is *proved*. Two stages, and separating them is the point: an **analytic** stage
+with exact systems and no fitting, so any failure is the metric's; then the
+**fitted** protocol, so any additional failure is the estimator's.
+
+### 11.1 The metric is correctly calibrated (analytic, exact)
+
+| check | measured | required |
+|---|---|---|
+| radial shear gauge (§7.1) | agree; $\rho$ err $1.0\times10^{-10}$, spec err $1.3\times10^{-10}$ | must **agree** |
+| §3.1 regrouping | disagree; spec err $0.2231$ | must **disagree** |
+| (F3) true vs regrouped | $+0.2231 \to -0.2231$ | must flip sign |
+| torus rotation (§7) | moves by $0.2069$ | must move |
+| torus after $GL(2,\mathbb{Z})$ | margin $0.00\times10^{0}$ | must vanish |
+| (F3) on two neutral cycles | $-0.9163$ | must reject |
+
+Six for six. The fingerprint is blind to what §8 declines to identify and
+sensitive to what the counterexamples change — which is the minimum an
+instrument must satisfy before it is pointed at data.
+
+### 11.2 The fitted protocol, crossed with the observation model
+
+$d=4$, partition $[2,2]$, 160 neurons split 80/80, 4 restarts a side, each arm
+run under a linear and an `MLPDecoder` observation map. "Identified" means the
+cross-split error beats the circular-shift null by $3\times$.
+
+| arm | decoder | obs-nl | (F3) | $\rho$ err | $\rho$ null | Tier-1 | T1 null | verdict |
+|---|---|---|---|---|---|---|---|---|
+| A filtration | linear | $0.000$ | $+0.500$ | $0.0103$ | $0.0553$ | $0.0195$ | $0.4465$ | ROT+SPEC |
+| A filtration | mlp | $0.423$ | $+0.134$ | $0.0030$ | $0.0550$ | $0.1687$ | $0.1897$ | ROT only |
+| B regrouping | linear | $0.000$ | $-0.521$ | $0.0080$ | $0.0102$ | $0.1085$ | $0.5255$ | SPEC only |
+| B regrouping | mlp | $0.637$ | $-0.395$ | $0.0081$ | $0.0122$ | $0.2567$ | $0.5789$ | **neither** ✓ |
+| C torus | linear | $0.000$ | $-0.676$ | $0.0004$ | $0.2068$ | $0.0149$ | $0.2074$ | ROT+SPEC ✗ |
+| C torus | mlp | $0.506$ | $-0.598$ | $0.0171$ | $0.2011$ | $0.3383$ | $1.1538$ | ROT+SPEC ✗ |
+| D gauge | linear | $0.000$ | $+0.488$ | $0.0076$ | $0.0639$ | $0.0111$ | $0.2681$ | ROT+SPEC |
+| D gauge | mlp | $0.383$ | $-0.038$ | $0.0413$ | $0.0681$ | $0.0957$ | $0.2253$ | **neither** ✗ |
+
+### 11.3 Three findings, two of them limits on the method
+
+**(a) Arm C is a false positive, and it is the important result.** Two limit
+cycles are provably identified only up to $GL(2,\mathbb{Z})$ — §11.1 confirms the
+regrouping moves the rotation vector by $0.2069$ with lattice margin exactly
+zero. Yet the two independently fitted halves agree to $0.0004$, under *both*
+decoders. The reason is not subtle: **both fits land on the same lattice
+representative.** An ambiguity being available does not mean the optimiser
+explores it.
+
+> **Cross-split agreement is necessary for identifiability, not sufficient.**
+> What the protocol of §10.3 measures is *estimator reproducibility across
+> disjoint samples of neurons*. That is a real and non-trivial property — the
+> circular-shift null fails it decisively — but it is strictly weaker than
+> identifiability, and on a system where non-identifiability is proved the
+> protocol returns "identified".
+>
+> This confirms experimentally the retraction already recorded against task 40:
+> two fits "land on the same lattice basis for reasons of parameterisation, not
+> because the observations pin it". §10.4's licensed claim must be read with
+> this attached.
+
+**(b) Gauge-blindness of the metric is not gauge-robustness of the estimator.**
+Arm D is arm A seen through a radial shear. Analytically the fingerprint is
+blind to it to $10^{-10}$ (§11.1). Under a *linear* decoder the fitted protocol
+recovers it cleanly. Under the MLP decoder it fails — $\rho$ err $0.0413$
+against a null of $0.0681$, a ratio of $1.65$ — and the fitted (F3) gap collapses
+from $+0.488$ to $-0.038$. The invariant is untouched; the *estimate* of it is
+not. Only running both stages separates these.
+
+**(c) §10.3's real-data result reproduces under known ground truth.** Arm A
+under the MLP decoder recovers the rotation number superbly ($0.0030$ against a
+null of $0.0550$) and the Lyapunov spectrum not at all ($0.1687$ against
+$0.1897$) — with the ground truth known and (F3) *holding* at $+0.134$. So "the
+rotation number is recoverable, the spectrum is not" is a property of the
+estimator under a nonlinear observation map, **not** a peculiarity of MC_Maze.
+That is the strongest support §10.3 has, and it arrives from a completely
+different direction.
+
+### 11.4 What (F3) is actually good for
+
+The pre-registered prediction was that $\operatorname{sign}(\texttt{filtration\_gap})$
+tracks recoverability. It holds **one way only**:
+
+- $\text{(F3)} > 0$: identified in $3/3$ cells.
+- $\text{(F3)} \le 0$: identified in $2/5$ — and both exceptions are arm C.
+
+> **Usable rule.** A positive fitted (F3) is a *positive* indicator: the modules
+> are spectrally separated, so the filtration is meaningful and the protocol
+> recovers it. A non-positive (F3) is **not** a reliable negative — it warns that
+> the modules are not spectrally separable, but it does not follow that the
+> protocol will notice the resulting ambiguity.
+
+**A caveat on the verdict rule, of the CLAUDE.md §3.9 family.** Arm C is scored
+as recovering the *spectrum* because both its modules have identical spectra
+$\{0, \log\lvert 1-2a\rvert\}$ — so agreeing on them is free, while the shuffled
+null destroys them entirely and scores badly. The comparison cannot fail, which
+is precisely why it passes. (F3) $< 0$ is the flag for exactly this degeneracy:
+when the hulls coincide there is nothing for spectral agreement to mean.
+
+### 11.5 Consequence: what needs building
+
+The arm-C failure is specific and fixable. The protocol currently *hopes* the
+optimiser explores the ambiguity. It should instead be made to:
+
+> **Adversarial initialisation.** Start the two fits at deliberately *different*
+> representatives — the alternative grouping for §3.1, the lattice image for §7 —
+> and refit. If the data pins the representation, they converge back to the same
+> invariants; if it does not, they stay apart. That converts agreement from a
+> necessary condition into something much closer to sufficient.
+
+Both alternative representatives already exist in code
+(`regrouping_counterexample` returns `system_tilde`,
+`torus_regrouping_counterexample` returns the lattice image), and arm C is the
+known-answer case that says whether the fix works. Until that is run, **§10.3's
+MC_Maze conclusion should be stated as estimator reproducibility across neuron
+samples, not as identifiability.**
