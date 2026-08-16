@@ -113,13 +113,16 @@ from pathlib import Path
 import numpy as np
 import torch
 
-# One intra-op thread, for correctness before speed.  On this machine the
-# multi-threaded build **deadlocked** partway through part 2: the process sat at
-# exactly zero CPU seconds over a 60-second wall window, having produced two
-# hours of no output.  Small tensors (batch 64, d = 4) give the thread pool
-# nothing to do but synchronise, and mixing torch's pool with numpy's LAPACK in
-# the same loop is the usual way to hit that.  Measured cost of pinning it: 300
-# steps in 5.2 s against 6.65 s, i.e. single-threaded is *faster* here anyway.
+# One intra-op thread, because it is measurably faster here: 300 steps in 5.2 s
+# against 6.65 s.  Batch 64 on a 4-dim latent gives the pool nothing to do but
+# synchronise.  It also makes the runtime reproducible, which matters for an
+# experiment whose cost has to be predicted before it is launched.
+#
+# NOTE this line was first added for a bad reason -- I diagnosed a deadlock from
+# a process sitting at zero CPU, and the *measurement* was wrong: the filter
+# matched the idle shell wrappers alongside the interpreter, and I read one of
+# those.  The run was healthy and merely slow.  Match on `Name -eq 'python.exe'`
+# as well as the command line before concluding anything from a CPU counter.
 torch.set_num_threads(1)
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -170,9 +173,10 @@ def banner(s: str) -> None:
 def checkpoint(rec: dict) -> None:
     """Write the record after every arm, not only at the end.
 
-    The first attempt at this run deadlocked two hours in and lost part 0 and
-    part 1 with it, because the JSON was written once at the bottom of `main`.
-    An experiment that takes an hour should not be all-or-nothing.
+    The first attempt was stopped two hours in and lost parts 0 and 1 with it,
+    because the JSON was written once at the bottom of `main`.  An experiment
+    that takes hours should not be all-or-nothing -- whatever the reason it ends
+    early, and here the reason was my own misreading of a CPU counter.
     """
     OUT.parent.mkdir(exist_ok=True)
     OUT.write_text(json.dumps(rec, indent=2), encoding="utf-8")

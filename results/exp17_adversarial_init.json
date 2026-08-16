@@ -1,0 +1,67 @@
+{
+  "seed": 20260816,
+  "predictions": {
+    "1_C_keeps_its_adversarial_start": "arm C is provably non-identifiable, so the R2 fits stay at R2",
+    "2_B_keeps_its_adversarial_start": "same for the \u00a73.1 regrouping, where h is a permutation",
+    "3_A_returns": "arm A's alternative has ||Dh|| ~ 1e8, so it cannot be held: the fits return to R1",
+    "4_E_returns": "arm E's target is not a conjugacy at all, so the data must reject it",
+    "5_min_radius_predicts_survival_and_F3_does_not": "min|z_donor| separates A from C; filtration_gap orders them the other way",
+    "6_matched_warm_starts_still_agree": "warm-starting BOTH halves at R1 reproduces exp16's agreement"
+  },
+  "params": {
+    "partition": [
+      2,
+      2
+    ],
+    "n_obs": 160,
+    "n_traj": 240,
+    "T": 30,
+    "steps": 3000,
+    "warm_steps": 800,
+    "n_restarts": 4,
+    "spec_tol": 0.05,
+    "rot_tol": 0.01,
+    "escape_c": 0.8,
+    "generating_decoder": "linear",
+    "fitted_encoder": "mlp",
+    "fitted_decoder": "mlp"
+  },
+  "part0_analytic": {
+    "A_spirals": {
+      "conjugacy_defect": 6.111645010016778e-16,
+      "min_module_radius": [
+        0.04120759104193205,
+        8.125927666155447e-09
+      ],
+      "min_donor_radius": 8.125927666155447e-09,
+      "sup_dh": 1292626.7973468404
+    },
+    "C_cycles": {
+      "conjugacy_defect": 1.0667812654602304e-15,
+      "min_module_radius": [
+        0.8015650300696444,
+        0.8000146467401558
+      ],
+      "min_donor_radius": 0.8000146467401558,
+      "sup_dh": 1.9337860222571674
+    },
+    "B_regroup": {
+      "conjugacy_defect": 0.0,
+      "min_module_radius": [
+        0.015379052587082356,
+        1.198266387245209e-05
+      ],
+      "min_donor_radius": 1.198266387245209e-05,
+      "sup_dh": 1.0000000005838672
+    },
+    "E_escape": {
+      "conjugacy_defect": NaN,
+      "min_module_radius": [
+        0.04120759104193205,
+        8.125927666155447e-09
+      ],
+      "min_donor_radius": 8.125927666155447e-09,
+      "sup_dh": 1.4770329624415468
+    }
+  }
+}
