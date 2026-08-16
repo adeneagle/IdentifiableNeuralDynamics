@@ -111,6 +111,16 @@ from itertools import permutations
 from pathlib import Path
 
 import numpy as np
+import torch
+
+# One intra-op thread, for correctness before speed.  On this machine the
+# multi-threaded build **deadlocked** partway through part 2: the process sat at
+# exactly zero CPU seconds over a 60-second wall window, having produced two
+# hours of no output.  Small tensors (batch 64, d = 4) give the thread pool
+# nothing to do but synchronise, and mixing torch's pool with numpy's LAPACK in
+# the same loop is the usual way to hit that.  Measured cost of pinning it: 300
+# steps in 5.2 s against 6.65 s, i.e. single-threaded is *faster* here anyway.
+torch.set_num_threads(1)
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
@@ -155,6 +165,17 @@ PREDICTIONS = {
 
 def banner(s: str) -> None:
     print(f"\n{'=' * 78}\n{s}\n{'=' * 78}")
+
+
+def checkpoint(rec: dict) -> None:
+    """Write the record after every arm, not only at the end.
+
+    The first attempt at this run deadlocked two hours in and lost part 0 and
+    part 1 with it, because the JSON was written once at the bottom of `main`.
+    An experiment that takes an hour should not be all-or-nothing.
+    """
+    OUT.parent.mkdir(exist_ok=True)
+    OUT.write_text(json.dumps(rec, indent=2), encoding="utf-8")
 
 
 # ------------------------------------------------------- systems and their h --
@@ -669,6 +690,7 @@ def main() -> int:
         print(f"  {name:12} {cd:12.2e} {radii:>22} {dh:11.1e}  "
               f"{'survives' if spec['expect_survives'] else 'must not'}")
     rec["part0_analytic"] = pre
+    checkpoint(rec)
     print("\n  (F1) is about sup||Dh||, and only for the lattice map is that")
     print("  1/min|z_donor|.  Arm B's h is a permutation and arm E's is affine, so")
     print("  their derivatives stay O(1) however small their blocks get -- which")
@@ -711,6 +733,7 @@ def main() -> int:
             print(f"  {name:12} {tag[3:]:>7} "
                   + " ".join(f"{v:9.4f}" for v in rr[tag]) + note)
     rec["part1_reachability"] = reach
+    checkpoint(rec)
     checks.append(("the warm start puts the FINGERPRINT at R2, not just the latents",
                    all(reach[a].get("post_warm_reads_R2", False)
                        for a in ("B_regroup", "C_cycles"))))
@@ -738,6 +761,8 @@ def main() -> int:
         # seeds unrecoverable from the JSON, against CLAUDE.md §8.
         out = run_arm(name, spec, SEED + 1000 * (i + 1), rng)
         results[name] = out
+        rec["arms"] = results
+        checkpoint(rec)
         n = out["n_adv_fits"]
         f = lambda v: "     n/a" if v is None else f"{v:8.4f}"  # noqa: E731
         print(f"  {name:12} {out['discriminating_invariant'][:4]:>5} "
