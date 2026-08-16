@@ -148,7 +148,7 @@ Create the pinned environment (CPU-only torch — deliberate, see
 conda env create -f environment.yml && conda activate idyn
 ```
 
-Then the acceptance test — **expect 352 passing**:
+Then the acceptance test — **expect 362 passing**:
 
 ```bash
 python -m pytest -q
@@ -235,7 +235,7 @@ experiments/           exp01..exp14, each writing results/<name>.json
                           run_all.py covers exp01..exp10 only, exp13/exp14 are
                           excluded on cost -- their machinery is covered by tests/)
 environment.yml        pinned env; requirements.txt is the pure-pip equivalent
-tests/                 352 tests
+tests/                 362 tests
 ```
 
 ## Conventions
