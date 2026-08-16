@@ -98,7 +98,7 @@ N_TRAJ = 240
 T_STEPS = 30
 STEPS = 3000
 WARM_STEPS = 800
-N_RESTARTS = 3
+N_RESTARTS = 4
 SPEC_TOL = 0.05
 ROT_TOL = 0.01
 ESCAPE_C = 0.8
@@ -248,9 +248,26 @@ def conjugacy_defect(system, alt, h, Z: np.ndarray) -> float:
     return float(np.abs(lhs - rhs).max() / max(np.abs(lhs).max(), 1e-300))
 
 
+def min_module_radius(Z: np.ndarray, partition=PART) -> list[float]:
+    """§11.6's checkable diagnostic, per module: how close each one gets to zero.
+
+    Reported for every module, not just the donor, because on real data nobody
+    knows in advance which module a regrouping would borrow from.  Bounded away
+    from zero means the lattice ambiguity is live for that module; decaying to
+    zero means (F1) excludes it -- a *different* quantity from `filtration_gap`,
+    which orders arm A above arm C while this one separates them the other way.
+    """
+    out, off = [], 0
+    for k in partition:
+        blk = Z[..., off:off + k]
+        out.append(float(np.sqrt((blk ** 2).sum(-1)).min()))
+        off += k
+    return out
+
+
 def min_donor_radius(Z: np.ndarray) -> float:
-    """§11.6's checkable diagnostic: how close the donor module gets to zero."""
-    return float(np.hypot(Z[..., 2], Z[..., 3]).min())
+    """The donor module's radius -- the one the lattice map borrows a phase from."""
+    return min_module_radius(Z)[1]
 
 
 def fingerprint(system, z0s, T=400, warmup=100):
@@ -300,7 +317,9 @@ def informative_modules(tgt1, tgt2, tol: float = 1e-6) -> tuple[list[int], str]:
     """
     r1 = [abs(float(x)) for x in tgt1.rotations]
     r2 = [abs(float(x)) for x in tgt2.rotations]
-    d_rot = [abs(a - b) for a, b in zip(r1, r2)]
+    # A module with no measurable rotation number separates nothing, so it scores
+    # 0 here rather than NaN -- which would also make `max` order-dependent.
+    d_rot = [0.0 if (np.isnan(a) or np.isnan(b)) else abs(a - b) for a, b in zip(r1, r2)]
     d_spec = [float(np.abs(np.sort(a) - np.sort(b)).max())
               for a, b in zip(tgt1.spectra, tgt2.spectra)]
     use_rot = max(d_rot) >= max(d_spec)
@@ -319,7 +338,10 @@ def restricted_distance(fp, tgt, keep: list[int], kind: str) -> float:
     """
     K = len(tgt.partition)
     if kind == "rotation":
-        f = [abs(float(x)) for x in fp.rotations]
+        # A fit that could not measure the invariant is maximally far, never a
+        # match: §3.13's rule that a missing measurement must not read as a
+        # perfect one, which is how exp15 shipped three vacuous checks.
+        f = [np.inf if np.isnan(x) else abs(float(x)) for x in fp.rotations]
         t = [abs(float(x)) for x in tgt.rotations]
         def d(pi):
             return max(abs(f[pi[k]] - t[k]) for k in keep)
@@ -468,6 +490,7 @@ def run_arm(name: str, spec: dict, seed: int, rng: np.random.Generator) -> dict:
         "discriminating_modules": keep,
         "conjugacy_defect": conjugacy_defect(system, alt, h, Z.reshape(-1, D)),
         "min_donor_radius": min_donor_radius(Z),
+        "min_module_radius": min_module_radius(Z),
         "separation": sep,
         "warm_residual_true": med([x.warm_residual for x in f1 + f2_matched]),
         "warm_residual_adv": med([x.warm_residual for x in f2_adv]),
@@ -536,12 +559,30 @@ def reachability(spec: dict, seed: int, budgets=(200, 800, 3200)) -> dict:
     X = (X - X.mean(axis=(0, 1), keepdims=True)) / X.std()
     Z1, Z2 = whiten_modules(Z), whiten_modules(spec["h"](Z))
     out = {"budgets": list(budgets), "at_R1": [], "at_R2": []}
+    last = None
     for b in budgets:
         cfg = ModelConfig(n_obs=X.shape[-1], d=D, partition=PART,
                           decoder="mlp", encoder="mlp")
         tc = T.TrainConfig(steps=1, seed=seed, warm_steps=b)
         out["at_R1"].append(T.fit(X, cfg, tc, warm_z=Z1).warm_residual)
-        out["at_R2"].append(T.fit(X, cfg, tc, warm_z=Z2).warm_residual)
+        last = T.fit(X, cfg, tc, warm_z=Z2)
+        out["at_R2"].append(last.warm_residual)
+
+    # The encoder residual says the *latents* arrived.  What the protocol
+    # actually reads is the fitted transition's fingerprint, and those are
+    # different objects -- an encoder sitting on R2 with a transition still at
+    # its initialisation would make every downstream verdict meaningless.  So
+    # check the fingerprint too, at the largest budget and before any main
+    # training: does the warm-started model *read* as R2?
+    if spec["alt"] is not None:
+        z_read = annulus_z0(r, 120, lo, hi)
+        t1 = fingerprint(spec["system"], z_read)
+        t2 = fingerprint(spec["alt"], spec["h"](z_read))
+        keep, kind = informative_modules(t1, t2)
+        fp = fitted_fingerprint(last, X.shape[1])
+        out["post_warm_to_R1"] = restricted_distance(fp, t1, keep, kind)
+        out["post_warm_to_R2"] = restricted_distance(fp, t2, keep, kind)
+        out["post_warm_reads_R2"] = bool(out["post_warm_to_R2"] < out["post_warm_to_R1"])
     return out
 
 
@@ -602,9 +643,17 @@ def main() -> int:
         rr = reachability(spec, SEED + 500 + i)
         reach[name] = rr
         for tag in ("at_R1", "at_R2"):
+            note = ""
+            if tag == "at_R2" and "post_warm_reads_R2" in rr:
+                note = (f"   fingerprint after warm start: ->R1 {rr['post_warm_to_R1']:.4f}"
+                        f"  ->R2 {rr['post_warm_to_R2']:.4f}"
+                        f"  {'READS R2' if rr['post_warm_reads_R2'] else 'still R1'}")
             print(f"  {name:12} {tag[3:]:>7} "
-                  + " ".join(f"{v:9.4f}" for v in rr[tag]))
+                  + " ".join(f"{v:9.4f}" for v in rr[tag]) + note)
     rec["part1_reachability"] = reach
+    checks.append(("the warm start puts the FINGERPRINT at R2, not just the latents",
+                   all(reach[a].get("post_warm_reads_R2", False)
+                       for a in ("B_regroup", "C_cycles"))))
     plateau = {k: v["at_R2"][-1] for k, v in reach.items()}
     checks.append(("arm A's alternative stays unreachable at 16x the warm budget",
                    plateau["A_spirals"] > 0.25))
