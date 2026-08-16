@@ -19,6 +19,47 @@ preconditions rather than results:
      that would decide the arm by an artefact.
 
 Writes `results/exp17_armB_calibration.json`.  Cheap on purpose: 2 restarts.
+
+--------------------------------------------------- what it said (2026-08-16) --
+
+Arm B's exponents.  The repo default puts the fastest mode below any horizon;
+the chosen set keeps every mode alive and still moves the per-module spectra by
+twice `SPEC_TOL`:
+
+    lams                     sep(spec)   slowest^T   fastest^T
+    (0.90, 0.75, 0.60, 0.45)    0.2231    4.24e-02    3.95e-11   <- mode 4 is gone
+    (0.97, 0.88, 0.79, 0.70)    0.1079    4.01e-01    2.25e-05   <- chosen
+    (0.95, 0.85, 0.75, 0.65)    0.1252    2.15e-01    2.44e-06
+
+The matched arm, mlp encoder + mlp decoder, 2 restarts a side:
+
+    arm         steps  warmres   x-rot   x-spec  ->true rot  ->true spec     fitq
+    A_spirals    3000   0.0027  0.0139   0.0170      0.1670       0.0189  2.69e-3
+    C_cycles     3000   0.0002  0.0003   0.0755      0.0001       0.7230  4.28e-4
+    B_regroup    3000   0.0035  0.0015   0.0123      0.0016       0.0402  7.08e-3
+    A_spirals    8000   0.0020  0.0103   0.0102      0.1678       0.0462  2.05e-3
+    C_cycles     8000   0.0001  0.0001   0.0690      0.0001       0.3605  3.31e-4
+
+Two things decided `exp17`'s settings.
+
+**The matched arm reproduces itself at 3000 steps**, so a later disagreement is
+attributable to the treatment rather than to the class.
+
+**More steps buy a better fit and not a better recovery** -- arm A at 8000 fits
+1.3x better (`fitq` 2.69e-3 -> 2.05e-3) and recovers rotation *identically*
+(0.1670 -> 0.1678) while its spectral error gets *worse* (0.0189 -> 0.0462).
+That is §3.13(e) in a fourth regime, now with the causal arrow checked by
+intervention, and it is why `STEPS` stays at 3000.
+
+Arm A's `->true rot` of 0.167 is not a failure of the fit: it is the *donor*
+module, whose rotation number is not in the data (§3.13b).  The module the
+lattice map actually moves comes back to 3e-4.  That measurement is what made
+`exp17` score on the informative modules rather than on the whole fingerprint.
+
+**The B-at-8000 row is missing and the JSON was never written**: two torch
+processes were thrashing each other's threads and the run was stopped in favour
+of `exp17` itself.  Re-run this file to regenerate it -- nothing in `exp17`
+depends on that row, since the 3000-step numbers are what its settings rest on.
 """
 
 from __future__ import annotations
