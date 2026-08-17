@@ -141,7 +141,28 @@ R_LO, R_HI = 0.6, 1.4        # inside the basin (boundary is 2.08)
 KAPPA_A = 2.0                # donor phase concentration, and it MOVES with u
 PHASE_MU = (-0.9, 0.9)       # the donor's per-u phase centres
 KAPPA_SYM, KAPPA_ASYM = 0.0, 4.0   # the recipient's phase concentration
-W_BEHAVIOR = 1.0             # §3.12's recalibrated weight for the WHITENED penalty
+# Calibrated at this batch, not inherited: `exp18_calibrate` swept w over five
+# orders.  Below 1e-2 the penalty is ignored (the fitted invariant block sits at
+# u-dependence 1.02, i.e. exactly where R2 puts it); at 1.0 the matched arm's
+# fit_quality degrades 160x.  0.1 imposes the constraint at 4x fit-quality cost.
+W_BEHAVIOR = 0.1
+# The per-time penalty (§3.15) buys sensitivity to a rotating u-dependence and
+# pays for it in SAMPLES: each timestep is scored on its own, so a minibatch of
+# 64 leaves 32 points per u level to estimate a 2-D conditional covariance from.
+# Measured, the penalty on a TRULY invariant block against its value at R2:
+#
+#     batch      64     128     256     512    2048
+#     floor    0.510   0.312   0.224   0.063   0.012
+#     signal   1.107   1.087   0.992   0.976   1.000
+#     ratio     2.2x    3.5x    4.4x   15.4x   83.7x
+#
+# At batch 64 half of what the optimiser minimises is sampling noise, and it pays
+# that down by distorting the block -- visible as the matched arm drifting 0.032
+# from R1 (40% of the R1-R2 separation) and the fitted block being driven to
+# u-dependence 0.096, BELOW the true block's own 0.211.  256 is the compromise
+# the runtime allows; the residual bias is common to both cells of the 2x2, which
+# is what the symmetric control is for.  Reported as `penalty_floor` in the JSON.
+BATCH = 256
 
 OUT = Path(__file__).resolve().parents[1] / "results" / "exp18_behaviour_vs_lattice.json"
 
@@ -414,10 +435,34 @@ def part0_analytic(rng) -> dict:
     print(f"  (F3) filtration gap {fg.gap:+.4f} (ordered={fg.ordered})   "
           f"-- Route C has no hypothesis here, which is why Route B is being asked")
 
+    # (e) the penalty's own sampling floor at the batch the fits will use: what a
+    # TRULY invariant block scores.  Reported so a "constraint imposed" claim can
+    # be read against the noise it is imposed through, rather than against 0.
+    import torch  # local: part 0 is otherwise pure numpy
+
+    from idyn.models import LatentDynamicsModel
+    _, Zp, Up, _ = make_data(np.random.default_rng(SEED + 313), KAPPA_ASYM,
+                             n_per_u=N_ANALYTIC)
+    pen_floor, pen_signal = [], []
+    r = np.random.default_rng(SEED + 314)
+    for _ in range(12):
+        idx = r.choice(Zp.shape[0], BATCH, replace=False)
+        ut = torch.as_tensor(Up[idx])
+        for A, acc in ((Zp, pen_floor), (lattice_map(Zp), pen_signal)):
+            zt = torch.as_tensor(np.ascontiguousarray(whiten_modules(A[idx])),
+                                 dtype=torch.float32)
+            acc.append(float(LatentDynamicsModel._behavioural_penalty(
+                zt, ut, slice(2, 4), whiten=True, per_time=True)))
+    print(f"  penalty at batch {BATCH}: floor (true block) {np.mean(pen_floor):.4f}   "
+          f"signal (R2) {np.mean(pen_signal):.4f}   "
+          f"ratio {np.mean(pen_signal) / max(np.mean(pen_floor), 1e-12):.1f}x")
+
     return {"conjugacy_defect": defect,
             "D3_variance_udep_by_t": var_ud,
             "D3_mean_radius_gap_by_t": gap,
             "detector_floor": floor, "detector_floor_slope": slope,
+            "penalty_floor": float(np.mean(pen_floor)),
+            "penalty_signal": float(np.mean(pen_signal)),
             "symmetry_sweep": sweep,
             "filtration_gap": float(fg.gap), "F3_ordered": bool(fg.ordered)}
 
@@ -449,8 +494,9 @@ def run_cell(name: str, kappa_b: float, w_behavior: float, rec: dict) -> dict:
             cfg = ModelConfig(n_obs=N_OBS, d=D, partition=PART,
                               decoder="mlp", encoder="mlp")
             tc = T.TrainConfig(steps=STEPS, seed=seed, warm_steps=WARM_STEPS,
-                               w_behavior=w_behavior, inv_start=2, inv_stop=4,
-                               behavior_whiten=True)
+                               batch=BATCH, w_behavior=w_behavior,
+                               inv_start=2, inv_stop=4,
+                               behavior_whiten=True, behavior_per_time=True)
             res = T.fit(X, cfg, tc, U=U, warm_z=warm)
             fp = fitted_fingerprint(res, T_STEPS + 1)
             d1 = restricted_distance(fp, tgt1, keep, kind)
@@ -520,7 +566,8 @@ def main() -> None:
                       "n_restarts": N_RESTARTS, "omega": [OM_A, OM_B],
                       "kappa_a": KAPPA_A, "phase_mu": list(PHASE_MU),
                       "kappa_sym": KAPPA_SYM, "kappa_asym": KAPPA_ASYM,
-                      "w_behavior": W_BEHAVIOR, "generating_decoder": "linear",
+                      "w_behavior": W_BEHAVIOR, "batch": BATCH,
+                      "generating_decoder": "linear",
                       "fitted_encoder": "mlp", "fitted_decoder": "mlp"}}
 
     rec["part0_analytic"] = part0_analytic(rng)
