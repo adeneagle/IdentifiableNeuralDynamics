@@ -534,26 +534,27 @@ def main() -> None:
     banner("CHECKS")
     p0, cells = rec["part0_analytic"], rec["cells"]
     sweep = p0["symmetry_sweep"]
+    SYM_ON, ASYM_ON = f"sym_w{W_BEHAVIOR:g}", f"asym_w{W_BEHAVIOR:g}"
     checks = {
         "1_D3_transient": p0["D3_variance_udep_by_t"][-1] < 0.15 * p0["D3_variance_udep_by_t"][0],
         "2_symmetric_hides_R2": sweep["kappa_b=0.0"]["ratio"] < 2.0,
         "3_asymmetric_exposes_R2": sweep["kappa_b=4.0"]["ratio"] > 5.0,
         "4a_sym_w0_keeps_R2": cells["sym_w0"]["summary"]["verdict"] == "SURVIVED",
         "4b_asym_w0_keeps_R2": cells["asym_w0"]["summary"]["verdict"] == "SURVIVED",
-        "5a_sym_wB_keeps_R2": cells["sym_w1"]["summary"]["verdict"] == "SURVIVED",
-        "5b_asym_wB_rejects_R2": cells["asym_w1"]["summary"]["verdict"] == "REJECTED",
+        "5a_sym_wB_keeps_R2": cells[SYM_ON]["summary"]["verdict"] == "SURVIVED",
+        "5b_asym_wB_rejects_R2": cells[ASYM_ON]["summary"]["verdict"] == "REJECTED",
         "6_matched_arms_hold_R1": all(
             c["summary"]["matched_stayed_at_R1"] > N_RESTARTS / 2 for c in cells.values()),
         "7_penalty_did_not_wreck_the_fit": (
-            cells[f"asym_w{W_BEHAVIOR:g}"]["summary"]["matched_fitq_med"]
+            cells[ASYM_ON]["summary"]["matched_fitq_med"]
             < 5.0 * cells["asym_w0"]["summary"]["matched_fitq_med"]),
         # The SURVIVED verdict in the symmetric behaviour-on cell only means
         # "behaviour is blind" if the penalty was actually enforced there.  If the
         # invariant block stays as u-dependent as R2 makes it, the cell measured a
         # weight that was ignored, not a symmetry -- and says nothing.
         "8_symmetric_cell_actually_enforced_the_penalty": (
-            cells[f"sym_w{W_BEHAVIOR:g}"]["summary"]["adv_inv_udep_med"]
-            < 2.0 * cells[f"sym_w{W_BEHAVIOR:g}"]["summary"]["true_inv_udep"]),
+            cells[SYM_ON]["summary"]["adv_inv_udep_med"]
+            < 2.0 * cells[SYM_ON]["summary"]["true_inv_udep"]),
         "9_no_mode_collapse": all(
             c["summary"]["adv_duplicate_modules"] <= N_RESTARTS / 2 for c in cells.values()),
         "10_arms_can_resolve_their_own_question": all(

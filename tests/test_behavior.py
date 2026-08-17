@@ -402,6 +402,75 @@ def test_breaking_that_symmetry_makes_the_same_regrouping_visible():
     assert seen[2] > 10.0 * seen[0], "and the two ends are not close"
 
 
+def test_pooling_timesteps_blinds_the_penalty_to_a_rotating_u_dependence():
+    """CLAUDE.md §3.15: the objective must score per timestep, not pooled.
+
+    An oscillatory block's phase advances every step, so over a trial it wraps
+    several times and the time-POOLED law is near-uniform for every u even when
+    the per-timestep laws differ completely.  The penalty then reports itself
+    satisfied on a representation that is maximally u-dependent at every instant.
+    """
+    import torch
+
+    from idyn.models import LatentDynamicsModel
+
+    ce = S.rotational_behavioural_escape()
+    rng = np.random.default_rng(44)
+    Z0, U = ce["sampler"](rng, 3000, kappa_b=4.0)
+    Z = ce["system"].simulate(Z0, 30)
+    H = ce["h"](Z)
+    Ut, sl = torch.as_tensor(U), slice(2, 4)
+    pen = LatentDynamicsModel._behavioural_penalty
+
+    def score(A, per_time):
+        t = torch.as_tensor(np.ascontiguousarray(A), dtype=torch.float32)
+        return float(pen(t, Ut, sl, whiten=True, per_time=per_time))
+
+    pooled_r1, pooled_r2 = score(Z, False), score(H, False)
+    pert_r1, pert_r2 = score(Z, True), score(H, True)
+
+    # pooled: the regrouped block looks nearly as invariant as the true one, and
+    # both are so small that no weight makes them matter against the fit terms
+    assert pooled_r2 < 1e-2, f"pooled cannot see it (got {pooled_r2})"
+    # per-time: a large absolute score and a wide margin over the true block
+    assert pert_r2 > 0.5, f"per-time sees it (got {pert_r2})"
+    assert pert_r2 > 8.0 * pert_r1, "and separates R2 from R1"
+    assert pert_r2 / pooled_r2 > 20.0, "the pooled form loses at least an order"
+    assert pooled_r1 < pooled_r2 and pert_r1 < pert_r2, "both orderings still correct"
+
+
+def test_radial_modulation_is_insensitive_to_the_pooling_fix():
+    """The exp13 regime is not blind either way -- which is why it stands.
+
+    A scale conditioning does not rotate, so pooling merely mixes decay stages.
+    Both forms detect an injected leak by two to three orders; the absolute
+    scales differ, which is why a weight still does not transfer.
+    """
+    import torch
+
+    from idyn.models import LatentDynamicsModel
+
+    rng = np.random.default_rng(45)
+    sysm = S.ModularSystem([S.TwistBlock(s=0.90, omega=0.4, beta=0.0),
+                            S.TwistBlock(s=0.55, omega=1.1, beta=0.0)])
+    smp = B.conditioned_initial_conditions(2, 2, np.arange(4), 3000, rng, mode="variance")
+    Z = sysm.simulate(smp.Z, 15)
+    Ut = torch.as_tensor(smp.U)
+    pen = LatentDynamicsModel._behavioural_penalty
+
+    def score(c, per_time):
+        A = np.array(Z)
+        A[..., 2:] = A[..., 2:] + c * A[..., :2]
+        t = torch.as_tensor(A, dtype=torch.float32)
+        return float(pen(t, Ut, slice(2, 4), whiten=True, per_time=per_time))
+
+    for per_time in (False, True):
+        clean, leaked = score(0.0, per_time), score(0.5, per_time)
+        assert leaked > 100.0 * clean, (
+            f"a radial leak is visible with per_time={per_time} "
+            f"({clean} -> {leaked})")
+
+
 def test_lemma_D_variance_modulation_is_transient_on_a_limit_cycle():
     """(D3) is unavailable in the oscillatory regime: the attractor erases it.
 

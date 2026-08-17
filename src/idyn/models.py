@@ -225,6 +225,7 @@ class LatentDynamicsModel(nn.Module):
         invariant_slice: slice | None = None,
         w_behavior: float = 0.0,
         behavior_whiten: bool = True,
+        behavior_per_time: bool = True,
     ) -> dict[str, torch.Tensor]:
         out = self(x)
         z, z_pred = out["z"], out["z_pred"]
@@ -246,7 +247,9 @@ class LatentDynamicsModel(nn.Module):
         # analogue of behavior.block_u_dependence.
         behavior = z.new_zeros(())
         if u is not None and invariant_slice is not None and w_behavior > 0.0:
-            behavior = self._behavioural_penalty(z, u, invariant_slice, whiten=behavior_whiten)
+            behavior = self._behavioural_penalty(z, u, invariant_slice,
+                                                 whiten=behavior_whiten,
+                                                 per_time=behavior_per_time)
             total = total + w_behavior * behavior
 
         # `fit_quality` excludes the whitening and behaviour terms: they are
@@ -263,7 +266,8 @@ class LatentDynamicsModel(nn.Module):
 
     @staticmethod
     def _behavioural_penalty(
-        z: torch.Tensor, u: torch.Tensor, block: slice, whiten: bool = True
+        z: torch.Tensor, u: torch.Tensor, block: slice, whiten: bool = True,
+        per_time: bool = True,
     ) -> torch.Tensor:
         """Between-``u`` spread of the first two conditional moments of ``z[..., block]``.
 
@@ -293,27 +297,68 @@ class LatentDynamicsModel(nn.Module):
         the objective.
 
         ``whiten=False`` restores the old behaviour, for reproducing those runs.
+
+        ### Why ``per_time`` defaults to True (CLAUDE.md §3.15)
+
+        Pooling every timestep into one sample set before scoring destroys any
+        u-dependence carried by a **rotating** quantity.  On an oscillatory module
+        the block's phase advances by ``omega`` per step, so over a trial it wraps
+        several times and the time-pooled law is close to rotationally uniform for
+        every ``u`` -- even when the per-timestep laws differ completely.
+
+        Measured on exp18's data, the recipient block under the lattice
+        regrouping: per-timestep u-dependence **0.979**, time-pooled **0.017**, a
+        59x collapse that leaves it only 3.8x above a genuinely invariant block's
+        pooled 0.0044.  The u-varying *donor* itself falls 0.991 -> 0.106.  At
+        that contrast no weight can impose the constraint, which is exactly what
+        the exp18 calibration found: at ``w`` from 1 upward the fitted block sat
+        at u-dependence 1.01 while the penalty reported itself satisfied.
+
+        Scoring each timestep and averaging preserves the structure.  This is not
+        a refinement of §3.12 but the same error one axis over: there the penalty
+        was invariant under a group it should have seen through (scale), here
+        under an average it should not have taken.
+
+        ``per_time=False`` restores the pooled form.  A **radial** modulation does
+        not rotate, so pooling only mixes decay stages and both forms see a leak
+        there: measured on exp13-style data (contracting twists, variance
+        modulation), injecting ``z_B += 0.5 z_A`` moves the pooled score
+        0.00085 -> 0.402 (473x) against the per-time 0.00169 -> 1.275 (754x).
+        Same order, so `exp13`'s conclusions are untouched -- but note the
+        absolute scales differ by ~3x, so a weight still does not transfer across
+        the flag any more than it transferred across ``whiten`` (§3.12).
         """
-        w = z[:, :, block].reshape(-1, block.stop - block.start)  # (N, d_b)
-        u_rep = u.view(-1, 1).expand(z.shape[0], z.shape[1]).reshape(-1)  # (N,)
-        if whiten:
-            wc = w - w.mean(0, keepdim=True)
-            cov = wc.T @ wc / max(wc.shape[0] - 1, 1)
-            # ridge keeps the Cholesky defined while the block is still collapsing
-            # early in training; it is far below any scale the penalty cares about.
-            cov = cov + 1e-6 * torch.eye(cov.shape[0], device=cov.device, dtype=cov.dtype)
-            L = torch.linalg.cholesky(cov)
-            w = torch.linalg.solve_triangular(L, wc.T, upper=False).T
-        means, covs = [], []
-        for lab in torch.unique(u_rep):
-            wl = w[u_rep == lab]
-            m = wl.mean(0)
-            wc_l = wl - m
-            means.append(m)
-            covs.append(wc_l.T @ wc_l / max(wl.shape[0] - 1, 1))
-        means = torch.stack(means)   # (n_u, d_b)
-        covs = torch.stack(covs)     # (n_u, d_b, d_b)
-        return means.var(0).sum() + covs.var(0).sum()
+        d_b = block.stop - block.start
+
+        def _score(w: torch.Tensor, lab_of: torch.Tensor) -> torch.Tensor:
+            if whiten:
+                wc = w - w.mean(0, keepdim=True)
+                cov = wc.T @ wc / max(wc.shape[0] - 1, 1)
+                # ridge keeps the Cholesky defined while the block is still
+                # collapsing early in training; far below any scale the penalty
+                # cares about.
+                cov = cov + 1e-6 * torch.eye(d_b, device=cov.device, dtype=cov.dtype)
+                L = torch.linalg.cholesky(cov)
+                w = torch.linalg.solve_triangular(L, wc.T, upper=False).T
+            means, covs = [], []
+            for lab in torch.unique(lab_of):
+                wl = w[lab_of == lab]
+                m = wl.mean(0)
+                wc_l = wl - m
+                means.append(m)
+                covs.append(wc_l.T @ wc_l / max(wl.shape[0] - 1, 1))
+            means = torch.stack(means)   # (n_u, d_b)
+            covs = torch.stack(covs)     # (n_u, d_b, d_b)
+            return means.var(0).sum() + covs.var(0).sum()
+
+        if not per_time:
+            w = z[:, :, block].reshape(-1, d_b)
+            u_rep = u.view(-1, 1).expand(z.shape[0], z.shape[1]).reshape(-1)
+            return _score(w, u_rep)
+
+        # Whitening is per-timestep too: a common whitener would reintroduce the
+        # pooled geometry through the back door.
+        return torch.stack([_score(z[:, t, block], u) for t in range(z.shape[1])]).mean()
 
 
 class LearnedBlock:

@@ -39,7 +39,13 @@ import exp18_behaviour_vs_lattice as E          # noqa: E402
 from idyn import train as T                     # noqa: E402
 from idyn.models import ModelConfig             # noqa: E402
 
-WEIGHTS = (0.0, 1.0, 5.0, 20.0, 80.0)
+# Recalibrated after the §3.15 per-time fix, and the range moved DOWN by orders.
+# The pooled penalty scored 2.8e-4 on the lattice representative -- the same order
+# as the fit terms themselves -- so no weight in (1, 80) moved anything and the
+# fitted invariant block sat at u-dependence 1.01 throughout.  The per-time form
+# scores 1.08 there against 0.044 at the true representative, i.e. ~3000x the fit
+# loss at w=1, so the usable weights are far below the ones first tried.
+WEIGHTS = (0.0, 1e-3, 1e-2, 1e-1, 1.0)
 
 
 def main() -> None:

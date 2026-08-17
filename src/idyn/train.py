@@ -53,6 +53,9 @@ class TrainConfig:
     # block rather than by making it u-invariant.  False reproduces the exp11 /
     # exp12 runs, whose behavioural conclusions are void for that reason.
     behavior_whiten: bool = True
+    # CLAUDE.md §3.15: pooling timesteps before scoring erases a ROTATING
+    # u-dependence (0.979 -> 0.017 on exp18's data).  False is the old form.
+    behavior_per_time: bool = True
     # Task 41: steps of supervised pretraining onto a designated latent
     # representative before the ordinary objective takes over.  Ignored unless
     # ``fit`` is given ``warm_z``.
@@ -255,6 +258,7 @@ def fit(
             invariant_slice=(inv if behav else None),
             w_behavior=cfg.w_behavior,
             behavior_whiten=cfg.behavior_whiten,
+            behavior_per_time=cfg.behavior_per_time,
         )
         opt.zero_grad(set_to_none=True)
         out["total"].backward()
