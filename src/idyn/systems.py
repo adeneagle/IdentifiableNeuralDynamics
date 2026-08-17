@@ -38,6 +38,7 @@ __all__ = [
     "multiindex_resonance_counterexample",
     "repeated_exponent_resonance_counterexample",
     "nonadditive_behavioural_escape",
+    "rotational_behavioural_escape",
     "lemma_d_witness",
     "gapless_resonant_coupling",
     "multidegree_resonant_coupling",
@@ -945,6 +946,125 @@ def nonadditive_behavioural_escape(
         "dynamics_defect": dynamics_defect,
         "additive": False,
         "satisfies_D4": True,
+    }
+
+
+def rotational_behavioural_escape(
+    a: float = 0.30, omega_a: float = 0.50, omega_b: float = 1.30
+) -> dict:
+    """**The non-additive escape becomes a real conjugacy on limit cycles.**  exp18.
+
+    `nonadditive_behavioural_escape` above is a rotation of the invariant block
+    by a function of the varying one, ``h_B = R(theta(z_A)) z_B``.  It satisfies
+    (D1)-(D4) with ``M_BA != 0``, and what stops it being a counterexample to
+    Lemma D is **Step 1**: conjugating modular dynamics to modular dynamics
+    requires ``theta . f_A - theta`` to be constant, and at the *fixed point* of a
+    contracting ``f_A`` that constant is forced to ``0``, hence ``theta = 0``.
+
+    Replace the fixed point with an attracting **limit cycle** and that
+    obstruction evaporates.  With ``theta = arg(z_A)`` the increment
+    ``theta . f_A - theta`` is exactly ``omega_a`` -- constant, and nonzero.  So
+
+        h(z_A, z_B) = ( z_A,  z_B * z_A/|z_A| )
+
+    *is* an exact modular conjugacy, carrying ``omega_b -> omega_b + omega_a``.
+    It is the same GL(2,Z) lattice regrouping as
+    `torus_regrouping_counterexample`, written with the donor first because that
+    is the orientation in which behaviour has any chance of seeing it (Lemma D
+    kills ``M_BA``, so the u-varying block must be the *donor*).
+
+    ### Why this matters: behaviour cannot see it, and the reason is a symmetry
+
+    The reparameterised invariant block is ``z_B`` **rotated** by an angle that is
+    independent of ``z_B``.  If ``p_B`` is rotationally symmetric -- which it is
+    whenever the cycle's phase is uniform -- then rotating it by any independent
+    angle returns the same law, so ``p(h_B | u) = p(z_B)`` for **every** ``u``,
+    whatever the donor's phase does.  Behaviour is blind to a coupling that acts
+    by a symmetry of the invariant block's own law, and no strengthening of the
+    behavioural hypothesis changes that.
+
+    Measured (exp18 part 0): with a uniform recipient phase the detector reads
+    ``0.016`` for the regrouped block against a ``0.044`` finite-sample floor --
+    i.e. below its own noise.  Concentrating the recipient's phase *without*
+    making it u-dependent (so it remains a legitimate invariant block) breaks the
+    symmetry and the same regrouping becomes visible, monotonically:
+
+        kappa_B        0.0     0.5     1.0     2.0     4.0
+        B under R2   0.016   0.205   0.441   0.747   0.956
+
+    ``sampler(rng, n, kappa_b, phase_mu_by_u)`` builds exactly that comparison.
+
+    ### The other half: (D3) is not available here either
+
+    Lemma D's own modulation hypothesis is variance modulation ``z_A = s(u) z~_A``.
+    A limit cycle attracts every radius to ``rho``, so a radial conditioning of
+    the initial law is *forgotten* -- measured, the modulated block's
+    u-dependence falls ``0.80 -> 0.03`` and the between-level mean-radius gap
+    falls ``6.0e-1 -> 1.8e-12`` over thirty steps.  What persists on a cycle is
+    the phase, which is not (D3).  So in the oscillatory regime Lemma D as proved
+    has no hypothesis to apply to, and the Route B *mechanism* is what is being
+    tested instead.
+
+    Returns the system, its alternative, ``h``/``h_inv``, and the sampler.
+    """
+    f_A = LimitCycleBlock(a=a, omega=omega_a, beta=0.0)
+    f_B = LimitCycleBlock(a=a, omega=omega_b, beta=0.0)
+    sysm = ModularSystem([f_A, f_B])
+    alt = ModularSystem([LimitCycleBlock(a=a, omega=omega_a, beta=0.0),
+                         LimitCycleBlock(a=a, omega=omega_b + omega_a, beta=0.0)])
+
+    def h(z: np.ndarray) -> np.ndarray:
+        z = np.asarray(z, dtype=float)
+        za = z[..., 0] + 1j * z[..., 1]
+        zb = z[..., 2] + 1j * z[..., 3]
+        w = zb * za / np.maximum(np.abs(za), 1e-300)
+        return np.stack([za.real, za.imag, w.real, w.imag], -1)
+
+    def h_inv(w: np.ndarray) -> np.ndarray:
+        w = np.asarray(w, dtype=float)
+        wa = w[..., 0] + 1j * w[..., 1]
+        wb = w[..., 2] + 1j * w[..., 3]
+        z = wb * np.conj(wa) / np.maximum(np.abs(wa), 1e-300)
+        return np.stack([wa.real, wa.imag, z.real, z.imag], -1)
+
+    def sampler(rng, n: int, kappa_b: float = 0.0,
+                phase_mu_by_u: Sequence[float] = (-0.9, 0.9),
+                kappa_a: float = 2.0, r_lo: float = 0.6, r_hi: float = 1.4):
+        """u-conditioned initial conditions: donor phase moves with u, recipient's does not.
+
+        ``kappa_b = 0`` gives a rotationally symmetric recipient law -- the case
+        behaviour cannot see.  Positive ``kappa_b`` breaks that symmetry while
+        keeping the block u-INVARIANT, which is the whole point.
+
+        Radii are drawn on an annulus, not from a Gaussian: `LimitCycleBlock`'s
+        basin ends at ``rho sqrt((1+a)/a)`` and a Gaussian tail crosses it, after
+        which orbits diverge and the resulting NaNs read like attractor collapse.
+        """
+        def polar(m, mu, kappa):
+            r = rng.uniform(r_lo, r_hi, m)
+            th = (rng.uniform(-np.pi, np.pi, m) if kappa <= 0
+                  else rng.vonmises(mu, kappa, m))
+            return np.stack([r * np.cos(th), r * np.sin(th)], -1)
+
+        Zs, Us = [], []
+        for k, mu in enumerate(phase_mu_by_u):
+            Zs.append(np.concatenate([polar(n, mu, kappa_a),
+                                      polar(n, 0.0, kappa_b)], axis=1))
+            Us.append(np.full(n, k, dtype=int))
+        return np.concatenate(Zs), np.concatenate(Us)
+
+    return {
+        "system": sysm,
+        "system_tilde": alt,
+        "f_A": f_A,
+        "f_B": f_B,
+        "h": h,
+        "h_inv": h_inv,
+        "sampler": sampler,
+        "omega": (float(omega_a), float(omega_b)),
+        "omega_tilde": (float(omega_a), float(omega_b + omega_a)),
+        "additive": False,
+        "is_modular_conjugacy": True,   # unlike nonadditive_behavioural_escape
     }
 
 

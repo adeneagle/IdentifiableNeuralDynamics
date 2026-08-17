@@ -329,6 +329,108 @@ def test_nonadditive_escape_is_killed_by_the_dynamics_not_by_behaviour():
 
 
 # --------------------------------------------------------------------------
+# exp18: on a LIMIT CYCLE that escape becomes a genuine modular conjugacy
+# --------------------------------------------------------------------------
+
+
+def _cycle_ic(rng, n):
+    r = rng.uniform(0.6, 1.4, n)
+    th = rng.uniform(-np.pi, np.pi, n)
+    return np.stack([r * np.cos(th), r * np.sin(th)], -1)
+
+
+def test_rotational_escape_IS_a_modular_conjugacy_unlike_the_fixed_point_case():
+    """The Step 1 obstruction evaporates once f_A has a cycle instead of a fixed point.
+
+    `nonadditive_behavioural_escape` is excluded because ``theta . f_A - theta``
+    must be constant and a contracting fixed point forces that constant to 0.
+    On a cycle with ``theta = arg(z_A)`` the increment is exactly ``omega_a``,
+    so the very same shape of map conjugates modular dynamics to modular
+    dynamics -- and it moves the recipient's rotation number.
+    """
+    ce = S.rotational_behavioural_escape()
+    rng = np.random.default_rng(40)
+    z = np.concatenate([_cycle_ic(rng, 4000), _cycle_ic(rng, 4000)], axis=1)
+
+    lhs = ce["h"](ce["system"].step(z))
+    rhs = ce["system_tilde"].step(ce["h"](z))
+    assert np.abs(lhs - rhs).max() < 1e-12, "exact modular conjugacy"
+    assert np.allclose(ce["h_inv"](ce["h"](z)), z, atol=1e-10), "a diffeomorphism"
+    assert ce["is_modular_conjugacy"] and not ce["additive"]
+    assert ce["omega_tilde"][1] != ce["omega"][1], "it moves the recipient's rotation"
+
+
+def test_a_rotationally_symmetric_invariant_block_hides_the_regrouping():
+    """Behaviour is blind to a coupling that acts by a symmetry of p_B.
+
+    The regrouping ROTATES the invariant block by the donor's phase.  With the
+    recipient's phase uniform, p_B is rotationally symmetric, so rotating it by
+    any independent angle returns the same law: p(h_B | u) = p(z_B) for every u,
+    whatever the donor does.  This is exp18's headline negative and the reason
+    Route B does not rescue the lattice ambiguity in general.
+    """
+    ce = S.rotational_behavioural_escape()
+    rng = np.random.default_rng(41)
+    Z0, U = ce["sampler"](rng, 20000, kappa_b=0.0)
+    Z = ce["system"].simulate(Z0, 30)
+    H = ce["h"](Z)
+
+    # the donor really is modulated, and the recipient really is invariant
+    assert B.block_u_dependence(Z[:, -1, :2], U, normalize=True).total > 0.5
+    floor = B.block_u_dependence(Z[:, -1, 2:], U, normalize=True).total
+    seen = B.block_u_dependence(H[:, -1, 2:], U, normalize=True).total
+    assert seen < 2.0 * floor, f"the regrouping is invisible to behaviour (got {seen} vs floor {floor})"
+
+
+def test_breaking_that_symmetry_makes_the_same_regrouping_visible():
+    """And it is the symmetry doing it, not anything about the dynamics.
+
+    Concentrating the recipient's phase *without* making it u-dependent keeps it
+    a legitimate invariant block and turns the detector back on, monotonically.
+    """
+    ce = S.rotational_behavioural_escape()
+    seen = []
+    for kb in (0.0, 1.0, 4.0):
+        rng = np.random.default_rng(42)
+        Z0, U = ce["sampler"](rng, 20000, kappa_b=kb)
+        Z = ce["system"].simulate(Z0, 30)
+        # the recipient stays u-invariant at every kappa: that is what makes it a
+        # fair comparison rather than a leak introduced by hand
+        assert B.block_u_dependence(Z[:, -1, 2:], U, normalize=True).total < 0.12
+        seen.append(B.block_u_dependence(ce["h"](Z)[:, -1, 2:], U, normalize=True).total)
+    assert seen[0] < seen[1] < seen[2], f"visibility rises with concentration: {seen}"
+    assert seen[2] > 10.0 * seen[0], "and the two ends are not close"
+
+
+def test_lemma_D_variance_modulation_is_transient_on_a_limit_cycle():
+    """(D3) is unavailable in the oscillatory regime: the attractor erases it.
+
+    Lemma D modulates the varying block's *scale*.  A limit cycle pulls every
+    radius to rho, so that conditioning is forgotten -- which is why exp18 tests
+    the Route B mechanism with phase modulation rather than testing Lemma D.
+    """
+    ce = S.rotational_behavioural_escape()
+    rng = np.random.default_rng(43)
+    Zs, Us = [], []
+    for k, s in enumerate((0.7, 1.3)):
+        Zs.append(np.concatenate([_cycle_ic(rng, 8000) * s, _cycle_ic(rng, 8000)], axis=1))
+        Us.append(np.full(8000, k))
+    Z = ce["system"].simulate(np.concatenate(Zs), 30)
+    U = np.concatenate(Us)
+    assert np.isfinite(Z).all(), "annulus draws stay inside the basin"
+
+    rad = np.abs(Z[..., 0] + 1j * Z[..., 1])
+    gap0 = abs(rad[U == 0, 0].mean() - rad[U == 1, 0].mean())
+    gapT = abs(rad[U == 0, -1].mean() - rad[U == 1, -1].mean())
+    assert gap0 > 0.4, "the modulation was delivered"
+    assert gapT < 1e-6 * gap0, f"and then erased ({gap0} -> {gapT})"
+
+    early = B.block_u_dependence(Z[:, 0, :2], U, normalize=True).total
+    late = B.block_u_dependence(Z[:, -1, :2], U, normalize=True).total
+    assert late < 0.15 * early, f"(D3) does not survive the attractor ({early} -> {late})"
+
+
+# --------------------------------------------------------------------------
 # Lemma D' -- (D1) is far more than the proof needs (identifiability.md 4.5a)
 #
 # The one-sided gap's only job is to exclude a degree-0 (scale-invariant) psi,
