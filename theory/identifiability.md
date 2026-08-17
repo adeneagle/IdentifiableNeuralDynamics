@@ -1972,3 +1972,177 @@ $\min\lvert z_i\rvert$ per module, **not** `filtration_gap`. On MC_Maze that
 number is the concerning one — $\lvert\lambda\rvert \approx 0.99$ over 35 bins
 means nothing decays, which is precisely the regime where the lattice ambiguity
 is live.
+
+---
+
+## 13. Can Route B kill what Route C cannot? — `exp18`
+
+Route C is dead in the oscillatory regime and not for want of effort: two limit
+cycles have identical spectral hulls, so (F3) fails outright, and §7 of
+`counterexamples.md` exhibits the $GL(2,\mathbb{Z})$ lattice regrouping as an
+*exact* modular conjugacy. §12 confirmed the fitted consequence — warm-started at
+that alternative, the fit stays there.
+
+Route B is the natural candidate to finish the job, and on paper it should.
+Lemma D′ (§4.5a) needs **no spectral hypothesis at all**, only
+$1\notin\operatorname{spec}(\tilde f_B)$, so it applies exactly where Lemma C,
+Theorem F and (D1) are all dead; its own witness is a pair of modules with
+identical spectra. So the question has a clean shape:
+
+> does a behavioural auxiliary variable reject the lattice representative that
+> the dynamics alone cannot?
+
+**The answer is no, and the obstruction is a symmetry rather than an estimator
+failure.** `exp18` is 9/12, with the analytic pre-flight 3/3 and the
+pre-registered headline **refuted**.
+
+### 13.1 Lemma D's own modulation hypothesis is unavailable here
+
+(D3) is variance modulation, $z_A = s(u)\,\tilde z_A$. A limit cycle attracts
+every radius to $\rho$, so a radial conditioning of the initial law is
+*forgotten*: the modulated block's $u$-dependence falls $0.799 \to 0.034$ and the
+between-level mean-radius gap falls $6.0\times10^{-1} \to 1.8\times10^{-12}$ over
+thirty steps. What persists on a cycle is the **phase**, which is not (D3).
+
+So in the regime where Route C has no hypothesis, Lemma D has none either. What
+`exp18` tests is therefore the Route B **mechanism** — the $u$-invariant subspace
+is canonical, so $h$ must map it into itself — and not Lemma D as proved. §3.13(b)
+in a third form: a hypothesis is usable only where the data still moves along it.
+
+### 13.2 The non-additive escape becomes a genuine conjugacy on a cycle
+
+Write the regrouping donor-first, in complex coordinates:
+
+$$h(z_A, z_B) = \bigl(z_A,\; z_B\, z_A/|z_A|\bigr).$$
+
+The orientation is forced: Lemma D kills $M_{BA} = \partial h_B/\partial z_A$, so
+the $u$-varying block must be the **donor**. With the roles swapped the coupling
+sits in the block Lemma D does not touch and every arm returns a null for a
+trivial reason.
+
+In this form the invariant block is **rotated** by the donor's phase — which is
+exactly `systems.nonadditive_behavioural_escape`, recorded in §4.5 as satisfying
+(D1)–(D4) with $M_{BA}\neq0$. What excluded it there was **Step 1**: conjugating
+modular dynamics to modular dynamics needs $\theta\circ f_A-\theta$ constant, and
+at the *fixed point* of a contracting $f_A$ that constant is forced to $0$, hence
+$\theta\equiv0$. **Replace the fixed point with an attracting limit cycle and the
+obstruction evaporates** — with $\theta=\arg z_A$ the increment is exactly
+$\omega_A$. Verified: conjugacy defect $7.5\times10^{-16}$, carrying
+$\omega_B\mapsto\omega_B+\omega_A$. Built as
+`systems.rotational_behavioural_escape`.
+
+So the escape §4.5 excluded is available in precisely the regime Route B was
+being asked to cover.
+
+### 13.3 Behaviour is blind to a coupling that acts by a symmetry of $p_B$
+
+The reparameterised invariant block is $z_B$ rotated by an angle independent of
+$z_B$. If $p_B$ is rotationally symmetric — which it is whenever the cycle's
+phase law is uniform — then
+
+$$p(h_B \mid u) \;=\; \int (T_\theta)_*p_B \; dp(\theta\mid u) \;=\; p_B
+\qquad\text{for every } u,$$
+
+whatever the donor's phase does. Measured: the detector reads $0.016$ for the
+regrouped block against its own $0.044$ finite-sample floor — *below* the noise.
+The floor is checked, not assumed: it falls with slope $-0.44$ in $n$ against the
+expected $-1/2$.
+
+**The general statement, and it explains Lemma D's hypothesis retroactively.**
+Let $h_B(z_A,z_B) = T(z_A)\cdot z_B$ with $T$ valued in a group $G$ acting on the
+$z_B$ space, and let $z_A \perp z_B$ given $u$. If $p_B$ is $G$-invariant then
+(D4) holds exactly while $M_{BA}\neq0$. **Route B's kill therefore requires $p_B$
+to have trivial symmetry under the group in which the coupling takes values.**
+Additive $h_B$ — Lemma D's case — is $G=$ translations, and *no* probability law
+on $\mathbb{R}^{d_B}$ is translation-invariant. That is why additivity was the
+right hypothesis rather than a convenience, and it also explains §4.5's remark
+that the escape needs $d_B\ge2$: at $d_B=1$ the orthogonal group is the discrete
+$\{\pm1\}$, so no family continuous in $z_A$ exists.
+
+### 13.4 Breaking the symmetry works in the data — and does not survive learning
+
+Concentrating the recipient's phase *without* making it $u$-dependent keeps it a
+legitimate invariant block and turns the detector back on, monotonically:
+
+| $\kappa_B$ | $0.0$ | $0.5$ | $1.0$ | $2.0$ | $4.0$ |
+|---|---|---|---|---|---|
+| block under R2 | $0.016$ | $0.205$ | $0.441$ | $0.747$ | $0.956$ |
+| ratio to floor | $0.4\times$ | $6.1\times$ | $13.8\times$ | $9.4\times$ | $16.7\times$ |
+
+That looked like a design rule. **It is not, and this is `exp18`'s sharpest
+finding.** The $2\times2$ — recipient symmetric/asymmetric $\times$ penalty
+off/on, every fit warm-started at R2 — returns:
+
+| cell | verdict | adv $\to$R1 | adv $\to$R2 | matched `fitq` | adv $u$-dep (true) |
+|---|---|---|---|---|---|
+| sym, $w=0$ | SURVIVED | $0.0795$ | $0.0001$ | $1.24\times10^{-4}$ | $0.203$ ($0.127$) |
+| sym, $w=0.1$ | SURVIVED | $0.0797$ | $0.0001$ | $1.16\times10^{-4}$ | $0.091$ ($0.065$) |
+| asym, $w=0$ | SURVIVED | $0.0795$ | $0.0001$ | $6.91\times10^{-5}$ | $0.961$ ($0.217$) |
+| **asym, $w=0.1$** | **SURVIVED** | $0.1101$ | $0.0314$ | $2.13\times10^{-3}$ | $0.310$ ($0.152$) |
+
+The pre-registered prediction was that the last row would **reject**. It did not,
+in 4/4 restarts, and the check is committed failing (§8 of CLAUDE.md).
+
+What happened instead is specific. The penalty did bite — it pulled the invariant
+block $0.961\to0.310$ and moved the fit off R2 ($0.0001\to0.0314$) — but the fit
+moved *away* from R1 ($0.0795\to0.1101$, i.e. past R2, since the whole R1–R2
+separation is $0.0796$), at a $30\times$ fit-quality cost. And the matched arm at
+the same weight sits at R1 with **both** a lower penalty and a better fit. So R1
+is preferred and not reached.
+
+**Why: the encoder restores the symmetry.** The discriminating measurement is the
+circular concentration $|\mathbb{E}e^{i\phi}|$ of the fitted invariant block
+(`exp18_mechanism`; no second-moment quantity can see this, since whitening makes
+an isotropic and a phase-concentrated block identical):
+
+| fit | concentration | by $u$ | $u$-dep |
+|---|---|---|---|
+| matched (at R1) | $0.809$ | $[0.811, 0.808]$ | $0.101$ |
+| adversarial (at R2) | $\mathbf{0.270}$ | $[0.313, 0.429]$ | $0.436$ |
+| *data*, R1 block | $0.854$ | | |
+| *data*, R2 block | $0.392$ | | |
+
+The matched fit reproduces the data's own concentration and is flat across $u$.
+The adversarial fit's is $0.270$ — **below even the R2 representation's own
+$0.392$**: the encoder has smeared the phase *further* than the regrouping
+already did, which is exactly the direction that makes the block rotationally
+symmetric and the coupling invisible. The escape is not fully reached (the per-$u$
+concentrations still differ), and that partial hiding is what the fit-quality
+cost buys.
+
+So the design rule of §13.4's first paragraph is a statement about the **data**,
+and the model class can undo it. The $u$-invariant subspace is canonical only if
+$p_B$ has trivial symmetry **in every representation the model can reach** — a
+far stronger requirement than trivial symmetry in the data. Third instance of the
+§3.12 pattern: a structural constraint satisfied by moving in the gauge rather
+than by acquiring the structure.
+
+### 13.5 What this licenses, and what it does not
+
+**Licensed.** Route B does not rescue the $GL(K,\mathbb{Z})$ ambiguity for
+oscillatory modules. It is blind when $p_B$ is rotationally symmetric (§13.3,
+analytic and exact), and where it can see, imposing it at a weight that preserves
+the fit does not restore R1 (§13.4, 4/4 restarts). Combined with §11.6 — (F1),
+not (F3), is what excludes the lattice regrouping — the honest position is that
+**for two non-decaying oscillatory modules the rotation vector is identified only
+up to the lattice, and neither route removes it.**
+
+**Not licensed.** (i) This is the Route B *mechanism*, not Lemma D, which §13.1
+shows has no applicable hypothesis here — Lemma D and D′–D‴ stand unchanged in
+their own settings. (ii) The $2\times2$'s negative is about the *adversarial*
+protocol; it does not show that a random-init fit with behaviour on would fail to
+prefer R1, though §11.3 is the reason not to read a random-init agreement as
+evidence either. (iii) Four restarts, one system, one $(\omega_A,\omega_B)$ pair.
+(iv) `duplicate_modules` flags 4/4 in **every** cell including the $w=0$ controls,
+because two limit cycles have identical spectra by construction — so check 9 is
+vacuous on this system rather than failing, the `exp15` trap in a new place, and
+it is kept and marked rather than deleted.
+
+**The one checkable thing that survives, and it is for real data.** The condition
+"$p_B$ has no symmetry that the coupling lives in" is a property of the recorded
+distribution, testable with no fitting at all: compute the circular concentration
+of a candidate module's phase. Trial-aligned neural data plausibly satisfies it in
+the *data* — trials do not begin at uniformly distributed phases — but §13.4 says
+that is not sufficient, since the encoder can flatten it. Any Route B claim on
+real data should report the fitted block's concentration alongside its
+$u$-dependence, or it cannot tell an imposed constraint from an evaded one.
