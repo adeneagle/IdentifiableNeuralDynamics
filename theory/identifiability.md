@@ -2108,7 +2108,24 @@ $0.392$**: the encoder has smeared the phase *further* than the regrouping
 already did, which is exactly the direction that makes the block rotationally
 symmetric and the coupling invisible. The escape is not fully reached (the per-$u$
 concentrations still differ), and that partial hiding is what the fit-quality
-cost buys.
+cost buys. Unanimous over 3 restarts — adversarial $0.270/0.264/0.211$ against
+matched $0.809/0.818/0.807$, a $3.1\times$ separation with no overlap.
+
+**And the escape shows up *within* the treatment arm, which is stronger than the
+contrast with the matched one.** `exp18_mechanism` reuses `exp18`'s seeds, so the
+two runs join per restart:
+
+| restart | fitted concentration | $u$-dep | distance to R2 |
+|---|---|---|---|
+| r0 | $0.2703$ | $0.4359$ | $0.0495$ |
+| r1 | $0.2640$ | $0.4313$ | $0.0496$ |
+| r2 | $\mathbf{0.2106}$ | $\mathbf{0.1886}$ | $\mathbf{0.0130}$ |
+
+Monotone in all three columns: **the more the encoder symmetrises the block, the
+better it satisfies the behavioural penalty, and the more firmly it holds R2.**
+The restart that hides best is the one that scores best — which is the signature
+of an evaded constraint rather than an imposed one, and is why §13.5 asks for the
+concentration to be reported beside any $u$-dependence.
 
 So the design rule of §13.4's first paragraph is a statement about the **data**,
 and the model class can undo it. The $u$-invariant subspace is canonical only if

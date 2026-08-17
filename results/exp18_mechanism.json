@@ -1,0 +1,95 @@
+{
+  "seed": 20260817,
+  "question": "did the fit stay at R2 because R1 is unreachable, or because the encoder restored p_B's rotational symmetry?",
+  "params": {
+    "kappa_b": 4.0,
+    "w_behavior": 0.1,
+    "batch": 256,
+    "steps": 3000,
+    "warm_steps": 800,
+    "n_restarts": 3
+  },
+  "data_concentration": {
+    "R1": 0.8540599389136152,
+    "R2": 0.3920871176044978
+  },
+  "fits": [
+    {
+      "restart": 0,
+      "adversarial": {
+        "seed": 20261824,
+        "fit_quality": 0.002769224112853408,
+        "concentration": 0.2702833280141518,
+        "concentration_by_u": [
+          0.3129154379842962,
+          0.4288400405599962
+        ],
+        "u_dependence": 0.4359141715496019
+      },
+      "matched": {
+        "seed": 20261830,
+        "fit_quality": 0.0021633931901305914,
+        "concentration": 0.8090402118444019,
+        "concentration_by_u": [
+          0.8112902939131881,
+          0.8079164879130926
+        ],
+        "u_dependence": 0.10083405672912713
+      }
+    },
+    {
+      "restart": 1,
+      "adversarial": {
+        "seed": 20262824,
+        "fit_quality": 0.0026569818146526814,
+        "concentration": 0.264035860766842,
+        "concentration_by_u": [
+          0.36240114862707956,
+          0.3742135092329333
+        ],
+        "u_dependence": 0.4312922811873833
+      },
+      "matched": {
+        "seed": 20262830,
+        "fit_quality": 0.0021447744220495224,
+        "concentration": 0.8183250034611889,
+        "concentration_by_u": [
+          0.8204559714892791,
+          0.817115957154513
+        ],
+        "u_dependence": 0.1314833420690239
+      }
+    },
+    {
+      "restart": 2,
+      "adversarial": {
+        "seed": 20263824,
+        "fit_quality": 0.003027915023267269,
+        "concentration": 0.21055348019167563,
+        "concentration_by_u": [
+          0.1438765110151106,
+          0.2827368767719038
+        ],
+        "u_dependence": 0.18860743180355388
+      },
+      "matched": {
+        "seed": 20263830,
+        "fit_quality": 0.0021107082720845938,
+        "concentration": 0.807265407105296,
+        "concentration_by_u": [
+          0.8076263745735713,
+          0.8078028550740038
+        ],
+        "u_dependence": 0.10558867509608105
+      }
+    }
+  ],
+  "summary": {
+    "adv_concentration_med": 0.264035860766842,
+    "matched_concentration_med": 0.8090402118444019,
+    "ratio": 3.064130037089274,
+    "adv_flatter_than_data_R2": true,
+    "matched_matches_data_R1": true,
+    "runtime_s": 2122.8920595645905
+  }
+}
