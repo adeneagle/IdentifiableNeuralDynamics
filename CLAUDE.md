@@ -100,6 +100,36 @@ obligation in this repo lives here.
 true of what is built, and not stated explicitly in the neuroscience literature.
 State it first; it costs nothing and it frames what Tier 2 adds.
 
+#### 1.2a On real data Tier 1 is not merely first, it is what survives (2026-08-16)
+
+**Measured, not projected.** On MC_Maze, Theorem F's two protective hypotheses
+fail in *opposite* directions, so neither can be traded for the other:
+
+- **(F3) needs contraction at separated rates.** The data sits at
+  $\lvert\lambda\rvert\approx0.99$ over 35 bins — $\approx30\%$ total contraction.
+  There are no separated intervals to find, and (F3) holds in **2 of 36** fits
+  (`exp14`: **0 of 24**).
+- **(F1) bites only when the donor *does* decay** ($\sup\lVert Dh\rVert \sim
+  1/\min\lvert z_{\text{donor}}\rvert$, §11.6). Nothing decaying means (F1) holds
+  comfortably *for the lattice map*, i.e. the $GL(K,\mathbb{Z})$ regrouping
+  ambiguity is **live** in exactly this regime.
+
+So Tier 2 is not just unproved on this data — its hypotheses are measurably
+absent, and the ambiguity Tier 2 exists to exclude is measurably present.
+**Tier 1 needs none of it**: injective decoder + matched observations gives
+$\hat F = hFh^{-1}$ with no (F1), no (F3), no theorem. The MC_Maze positive
+(rotation recovered at $10.4\times$ the null) is closer to a Tier-1 claim than to
+a Theorem F one, and the flow being $\ge99\%$ linear puts **Theorem A** — proved,
+sharp, complete — under it.
+
+**Consequence for the write-up, and it is a re-ranking not a retreat:** lead with
+Tier 1 as the claim that holds on the data we have, and bill Theorem F as the
+conditional refinement that applies *when a regime supplies timescale
+separation*. Do not present (F3) as a hypothesis a reader should expect to hold
+in a movement-epoch motor recording. Whether a regime with real separation exists
+is task 42, and it is a question about which epoch and area are recorded, not
+about the estimator.
+
 ### 1.3 The identifiability content is dynamical, not distributional
 
 The model class is **not** committed to a variational sequential autoencoder.
