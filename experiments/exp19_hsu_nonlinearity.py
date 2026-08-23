@@ -1,4 +1,4 @@
-"""exp19 -- is there genuine DECODER nonlinearity in the Hsu open-field data?
+r"""exp19 -- is there genuine DECODER nonlinearity in the Hsu open-field data?
 
 This is task 42, asked with the right instrument.  `exp15b` answered "no" on the
 NLB benchmarks, but it answered it about the wrong object, and so did this
@@ -27,7 +27,7 @@ three separate artefacts would each produce it.
 1. **Estimation noise.**  The MLP has far more parameters than PCA.  Scored on a
    Gaussian surrogate with matched mean and covariance -- identical second-order
    structure, no curvature -- the same network comes out *worse* than PCA
-   (-0.007 to -0.078).  So there is no free advantage; the budget is calibrated.
+   (-0.017 to -0.061).  So there is no free advantage; the budget is calibrated.
 
 2. **Marginal shape.**  A Gaussian surrogate has Gaussian marginals while
    smoothed sqrt-counts are skewed.  A Gaussian-*copula* surrogate keeps each
@@ -54,14 +54,16 @@ three separate artefacts would each produce it.
 
 ### Result
 
-Only **M56** survives control 3, at +0.121 at both ``k=4`` and ``k=8``.  VS goes
-*negative*, DS collapses to +0.02..+0.06, M23 is inconsistent (-0.015 / +0.073).
+Only **M56** survives control 3, at +0.111 (``k=4``) and +0.124 (``k=8``).  VS
+goes *negative* (-0.030 / -0.068), DS collapses (+0.051 / +0.020), M23 is
+inconsistent (-0.025 / +0.073).
 So for VS/DS/M23 the curvature is coordinate-wise and those areas sit in
 Theorem A after a known change of variables -- a clean negative, not a failure
 to measure.
 
 M56 is independently the only area whose *flow* curvature beats a per-neuron
-circular-shift null (5-347x, part 2).  Two unrelated statistics with different
+circular-shift null (4-34x, part 2; at k=8 lag=40 the null is negative, so the
+ratio is undefined and the gap is larger still).  Two unrelated statistics with different
 preprocessing and different nulls selecting the same area is worth more than
 either alone.
 
@@ -74,8 +76,56 @@ units above threshold in the best session, which is below the ~32/side that
 `exp17`'s adversarial-initialisation test needs no neuron split, so this bounds
 task 40 here and not task 41.
 
+### (d) The one hole that is NOT closed, and four failed attempts to close it
+
+Rank-Gaussianisation maps $x_j = \phi_j(u_j)$ to $\Phi^{-1}(F_{u_j}(u_j))$, which
+equals $u_j$ **exactly only when $u_j$ is Gaussian**.  Otherwise it does not
+remove the per-neuron warp, it *canonicalises* it: the result is still
+(coordinate-wise) o (linear), so the Theorem A reading is unchanged, but the
+manifold stays curved and the AE can still score a gain.  **So M56's +0.111/+0.124 could
+in principle be inflated by non-Gaussian latent projections.**
+
+What is nonetheless solid: the control demonstrably does real work, because it
+**reorders the areas** -- VS goes from second-highest raw (+0.127) to lowest and
+negative (-0.068).  A control that was inert could not do that.  And on synthetic
+data it is validated in both directions (kills a pure coordinate-wise
+construction +0.136 -> -0.0003; preserves genuine multivariate curvature
++0.436 -> +0.451).
+
+Four supplementary controls were tried and all four failed, for four different
+reasons.  Recorded because each looks reasonable in advance, and because the
+failures are informative about the shape of the problem:
+
+1. **Phase-randomised surrogate** (common phase per frequency, so covariance and
+   every auto/cross-correlation are preserved exactly -- verified, ``linS ==
+   linD`` to 4 dp).  Unusable: the AE's deficit on a Gaussian process varies by
+   area for reasons unrelated to curvature, so the excess statistic measures
+   *learnability*, not manifold shape.  It scored VS positive (+0.089) whose real
+   gain is negative.
+2. **Fitting the $\phi\circ W$ class directly, attempt 1.**  Invalid: the fitter
+   standardised columns internally, so the model did *correlation* PCA while
+   ``pca_r2`` does *covariance* PCA.  After Gaussianisation the column sds run
+   0.29-0.99 (sparse units have heavy ties at zero, and no monotone map can
+   spread a tied mass), so those are materially different subspaces -- a 0.096
+   deficit present at ZERO training steps.  The tell: ``WARPED < PCA`` in every
+   row, which is impossible for a class that *contains* PCA.
+3. **Attempt 2, run in Gaussianised coordinates.**  Tautological: the
+   coordinate-wise budget is already spent there, so the warp is redundant
+   (measured ``warp-pca`` = -0.0003) and ``full-warp`` merely reproduces the
+   Gaussianised gain this file already reports.
+4. **Attempt 3, raw coordinates with the PCA-init guard.**  Frozen: initialising
+   ``raw_c = -14`` to make ``W@0 == PCA`` exact puts the spline coefficients in a
+   vanishing-gradient plateau (``softplus'(-14) ~ 8e-7``), so the warp never
+   moves.  Known wrong rather than merely null -- Gaussianisation itself lifts
+   PCA by ~+0.10 on the same data, so a $\phi$ achieving that exists in the class
+   and the optimiser failed to find it.
+
+The guard worth keeping from all of this: **a nested model class must reproduce
+its own special case before its surplus means anything.**  Assert
+``WARPED@0 == PCA`` (this file's successor does) rather than trusting it.
+
 Unregistered in `run_all.py`: needs the recordings (``IDYN_HSU_ROOT``) and runs
-~55 min.  Checkpoints its JSON after every area.
+~21 min.  Checkpoints its JSON after every area.
 """
 
 from __future__ import annotations
