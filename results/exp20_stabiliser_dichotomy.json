@@ -1,0 +1,268 @@
+{
+  "seed": 20260824,
+  "n": 200000,
+  "d_b": 2,
+  "sigmas": [
+    0.7,
+    1.4
+  ],
+  "move_target": 0.3,
+  "detect_ratio": 5.0,
+  "floor_ratio": 2.0,
+  "part1_group_dichotomy": {
+    "floor": {
+      "u_dep": 0.011947137421166112,
+      "u_dep_mean": 0.004414167875458179,
+      "u_dep_cov": 0.0075329695457079324
+    },
+    "arms": {
+      "1a_translation": {
+        "coeff": 0.4483019459686667,
+        "move": 0.2999999999999999,
+        "u_dep": 0.12419846423241677,
+        "u_dep_mean": 0.004377720050538251,
+        "u_dep_cov": 0.11982074418187852,
+        "u_dep_raw": 0.1534185316255633
+      },
+      "1b_scaling": {
+        "coeff": 0.3375026595637435,
+        "move": 0.2999999999999998,
+        "u_dep": 0.24492733981662648,
+        "u_dep_mean": 0.0042113957492373975,
+        "u_dep_cov": 0.24071594406738908,
+        "u_dep_raw": 0.3283699966285109
+      },
+      "1c_shear": {
+        "coeff": 0.5622942840149704,
+        "move": 0.3,
+        "u_dep": 0.17533740921751925,
+        "u_dep_mean": 0.004368627637837088,
+        "u_dep_cov": 0.17096878157968218,
+        "u_dep_raw": 0.24159347780063212
+      },
+      "1d_rotation": {
+        "coeff": 0.36330105149583336,
+        "move": 0.3,
+        "u_dep": 0.007666857833129786,
+        "u_dep_mean": 0.0038033846521978213,
+        "u_dep_cov": 0.0038634731809319644,
+        "u_dep_raw": 0.007661750998693309
+      }
+    }
+  },
+  "part2_conjugacy": {
+    "floor": {
+      "u_dep": 0.013477259027121002,
+      "u_dep_mean": 0.004084854302581022,
+      "u_dep_cov": 0.00939240472453998
+    },
+    "arms": {
+      "2a_rotation": {
+        "coeff": 0.363820018215494,
+        "move": 0.29999999999999993,
+        "u_dep": 0.1732301228839919,
+        "u_dep_mean": 0.004767201085160228,
+        "u_dep_cov": 0.16846292179883166,
+        "u_dep_raw": 0.3107985902707045
+      },
+      "2b_conjugated_rotation": {
+        "coeff": 0.3637824297564099,
+        "move": 0.3,
+        "u_dep": 0.012765841883253512,
+        "u_dep_mean": 0.004171588808306214,
+        "u_dep_cov": 0.008594253074947298,
+        "u_dep_raw": 0.02038761266212253
+      }
+    }
+  },
+  "part3_detector_limit": {
+    "floor": {
+      "u_dep": 0.007157665266784305,
+      "u_dep_mean": 0.003036232983222108,
+      "u_dep_cov": 0.0041214322835621976
+    },
+    "arms": {
+      "3_rotation_whitened_skew": {
+        "coeff": 0.3643918163642784,
+        "move": 0.29999999999999993,
+        "u_dep": 0.005401277842521704,
+        "u_dep_mean": 0.001953481586265029,
+        "u_dep_cov": 0.0034477962562566747,
+        "u_dep_raw": 0.0054021974827831495,
+        "p_b_circular_concentration": 0.15092123941364322,
+        "p_b_mean_norm": 1.4102170943929731e-15,
+        "p_b_cov_dev_from_I": 2.5344944027145353e-15,
+        "p_b_harmonic4": 0.16448169818659836,
+        "harmonic_gap_coupled": {
+          "3": 0.21340764812280985,
+          "4": 0.0755429826098981,
+          "5": 0.01648803469685341
+        },
+        "harmonic_gap_uncoupled": {
+          "3": 0.003004655137995471,
+          "4": 0.00025990854061111457,
+          "5": 0.004193527598872766
+        }
+      }
+    }
+  },
+  "part4_nonzero_mean": {
+    "arms": {
+      "mean_0.0": {
+        "coeff": 0.364345028646233,
+        "move": 0.2999999999999999,
+        "u_dep": 0.004440842213781692,
+        "u_dep_mean": 0.0021027454928209946,
+        "u_dep_cov": 0.0023380967209606974,
+        "u_dep_raw": 0.004447301989652867,
+        "floor": 0.005766095569216055,
+        "ratio": 0.7701645178221455,
+        "circular_concentration": 0.0012932877478854055
+      },
+      "mean_0.25": {
+        "coeff": 0.3635055113034438,
+        "move": 0.3,
+        "u_dep": 0.009868666138670339,
+        "u_dep_mean": 0.007353633652392086,
+        "u_dep_cov": 0.002515032486278253,
+        "u_dep_raw": 0.009869298532506728,
+        "floor": 0.010916237339463286,
+        "ratio": 0.9040355052554718,
+        "circular_concentration": 0.1551448372190481
+      },
+      "mean_0.5": {
+        "coeff": 0.3654849629632991,
+        "move": 0.29999999999999993,
+        "u_dep": 0.040557656406271486,
+        "u_dep_mean": 0.023239270065236222,
+        "u_dep_cov": 0.017318386341035264,
+        "u_dep_raw": 0.04108231410207164,
+        "floor": 0.003416381820532205,
+        "ratio": 11.871523306476734,
+        "circular_concentration": 0.3029402278822502
+      },
+      "mean_1.0": {
+        "coeff": 0.3625532539404009,
+        "move": 0.30000000000000004,
+        "u_dep": 0.11159683097905337,
+        "u_dep_mean": 0.045142397819299976,
+        "u_dep_cov": 0.0664544331597534,
+        "u_dep_raw": 0.12069459009218438,
+        "floor": 0.004407952210966815,
+        "ratio": 25.317159905092613,
+        "circular_concentration": 0.5572856933610639
+      },
+      "mean_2.0": {
+        "coeff": 0.3635248358443729,
+        "move": 0.29999999999999993,
+        "u_dep": 0.27776944178583385,
+        "u_dep_mean": 0.08524110692973524,
+        "u_dep_cov": 0.19252833485609858,
+        "u_dep_raw": 0.3788652220699301,
+        "floor": 0.010151444382026368,
+        "ratio": 27.362553675380255,
+        "circular_concentration": 0.8442782476829651
+      }
+    },
+    "detection_threshold_concentration": [
+      0.1551448372190481,
+      0.3029402278822502
+    ]
+  },
+  "part5_floor_scaling": {
+    "n": [
+      12500,
+      25000,
+      50000,
+      100000,
+      200000
+    ],
+    "floor": [
+      0.026582098150296836,
+      0.023496727702847622,
+      0.01732512169218984,
+      0.01549975646649112,
+      0.00561644290839574
+    ],
+    "log_log_slope": -0.5085667039029886
+  },
+  "checks": [
+    {
+      "name": "part1 1a_translation -> detect",
+      "pass": true,
+      "detail": "u_dep=0.1242 floor=0.01195 ratio=10.40"
+    },
+    {
+      "name": "part1 1b_scaling -> detect",
+      "pass": true,
+      "detail": "u_dep=0.2449 floor=0.01195 ratio=20.50"
+    },
+    {
+      "name": "part1 1c_shear -> detect",
+      "pass": true,
+      "detail": "u_dep=0.1753 floor=0.01195 ratio=14.68"
+    },
+    {
+      "name": "part1 1d_rotation -> floor",
+      "pass": true,
+      "detail": "u_dep=0.007667 floor=0.01195 ratio=0.64"
+    },
+    {
+      "name": "part2 2a_rotation -> detect",
+      "pass": true,
+      "detail": "u_dep=0.1732 floor=0.01348 ratio=12.85"
+    },
+    {
+      "name": "part2 2b_conjugated_rotation -> floor",
+      "pass": true,
+      "detail": "u_dep=0.01277 floor=0.01348 ratio=0.95"
+    },
+    {
+      "name": "part3 p_B is genuinely asymmetric (4th harmonic well above 0)",
+      "pass": true,
+      "detail": "harmonic4=0.1645"
+    },
+    {
+      "name": "part3 p_B is exactly centred and whitened (so a rotation fixes moments 1-2)",
+      "pass": true,
+      "detail": "|mean|=1.41e-15 ||cov-I||=2.53e-15"
+    },
+    {
+      "name": "part3 (D4) GENUINELY fails here -- the 3rd harmonic separates the u levels",
+      "pass": true,
+      "detail": "coupled=0.2134 uncoupled=0.003005 ratio=71.0"
+    },
+    {
+      "name": "part3 PREDICTED: trivial stabiliser is NOT enough for a 2nd-moment detector",
+      "pass": true,
+      "detail": "u_dep=0.005401 floor=0.007158 ratio=0.75"
+    },
+    {
+      "name": "part4 zero mean is at floor",
+      "pass": true,
+      "detail": "ratio=0.77"
+    },
+    {
+      "name": "part4 nonzero mean is detected",
+      "pass": true,
+      "detail": "ratio=27.36"
+    },
+    {
+      "name": "part4 monotone in |m|",
+      "pass": true,
+      "detail": "ratios=[0.77, 0.9, 11.87, 25.32, 27.36]"
+    },
+    {
+      "name": "part4 the threshold brackets exp18's fitted concentrations (adversarial 0.270 below, matched 0.809 above)",
+      "pass": true,
+      "detail": "threshold in [0.155, 0.303]; exp18 adversarial 0.270, data-R2 0.392, matched 0.809"
+    },
+    {
+      "name": "part5 floor falls like n^{-1/2}",
+      "pass": true,
+      "detail": "slope=-0.509"
+    }
+  ],
+  "n_pass": 15,
+  "n_check": 15
+}

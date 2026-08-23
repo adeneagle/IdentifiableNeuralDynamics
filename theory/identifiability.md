@@ -2163,3 +2163,135 @@ the *data* — trials do not begin at uniformly distributed phases — but §13.
 that is not sufficient, since the encoder can flatten it. Any Route B claim on
 real data should report the fitted block's concentration alongside its
 $u$-dependence, or it cannot tell an imposed constraint from an evaded one.
+
+---
+
+## 14. Route B's exact reach — the compact-stabiliser dichotomy (`exp20`)
+
+**New (2026-08-24).** §13.3 records that behaviour is blind to a coupling acting
+by a symmetry of $p_B$ and stops at the slogan. It completes into a dichotomy,
+and the completion is worth having because it turns `exp18`'s negative into a
+statement with a boundary: Route B's kill is **not** restricted to additive
+$h_B$, and the residual ambiguity is always a *compact* group.
+
+### 14.1 The proposition
+
+> **Proposition S.** Let $h_B(z_A,z_B) = T(z_A)\cdot z_B$ with $T$ valued in a
+> group $G$ acting affinely on $\mathbb{R}^{d_B}$, let $z_A \perp z_B$ given $u$,
+> and let $p_B$ have finite nonsingular second moment. Then **(D4)** holds with
+> $M_{BA}\neq0$ **iff** $T$ takes values in a single coset of
+> $\mathrm{Stab}_G(p_B)$; and
+> $$\mathrm{Stab}_G(p_B) \;\subseteq\; \Sigma^{1/2}\,O(d_B)\,\Sigma^{-1/2},$$
+> a **compact** group, where $\Sigma = \mathrm{Cov}(p_B)$.
+
+*Proof.* $(A,b)_*p_B = p_B$ preserves the first two moments, so
+$A\Sigma A^\top = \Sigma$ and $A\mu + b = \mu$. The first gives
+$\Sigma^{-1/2}A\Sigma^{1/2} \in O(d_B)$; the second determines $b$ from $A$. A
+closed subgroup of a conjugate of $O(d_B)$ is compact. Conversely, if
+$T(z_A) \in T_0\,\mathrm{Stab}$ for all $z_A$ then $T(z_A)_*p_B = (T_0)_*p_B$
+for every $z_A$, so the law of $h_B$ is $u$-free while $\partial h_B/\partial z_A
+\neq 0$. $\square$
+
+**Two consequences, and they run in opposite directions.**
+
+1. **Lemma D generalises well past additivity.** Any coupling valued in a group
+   that is non-compact modulo the stabiliser — translations, scalings, shears —
+   is killed. "No probability law is translation-invariant" (§13.3) is the
+   $d_B$-dimensional shadow of compactness, so additivity was never the load-
+   bearing hypothesis; *non-compactness* was.
+2. **The escape is compact, hence small and measurable.** It is at most
+   $\Sigma^{1/2}O(d_B)\Sigma^{-1/2}$ — and note *conjugate to*, not *equal to*.
+   An anisotropic $p_B$ does not remove the escape, it moves it.
+
+### 14.2 What `exp20` certifies — analytic, 15/15
+
+Exact distributions, no fitting, so any failure is the criterion's or the
+detector's. Every coupling is a one-parameter subgroup $T = \exp(\theta X)$ with
+$\theta = c\,z_{A,0}$, and $c$ is **bisected to a common displacement**
+$\mathbb{E}\lVert h_B-z_B\rVert/\mathbb{E}\lVert z_B\rVert = 0.300$ in every arm,
+so "invisible" can never be "weak". The floor is measured at the same $n$ and
+falls with log-log slope $-0.509$ against the expected $-1/2$.
+
+| arm | $p_B$ | generator | $u$-dep | $\times$ floor | verdict |
+|---|---|---|---|---|---|
+| 1a | isotropic | translation | $0.1242$ | $10.4$ | killed |
+| 1b | isotropic | scaling | $0.2449$ | $20.5$ | killed |
+| 1c | isotropic | shear | $0.1753$ | $14.7$ | killed |
+| 1d | isotropic | **rotation** | $0.0077$ | $\mathbf{0.64}$ | **invisible** |
+| 2a | anisotropic | rotation | $0.1732$ | $12.9$ | killed |
+| 2b | anisotropic | $\Sigma^{1/2}R\Sigma^{-1/2}$ | $0.0128$ | $\mathbf{0.95}$ | **invisible** |
+
+Arms 2a/2b are the pair that distinguishes "conjugate to $O(d_B)$" from "equal
+to $O(d_B)$", and they separate by $13.5\times$ at matched displacement. Making
+$p_B$ anisotropic does not buy immunity — it relocates the blind group, and the
+relocated one is exactly as blind.
+
+### 14.3 The detector is blinder than the criterion, and structurally so
+
+Arm 3 was pre-registered as a *negative prediction* and it landed. Take a
+non-Gaussian $p_B$, **centred and whitened exactly** ($\lVert\mu\rVert =
+1.4\times10^{-15}$, $\lVert\Sigma - I\rVert = 2.5\times10^{-15}$) and asymmetric
+enough that $\mathrm{Stab}_{O(2)}(p_B)$ is trivial (4th circular harmonic
+$0.165$). Proposition S says (D4) **fails** — and it does, grossly:
+
+| statistic | coupled | uncoupled | ratio |
+|---|---|---|---|
+| 3rd circular harmonic gap across $u$ | $0.2134$ | $0.0030$ | $\mathbf{71\times}$ |
+| `block_u_dependence` (whitened) | $0.0054$ | $0.0072$ (floor) | $0.75\times$ |
+
+So the conditional laws are wildly different and **the detector reads below its
+own noise floor**. Separating those two was the point of the harmonic test:
+without it "at floor" would have been unattributable, equally consistent with
+Proposition S saying there is nothing to detect.
+
+**The sharpening this forces on §13.3, and it is not a detail.** §13.3 blames
+$p_B$'s rotational symmetry. For a *whitened second-moment* detector the blind
+group is $O(d_B)$ for **every** $p_B$, because whitening makes the second moments
+isotropic by construction. So CLAUDE.md §3.12's fix — whiten the block so the
+penalty is $GL(d_B)$-invariant — and the rotational blindness are **the same
+fact**, not an unrelated repair. The gauge-invariance we require is precisely
+what forfeits the orthogonal direction. That is a genuine tension in the
+objective, and it was not visible until the criterion and the detector were
+measured apart.
+
+### 14.4 What a whitened second-moment detector *can* still see
+
+Only a $u$-dependent **mean direction**. Arm 4 sweeps $\lVert\mathbb{E}z_B\rVert$
+under a rotation coupling:
+
+| $\lVert m\rVert$ | $0$ | $0.25$ | $0.5$ | $1.0$ | $2.0$ |
+|---|---|---|---|---|---|
+| circular concentration | $0.001$ | $0.155$ | $0.303$ | $0.557$ | $0.844$ |
+| $\times$ floor | $0.77$ | $0.90$ | $\mathbf{11.9}$ | $25.3$ | $27.4$ |
+
+Monotone, and a **threshold** rather than a ramp: detection turns on between
+concentration $0.155$ and $0.303$.
+
+**That bracket is where `exp18`'s mechanism measurement sits.** Its fitted
+adversarial block had concentration $\mathbf{0.270}$ — inside the bracket, on the
+undetectable side — against a matched arm at $0.809$, far above it, and the
+data's own R2 value $0.392$, just above. `exp18` §13.4's "the encoder restores
+the symmetry" is therefore quantitatively predicted here from an experiment with
+no fitting in it at all: the encoder is **centring the block**, and it only has
+to move the concentration below $\approx0.3$ to become invisible.
+
+### 14.5 What this licenses, and what it does not
+
+**Licensed.** (i) Lemma D's additivity can be replaced by *non-compactness of
+the coupling group modulo $\mathrm{Stab}(p_B)$*, which is strictly weaker and
+covers scalings and shears. (ii) The residual ambiguity after a Route B kill is
+at most a compact group conjugate to a subgroup of $O(d_B)$ — finite-dimensional,
+and measurable without fitting. (iii) The design rule for the fitted model is
+**concentration $\gtrsim 0.3$ on the pinned block**, not "break the rotational
+symmetry of $p_B$", and it is a mean-direction condition.
+
+**Not licensed.** (a) This is stage 1: it measures **(D4) and its detector**, not
+whether a given $T$ arises from a genuine modular conjugacy — §13.2 already shows
+those differ, the rotational escape being excluded at a fixed point by Step 1 and
+real on a cycle. (b) Proposition S assumes $p_B$ has finite nonsingular second
+moment; heavy-tailed laws are not covered, and the stabiliser argument would need
+Cartan's theorem instead. (c) $d_B = 2$ throughout; the compactness argument is
+dimension-free but nothing here checks $d_B \ge 3$, where $O(d_B)$ has a much
+richer subgroup lattice. (d) Nothing here says the concentration condition
+survives learning — that is stage 2, and `exp18` is the reason to expect it needs
+to be *imposed* rather than inherited.

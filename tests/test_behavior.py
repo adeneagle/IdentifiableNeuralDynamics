@@ -879,3 +879,145 @@ def test_k_koopman_eigenfunctions_tie_k_levels_so_no_finite_count_works():
     assert max(ws) - min(ws) < 1e-10, f"three levels tied: {ws}"
     # a fourth level still separates -- the tie is not a degeneracy of psi
     assert abs(W(2.4, c) - ws[0]) > 1e-4
+
+
+# ============================================================================
+# Route B's exact reach: the compact-stabiliser dichotomy (Prop. S, section 14)
+#
+# The kill is not about additivity, it is about COMPACTNESS.  A coupling valued
+# in a group acting non-compactly on z_B is detected; one valued in Stab(p_B) --
+# always compact -- is not.  These pin both directions, plus the sharper fact
+# that the *detector* is blinder than the criterion.
+# ============================================================================
+
+_N_DICH = 60_000
+_SIGMAS_DICH = (0.7, 1.4)
+
+
+def _dich_draw(kind, n, rng, mean_norm=0.0):
+    u = rng.integers(0, 2, size=n)
+    zA0 = np.asarray(_SIGMAS_DICH)[u] * rng.standard_normal(n)
+    if kind == "iso":
+        zB = rng.standard_normal((n, 2))
+    elif kind == "aniso":
+        zB = rng.standard_normal((n, 2)) * np.array([1.0, 2.0])
+    elif kind == "skew":
+        which = rng.choice(3, size=n, p=[0.5, 0.3, 0.2])
+        ang = np.array([0.0, 1.75, 3.75])
+        zB = 2.0 * np.stack([np.cos(ang), np.sin(ang)], 1)[which]
+        zB = zB + 0.6 * rng.standard_normal((n, 2))
+        zB = zB - zB.mean(0, keepdims=True)
+        zB = np.linalg.solve(np.linalg.cholesky(np.cov(zB, rowvar=False)), zB.T).T
+    else:  # pragma: no cover
+        raise ValueError(kind)
+    return zA0, zB + np.array([mean_norm, 0.0]), u
+
+
+def _rot(th):
+    c, s = np.cos(th), np.sin(th)
+    return np.stack([np.stack([c, -s], -1), np.stack([s, c], -1)], -2)
+
+
+def _matched(build, zA0, zB, target=0.30):
+    """Bisect the coefficient so every arm displaces h_B by the same amount."""
+    mv = lambda c: float(np.linalg.norm(build(c * zA0, zB) - zB, axis=1).mean()
+                         / np.linalg.norm(zB, axis=1).mean())
+    lo, hi = 1e-6, 1e3
+    for _ in range(50):
+        c = np.sqrt(lo * hi)
+        lo, hi = (c, hi) if mv(c) < target else (lo, c)
+    return build(np.sqrt(lo * hi) * zA0, zB)
+
+
+def _dep(w, u):
+    return B.block_u_dependence(w, u, normalize=True).total
+
+
+def test_noncompact_coupling_groups_are_all_killed_not_just_translations():
+    """Lemma D's additivity is the translation case of a much larger class.
+
+    Scalings and shears are equally non-compact and equally detected, at matched
+    displacement -- so the load-bearing hypothesis is non-compactness, not the
+    additive form.
+    """
+    rng = np.random.default_rng(0)
+    zA0, zB, u = _dich_draw("iso", _N_DICH, rng)
+    floor = _dep(zB, u)
+    builds = {
+        "translation": lambda th, z: z + np.stack([th, np.zeros_like(th)], 1),
+        "scaling": lambda th, z: np.exp(th)[:, None] * z,
+        "shear": lambda th, z: np.einsum("nab,nb->na", np.stack(
+            [np.stack([np.ones_like(th), th], -1),
+             np.stack([np.zeros_like(th), np.ones_like(th)], -1)], -2), z),
+    }
+    for name, b in builds.items():
+        assert _dep(_matched(b, zA0, zB), u) > 5 * floor, name
+
+
+def test_a_rotation_is_invisible_against_an_isotropic_law():
+    """Stab(N(0,I)) contains SO(2), so (D4) holds exactly with M_BA nonzero."""
+    rng = np.random.default_rng(1)
+    zA0, zB, u = _dich_draw("iso", _N_DICH, rng)
+    hB = _matched(lambda th, z: np.einsum("nab,nb->na", _rot(th), z), zA0, zB)
+    assert _dep(hB, u) < 2 * _dep(zB, u)
+
+
+def test_the_blind_group_is_CONJUGATE_to_O2_not_equal_to_it():
+    """Anisotropy does not remove the escape -- it relocates it.
+
+    Against ``N(0, diag(1,4))`` a plain rotation is detected, while the
+    conjugated rotation ``S^{1/2} R S^{-1/2}`` -- which *is* the stabiliser --
+    is invisible.  Getting this backwards would read "make p_B anisotropic" as a
+    fix, and it is not one.
+    """
+    rng = np.random.default_rng(2)
+    zA0, zB, u = _dich_draw("aniso", _N_DICH, rng)
+    floor = _dep(zB, u)
+    Sh, Shi = np.diag([1.0, 2.0]), np.diag([1.0, 0.5])
+    plain = _matched(lambda th, z: np.einsum("nab,nb->na", _rot(th), z), zA0, zB)
+    conj = _matched(lambda th, z: np.einsum(
+        "ab,nbc,cd,nd->na", Sh, _rot(th), Shi, z), zA0, zB)
+    assert _dep(plain, u) > 5 * floor
+    assert _dep(conj, u) < 2 * floor
+
+
+def test_the_second_moment_detector_is_blinder_than_the_criterion():
+    """Trivial stabiliser is NOT sufficient for ``block_u_dependence``.
+
+    A centred, whitened, asymmetric ``p_B`` has trivial ``Stab_{O(2)}``, so a
+    rotation genuinely breaks (D4) -- visible at the 3rd circular harmonic.  But
+    a rotation fixes the mean (0) and the covariance (I), so a whitened
+    second-moment detector cannot see it.  This is why section 3.12's
+    gauge-invariance fix and section 13.3's rotational blindness are the same
+    fact rather than two problems.
+    """
+    rng = np.random.default_rng(3)
+    zA0, zB, u = _dich_draw("skew", 4 * _N_DICH, rng)
+    np.testing.assert_allclose(zB.mean(0), 0.0, atol=1e-9)
+    np.testing.assert_allclose(np.cov(zB, rowvar=False), np.eye(2), atol=1e-9)
+    hB = _matched(lambda th, z: np.einsum("nab,nb->na", _rot(th), z), zA0, zB)
+
+    def harm(w, k):
+        a = np.arctan2(w[:, 1], w[:, 0])
+        v = [np.hypot(np.cos(k * a[u == j]).mean(), np.sin(k * a[u == j]).mean())
+             for j in (0, 1)]
+        return abs(v[0] - v[1])
+
+    assert harm(hB, 3) > 20 * harm(zB, 3), "(D4) must genuinely fail here"
+    assert _dep(hB, u) < 2 * _dep(zB, u), "and the detector must still miss it"
+
+
+def test_a_nonzero_mean_is_what_restores_the_kill():
+    """The one thing a whitened second-moment detector can still see.
+
+    Design rule behind section 14.4: the pinned block needs a u-dependent mean
+    direction, i.e. circular concentration above ~0.3.  exp18's fitted
+    adversarial block sat at 0.270 -- just under.
+    """
+    rng = np.random.default_rng(4)
+    ratios = []
+    for m in (0.0, 1.0):
+        zA0, zB, u = _dich_draw("iso", _N_DICH, rng, mean_norm=m)
+        hB = _matched(lambda th, z: np.einsum("nab,nb->na", _rot(th), z), zA0, zB)
+        ratios.append(_dep(hB, u) / _dep(zB, u))
+    assert ratios[0] < 2.0 < 5.0 < ratios[1]
