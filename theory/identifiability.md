@@ -3031,3 +3031,107 @@ closes one oscillator driving one contracting module, modulo analyticity; and
 §15.13b identifies the mechanism for two oscillators but not the proof. That is
 strictly more than any other route in this document reaches, and it is still
 short of the case task 23 exhibits.
+
+---
+
+## 15.14 exp22 — Route D survives learning, and the control that makes it readable
+
+`exp21` established Route D analytically and §15.12–15.13b prove it in
+restricted settings. Neither says a **fitted** model finds the independent
+representative, and this repo's history says to expect trouble: three times a
+structural constraint has been satisfied in gauge rather than in structure
+(§3.12 the optimiser shrank the block, §3.15 time-pooling erased a rotating
+signal, §13.4 the encoder flattened the phase). `exp22` (task 48) asks whether
+the whitened-dCor term bites, reusing `exp18`'s system, seeds and settings so
+the only new thing is `w_independence`.
+
+**Result: 5 of 6, with the failure in the fit-quality budget rather than in any
+structural prediction.** Three restarts per cell, 3000 steps, $w=1.0$ chosen by
+the stage-0 sweep, every fit warm-started at a designated representative and
+then trained normally. Distances are the §3.17 Procrustes distance, so the
+within-module gauge is quotiented out.
+
+| cell | median $d(R_1)$ | median $d(R_2)$ | lands at | dCor | fit quality |
+|---|---|---|---|---|---|
+| asymmetric + **adversarial** (warm-start R2) | $\mathbf{0.3242}$ | $1.0232$ | **R1**, 3/3 | $0.0688$ | $1.67\times10^{-3}$ |
+| asymmetric + matched (warm-start R1) | $0.3283$ | $0.9919$ | R1, 3/3 | $0.0573$ | $2.15\times10^{-3}$ |
+| symmetric + **adversarial** | $1.0342$ | $\mathbf{0.4086}$ | **R2**, 3/3 | $0.0574$ | $3.31\times10^{-3}$ |
+
+R1–R2 separation is $0.9708$ (asymmetric) and $0.9732$ (symmetric).
+
+### 15.14.1 What the numbers say
+
+**(a) The $w=0$ row is the within-experiment A/B, and it is the whole result.**
+Stage 0 at $w=0$ leaves the adversarially-initialised fit sitting at R2:
+$d(R_2)=0.0274$ against $d(R_1)=0.9709$, with fitted dCor $0.7966$ — `exp18`'s
+finding reproduced exactly, the lattice representative is stable under learning.
+Turning the term on flips it. Same data, same seeds, same warm start; one term.
+
+**(b) It arrives *at* R1 rather than drifting off R2.** The adversarial arm lands
+at $0.324$–$0.350$; the arm that was **initialised** at R1 lands at
+$0.275$–$0.443$. Those are the same distribution, so $\approx0.33$ is the
+estimator's floor and not a shortfall. This is the pre-registered contrast with
+`exp18`, whose behavioural penalty moved the fit off R2 but *past* R1
+(§13.4: to $0.1101$ against an R1–R2 separation of only $0.0796$) — the
+signature of a constraint being evaded rather than satisfied.
+
+**(c) The symmetric control is unanimous and it is what rules out the boring
+explanation.** With $p_B$ rotationally symmetric the lattice image is genuinely
+independence-preserving (data dCor $0.0687$ at R2 versus $0.0770$ at R1, i.e.
+*more* independent at R2), so Theorem D′ says the term must be blind there. It
+is: 3/3 stay at R2, at the same weight and the same budget. **A penalty that
+merely degraded the fit into noise would move this cell too.** That is why the
+cell was mandatory, and it is the check §3.12, §3.15 and §13.4 would each have
+failed.
+
+**(d) The fits are slightly *more* independent than the truth.** Fitted dCor
+$0.057$–$0.069$ against the true representation's $0.0761$. Small, and in the
+direction the term pushes; worth noting because it says the term is doing work
+at the optimum rather than sitting inactive.
+
+### 15.14.2 The failing check, and a new instance of an old lesson
+
+> **FAIL — "the penalty did not wreck the fit": matched-arm fit quality
+> $2.152\times10^{-3}$ against the $w=0$ calibration's $3.255\times10^{-4}$, a
+> factor $6.6$ where the pre-registered bar was $5$.** Committed failing per §8.
+
+Two things must be said about it, one exculpatory and one not.
+
+**Not exculpatory: the comparison understates the cost.** The $w=0$ reference was
+measured at the stage-0 budget of 800 steps, while the matched arm ran 3000. A
+longer unpenalised run would fit *better*, so the true ratio is at least $6.6$.
+
+**And it is a fresh instance of §3.11's warning, one level over.** That section
+says a step count does not survive a change of observation model; here a
+**weight** did not survive a change of *budget*. Stage 0 picked $w=1.0$ as the
+largest weight costing under $5\times$ — at 800 steps it cost $4.8\times$, just
+inside the bar, and by 3000 steps the same weight cost $6.6\times$. Calibrating a
+penalty weight at a short budget and then running long silently tightens it.
+**Do:** calibrate at the budget you will use, or report the ratio at both.
+
+**Does it threaten the conclusion?** No, and the reason is (c) rather than
+special pleading: the symmetric cell carries the identical weight and budget and
+does not move. A penalty large enough to push fits around indiscriminately would
+have moved it.
+
+### 15.14.3 The uninformative pass
+
+`pred 4` ("fitted dCor tracks the representative") passed on a margin of
+$10^{-4}$ — asymmetric-matched $0.0573$ against symmetric-adversarial $0.0574$ —
+and should be read as **uninformative, not as support**. The check compares dCor
+across two *different* data-generating systems, and in the symmetric one R2 is
+independent by construction, so every arm scores low and the comparison cannot
+discriminate. The within-system version is unavailable for a good reason: no
+asymmetric fit stayed at R2, so there is no high-dCor arm left to contrast
+against. Same family as `exp15`'s empty screened arm and `exp18`'s vacuous
+`duplicate_modules` — a check that cannot fail is not evidence.
+
+### 15.14.4 Standing
+
+Task 48 is answered positively with one caveat. The Route D term is the first
+structural penalty in this repo that **moves a fit onto the correct
+representative without overshooting, and provably declines to move it where the
+theory says it should be blind**. What it has not been shown to do is work at a
+budget where its fit-quality cost is small, and it has been run at
+$K=2$, $d_B=2$, three restarts, on one system. `TODO(gap)` — recalibrate $w$ at
+the full budget and re-run before treating the cost as intrinsic.

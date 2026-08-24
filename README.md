@@ -247,7 +247,7 @@ experiments/           exp01..exp14, each writing results/<name>.json
                           run_all.py covers exp01..exp10 only, exp13/exp14 are
                           excluded on cost -- their machinery is covered by tests/)
 environment.yml        pinned env; requirements.txt is the pure-pip equivalent
-tests/                 417 tests (416 passing + 1 skipped)
+tests/                 422 tests (421 passing + 1 skipped)
 ```
 
 ## Conventions

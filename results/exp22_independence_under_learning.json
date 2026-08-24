@@ -64,7 +64,118 @@
         "nearer": "R1",
         "dcor": 0.07323726531248433,
         "fit_quality": 0.0016742058796808124
+      },
+      {
+        "restart": 1,
+        "seed": 20262833,
+        "d_R1": 0.3242188715154321,
+        "d_R2": 1.0221741385525633,
+        "nearer": "R1",
+        "dcor": 0.06876373262499617,
+        "fit_quality": 0.001501819002442062
+      },
+      {
+        "restart": 2,
+        "seed": 20263833,
+        "d_R1": 0.35024968042948906,
+        "d_R2": 1.0324969543239495,
+        "nearer": "R1",
+        "dcor": 0.06668259633162406,
+        "fit_quality": 0.0022410631645470858
+      }
+    ],
+    "asym_matched": [
+      {
+        "restart": 0,
+        "seed": 20261839,
+        "d_R1": 0.3282992113673572,
+        "d_R2": 0.9918705622124115,
+        "nearer": "R1",
+        "dcor": 0.057266633718217476,
+        "fit_quality": 0.002152196131646633
+      },
+      {
+        "restart": 1,
+        "seed": 20262839,
+        "d_R1": 0.4433650416528696,
+        "d_R2": 1.0305197139181488,
+        "nearer": "R1",
+        "dcor": 0.05393343015691711,
+        "fit_quality": 0.003509692382067442
+      },
+      {
+        "restart": 2,
+        "seed": 20263839,
+        "d_R1": 0.27466343795924825,
+        "d_R2": 0.9742892664792723,
+        "nearer": "R1",
+        "dcor": 0.060220723605446454,
+        "fit_quality": 0.0011772816069424152
+      }
+    ],
+    "sym_adversarial": [
+      {
+        "restart": 0,
+        "seed": 20261833,
+        "d_R1": 1.0343343994739627,
+        "d_R2": 0.40856733946023344,
+        "nearer": "R2",
+        "dcor": 0.057072713135621296,
+        "fit_quality": 0.004474037792533636
+      },
+      {
+        "restart": 1,
+        "seed": 20262833,
+        "d_R1": 1.0302211966617627,
+        "d_R2": 0.3940825766916612,
+        "nearer": "R2",
+        "dcor": 0.058700884391368495,
+        "fit_quality": 0.0033086203038692474
+      },
+      {
+        "restart": 2,
+        "seed": 20263833,
+        "d_R1": 1.0341763453347204,
+        "d_R2": 0.41063417641011657,
+        "nearer": "R2",
+        "dcor": 0.05744623918550721,
+        "fit_quality": 0.003083684714511037
       }
     ]
-  }
+  },
+  "checks": [
+    {
+      "name": "pred 1: asymmetric+adversarial moves off R2",
+      "pass": true,
+      "detail": "3/3 nearer R1; median d(R1) 0.3242 d(R2) 1.0232"
+    },
+    {
+      "name": "pred 1b: and TOWARD R1, not past it (exp18 overshot)",
+      "pass": true,
+      "detail": "median d(R1) 0.3242 vs R1-R2 separation 0.9708"
+    },
+    {
+      "name": "pred 2: asymmetric+matched stays at R1",
+      "pass": true,
+      "detail": "3/3"
+    },
+    {
+      "name": "pred 3: symmetric+adversarial does NOT move -- Thm D' blindness",
+      "pass": true,
+      "detail": "3/3 still at R2"
+    },
+    {
+      "name": "pred 4: fitted dCor tracks the representative",
+      "pass": true,
+      "detail": "asym adv 0.0688, asym matched 0.0573, sym adv 0.0574"
+    },
+    {
+      "name": "the penalty did not wreck the fit",
+      "pass": false,
+      "detail": "matched fitq 2.152e-03 vs w=0 calibration 3.255e-04"
+    }
+  ],
+  "n_pass": 5,
+  "n_check": 6,
+  "runtime_s": 6049.433822393417
 }
