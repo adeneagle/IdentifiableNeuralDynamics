@@ -1,0 +1,50 @@
+{
+  "seed": 20260826,
+  "n_restarts": 3,
+  "w_grid": [
+    0.0,
+    0.3,
+    1.0,
+    3.0
+  ],
+  "cal_steps": 800,
+  "steps": 3000,
+  "predictions": {
+    "1": "asymmetric+adversarial moves off R2 TOWARD R1",
+    "2": "asymmetric+matched stays at R1 with fit quality intact",
+    "3": "symmetric+adversarial does NOT move (Thm D' blindness)",
+    "4": "fitted dCor tracks which representative the fit ends at"
+  },
+  "data": {
+    "asym": {
+      "separation": 0.9708074706402701,
+      "dcor_R1": 0.07606195872913882,
+      "dcor_R2": 0.7966158069851761
+    },
+    "sym": {
+      "separation": 0.9732149868671237,
+      "dcor_R1": 0.07702289797515095,
+      "dcor_R2": 0.06868198754139457
+    }
+  },
+  "stage0_calibration": {
+    "0.0": {
+      "dcor": 0.7965883424942448,
+      "fit_quality": 0.00032550730975344777,
+      "d_R1": 0.9708873785798533,
+      "d_R2": 0.027361558196983306
+    },
+    "0.3": {
+      "dcor": 0.09435420155873588,
+      "fit_quality": 0.001228861859999597,
+      "d_R1": 0.3063820154990245,
+      "d_R2": 1.0168302161720877
+    },
+    "1.0": {
+      "dcor": 0.08906536197927827,
+      "fit_quality": 0.0015594747383147478,
+      "d_R1": 0.2619645132492762,
+      "d_R2": 1.0044955202619636
+    }
+  }
+}

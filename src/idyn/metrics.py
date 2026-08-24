@@ -52,6 +52,7 @@ __all__ = [
     "dynamical_fingerprint",
     "AgreementReport",
     "invariant_agreement",
+    "procrustes_block_distance",
 ]
 
 
@@ -1357,3 +1358,48 @@ def invariant_agreement(
         per_module_spectrum=per_spec,
         per_module_rotation=[float(x) for x in per_rot],
     )
+
+
+def procrustes_block_distance(
+    A: np.ndarray, B: np.ndarray, partition: Sequence[int]
+) -> float:
+    """Distance from ``A`` to ``B`` after the best per-module ORTHOGONAL alignment.
+
+    Returns ``||A' - B|| / ||B||`` where each module of ``A`` has been rotated to
+    best match ``B``'s.  Both are assumed already whitened per module (e.g. by
+    an experiment's ``whiten_modules``); this quotients what whitening leaves.
+
+    ### Why this exists (CLAUDE.md §3.17)
+
+    Deciding *which representative a fit landed on* is a distance question, and a
+    raw distance measures the gauge.  §7 grants an arbitrary coordinate change
+    inside each module; per-module whitening removes scale and shear but leaves
+    ``O(d_i)``, so a fit sitting **at** a representative up to a within-module
+    rotation scores a large raw distance and reads as a failure.
+
+    Found in `exp22` stage 0 before it cost a 54-minute run: with the Route D
+    penalty on, the raw distances read ``d(R1) = 0.83`` against ``d(R2) = 1.03``,
+    which is equally consistent with "moved off R2 to nowhere" and "arrived at R1
+    in rotated coordinates" -- the two hypotheses the experiment exists to
+    separate.
+
+    Note the same correction is **not** needed for a *distribution* statistic:
+    §14's whitened resultant and §15's whitened dCor are already
+    ``O(d_i)``-invariant.  It is distances that need it.
+    """
+    A = np.asarray(A, float)
+    B = np.asarray(B, float)
+    if A.shape != B.shape:
+        raise ValueError(f"shape mismatch: {A.shape} vs {B.shape}")
+    if sum(partition) != A.shape[-1]:
+        raise ValueError(f"partition {list(partition)} does not sum to {A.shape[-1]}")
+    a2 = A.reshape(-1, A.shape[-1])
+    b2 = B.reshape(-1, B.shape[-1])
+    num, den, off = 0.0, 0.0, 0
+    for k in partition:
+        x, y = a2[:, off:off + k], b2[:, off:off + k]
+        u, _, vt = np.linalg.svd(x.T @ y)
+        num += float(np.linalg.norm(x @ (u @ vt) - y) ** 2)
+        den += float(np.linalg.norm(y) ** 2)
+        off += k
+    return float(np.sqrt(num / max(den, 1e-30)))

@@ -917,3 +917,56 @@ def test_per_module_errors_expose_what_the_max_hides():
     assert max(r.per_module_rotation) == pytest.approx(r.rotation_error, abs=1e-12)
     # the per-module list is aligned with `matching`, so a caller can say which
     assert len(r.matching) == len(r.per_module_rotation) == len(r.per_module_spectrum)
+
+
+# ---------------------------------------------------------------------------
+# procrustes_block_distance (CLAUDE.md 3.17): deciding WHICH representative a
+# fit landed on is a distance question, and a raw distance measures the gauge.
+# ---------------------------------------------------------------------------
+
+def test_procrustes_distance_is_blind_to_the_within_module_gauge():
+    """Per-module whitening leaves O(d_i), and section 7 grants exactly that.
+
+    A fit sitting AT a representative up to a within-module rotation must score
+    zero, or the readout reports success as failure.
+    """
+    from idyn.metrics import procrustes_block_distance as pbd
+
+    rng = np.random.default_rng(0)
+    B = rng.standard_normal((300, 6, 4))
+    assert pbd(B, B, [2, 2]) < 1e-12
+
+    th = 0.7
+    Q = np.array([[np.cos(th), -np.sin(th)], [np.sin(th), np.cos(th)]])
+    A = B.copy()
+    A[..., :2] = B[..., :2] @ Q.T
+    assert pbd(A, B, [2, 2]) < 1e-12, "a within-module rotation is gauge"
+    # and a reflection, which is in O(2) but not SO(2)
+    A2 = B.copy()
+    A2[..., 2:] = B[..., 2:] @ np.diag([1.0, -1.0])
+    assert pbd(A2, B, [2, 2]) < 1e-12
+
+
+def test_procrustes_distance_is_not_vacuous():
+    """The quotient must not flatten a genuine difference -- the control that
+    makes the previous test a fix rather than a way of always scoring zero."""
+    from idyn.metrics import procrustes_block_distance as pbd
+
+    rng = np.random.default_rng(1)
+    B = rng.standard_normal((300, 6, 4))
+    # mixing ACROSS modules is not gauge, and must survive
+    A = B.copy()
+    A[..., 0] = B[..., 0] + 1.5 * B[..., 2]
+    assert pbd(A, B, [2, 2]) > 0.3
+    # an unrelated draw likewise
+    assert pbd(rng.standard_normal((300, 6, 4)), B, [2, 2]) > 0.5
+
+
+def test_procrustes_distance_rejects_a_mismatched_partition():
+    from idyn.metrics import procrustes_block_distance as pbd
+
+    Z = np.zeros((10, 4))
+    with pytest.raises(ValueError, match="does not sum"):
+        pbd(Z, Z, [2, 3])
+    with pytest.raises(ValueError, match="shape mismatch"):
+        pbd(Z, np.zeros((10, 5)), [2, 2])
