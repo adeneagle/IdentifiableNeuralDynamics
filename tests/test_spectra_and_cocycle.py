@@ -807,3 +807,86 @@ def test_theorem_D_kills_the_cross_block_theorem_F_is_forced_to_permit():
     # Theorem D can
     assert np.log(rho2) + 0.0 < 0, "Theorem D's condition holds (spread 0)"
     assert _theorem_d_residual(f1, rho2) < 1e-2
+
+
+# ---------------------------------------------------------------------------
+# Theorem D' (identifiability.md 15.13), linearisation step.  On a limit cycle
+# the sketch's one remaining obligation is whether every u_s is linear.  The
+# cocycle u_s = f_1^{-n} u_{f_2^n s} f_1^n acts on a degree-p Taylor term Q by
+#
+#     Q  |->  A_1^{-n} Q(A_1^n .),      ||.|| <= (rho_max^p)^n / rho_min^n,
+#
+# so the degree-2 term (the binding one) decays iff
+#
+#     log rho_1 + sigma_1 < 0,        sigma_1 = Lyapunov SPREAD of f_1.
+#
+# Free for a conformal f_1.  Note what this says: ANISOTROPY breaks it, not
+# slowness -- diag(0.6, 0.3) contracts harder than a 0.95 spiral and still
+# grows.  Same shape as 3.14's "width, not speed, is what disqualifies".
+# ---------------------------------------------------------------------------
+
+def _quadratic_jet_norm(A1, n, n_samp=4096):
+    """||A_1^{-n} Q(A_1^n .)|| on the unit circle, for Q(y) = e_last * y_0^2.
+
+    Deterministic angular grid, not a random sample: a conformal A_1 rotates
+    the evaluation points by n*omega, so Monte-Carlo error does NOT cancel
+    between two values of n and shows up as a ~1% bias in their ratio.
+    """
+    th = np.linspace(0.0, 2 * np.pi, n_samp, endpoint=False)
+    X = np.stack([np.cos(th), np.sin(th)], axis=1)
+    An = np.linalg.matrix_power(A1, n)
+    Y = X @ An.T
+    Q = np.zeros_like(Y)
+    Q[:, -1] = Y[:, 0] ** 2
+    Z = Q @ np.linalg.inv(An).T
+    return float(np.sqrt((Z ** 2).sum(1).mean()))
+
+
+def _spiral(s, omega):
+    c, sn = np.cos(omega), np.sin(omega)
+    return s * np.array([[c, -sn], [sn, c]])
+
+
+def _log_rho_and_spread(A):
+    sv = np.linalg.svd(A, compute_uv=False)
+    return float(np.log(sv.max())), float(np.log(sv.max()) - np.log(sv.min()))
+
+
+def test_theorem_d_prime_linearisation_boundary_is_log_rho_plus_spread():
+    """The decay rate of the quadratic jet is exactly exp(log rho_1 + sigma_1).
+
+    Checked against the closed form on both sides of the boundary, so the
+    condition is certified sharp rather than merely sufficient.
+    """
+    cases = [
+        _spiral(0.8, 0.7),
+        _spiral(0.95, 0.4),
+        np.diag([0.9, 0.3]),
+        np.diag([0.6, 0.3]),
+        np.diag([0.9, 0.75]),
+    ]
+    for A1 in cases:
+        log_rho, sigma = _log_rho_and_spread(A1)
+        emp = _quadratic_jet_norm(A1, 20) / _quadratic_jet_norm(A1, 10)
+        pred = np.exp(10 * (log_rho + sigma))
+        assert np.isclose(emp, pred, rtol=1e-3), (A1, emp, pred)
+
+
+def test_theorem_d_prime_linearisation_is_free_for_a_conformal_module():
+    """Conformal f_1 (spread 0) kills the nonlinear jet; anisotropy revives it.
+
+    The comparison that matters: diag(0.6, 0.3) contracts *harder* than the
+    0.95 spiral (log rho -0.51 vs -0.05) and its jet GROWS, because its spread
+    is 0.69.  So the hypothesis is not "contract fast enough".
+    """
+    conformal = _spiral(0.95, 0.4)
+    log_rho, sigma = _log_rho_and_spread(conformal)
+    assert sigma < 1e-12, "a TwistBlock is conformal"
+    assert log_rho + sigma < 0
+    assert _quadratic_jet_norm(conformal, 40) < 0.2 * _quadratic_jet_norm(conformal, 0)
+
+    anisotropic = np.diag([0.6, 0.3])
+    log_rho_a, sigma_a = _log_rho_and_spread(anisotropic)
+    assert log_rho_a < log_rho, "contracts harder than the spiral"
+    assert log_rho_a + sigma_a > 0, "yet fails the condition"
+    assert _quadratic_jet_norm(anisotropic, 20) > 5 * _quadratic_jet_norm(anisotropic, 10)

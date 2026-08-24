@@ -2907,3 +2907,60 @@ existing and not.
 > If the answer is no, the counterexample is a nonlinear $p_1$-preserving $u_s$
 > compatible with the cocycle, which would be a new escape and worth more than
 > the theorem.
+
+### 15.13a The linearisation step closes when $f_1$ has a fixed point — and the condition is again a *spread*
+
+The obligation §15.13 is left with is answerable by the same device as
+Theorem D, applied to the Taylor jet instead of to the map. Expand $u_s$ at
+module 1's fixed point (take it to be $0$; §15.12's $t\to\infty$ argument gives
+$u_s(0)=0$, and it is available here because $f_1$ contracts, so
+$p_1^{(t)}\to\delta_0$). Write $A_1=Df_1(0)$. In
+$u_s=f_1^{-n}u_{f_2^{n}(s)}f_1^{n}$ a homogeneous degree-$p$ term $Q$ is carried
+to $A_1^{-n}Q(A_1^{n}\,\cdot\,)$, whose norm obeys
+
+$$\bigl\lVert A_1^{-n}Q(A_1^{n}\,\cdot\,)\bigr\rVert \;\le\; \frac{(\rho_1^{\max})^{np}}{(\rho_1^{\min})^{n}}\,\lVert Q\rVert .$$
+
+The exponent is $n\bigl[p\log\rho_1^{\max}-\log\rho_1^{\min}\bigr]$, so the
+degree-$p$ term decays iff $p\log\rho_1^{\max}<\log\rho_1^{\min}$. Substituting
+$\log\rho_1^{\min}=\log\rho_1^{\max}-\sigma_1$ turns this into
+$(p-1)\log\rho_1^{\max}+\sigma_1<0$, and since $\log\rho_1^{\max}<0$ increasing
+$p$ only helps — the binding case is $p=2$:
+
+> **(D-e)** $\log\rho_1+\sigma_1<0$, with $\rho_1$ module 1's top rate and
+> $\sigma_1$ its Lyapunov **spread**.
+
+Given $\lVert u_{f_2^{n}(s)}\rVert_{C^2}$ bounded uniformly in $s$ — the same
+regularity Theorem D already assumes — every Taylor coefficient of degree $\ge2$
+is $0$, so $u_s$ is **formally linear**, and §15.13's pointwise stabiliser step
+finishes it.
+
+**Three things worth separating out.**
+
+1. **(D-e) is a third condition of the same shape, and that is the pattern.**
+   Theorem D needs $\log\rho_2+\sigma_1<0$, (D-b′) needs
+   $\log\rho_2^{\perp}+\sigma_1<0$, and (D-e) needs $\log\rho_1+\sigma_1<0$.
+   All three compare a rate to **module 1's own spread**, never to a separation
+   *between* modules — which is exactly why §3.7's two-sided obstruction does not
+   apply to any of them. **All three are free for a conformal $f_1$.**
+2. **Anisotropy breaks it, not slowness.** $\operatorname{diag}(0.6,0.3)$
+   contracts *harder* than a $0.95$ spiral ($\log\rho_1=-0.51$ against $-0.05$)
+   and its quadratic jet **grows** $6.2\times$ per ten steps, because its spread
+   is $0.69$. Same shape as §3.14's "width, not speed, is what disqualifies".
+   Certified sharp: the measured decay ratio matches $e^{10(\log\rho_1+\sigma_1)}$
+   to $<10^{-3}$ relative on both sides of the boundary, over five cases
+   (`tests/test_spectra_and_cocycle.py`, §"Theorem D′ … linearisation").
+3. **Formal $\Rightarrow$ actual needs analyticity, and it is the familiar
+   price.** The argument kills the jet, not a flat remainder. For analytic $h$ —
+   free with `tanh`-MLP decoders, §3.7 — the identity theorem finishes it. In
+   $C^\infty$ a flat $u_s$ survives the jet argument, which is (FLAT-D) again,
+   the same residual Route A carries.
+
+**Scope, and it must not be overread: this does *not* close the two-oscillator
+case.** (D-e) and the $u_s(0)=0$ step both need $f_1$ to have a contracting fixed
+point. In task 23's lattice regrouping $h(z_1,z_2)=(z_1z_2/\lvert z_2\rvert,z_2)$
+the *recipient* module is itself a limit cycle, so there is no fixed point to
+expand at and this argument is silent. What is closed is the configuration
+**one oscillatory module driving one contracting module** — where Theorem F is
+either unavailable ((F3) cannot order a cycle against a module whose hull it
+contains) or permits the very cross-block Theorem D removes. Two oscillators
+remains the open case, as it is for every other route in this document.
