@@ -46,7 +46,7 @@ from.
 | **(D-e)** (§15.13a) | the linearisation step, when $f_1$ has a fixed point | **proved**, boundary certified sharp | $\log\rho_1+\sigma_1<0$ — **free for a conformal module**; anisotropy breaks it, not slowness |
 | **Lemma T** (§15.13b) | two time points collapse $\operatorname{Stab}_{\mathrm{Homeo}}(\mu)$ to $\operatorname{Stab}_{O(2)}(\mu)$ | **proved for irrational $\alpha$**; rational case searched, no escape | $\mu$ not $R_\omega$-invariant |
 | **Theorem D″** (§15.13c) | two oscillators ⟹ block-diagonal | **proved** for triangular $h$ | (D-b′) and (D-d), both already Theorem D′'s |
-| **Prop. L** (§15.13d) | independence kills every non-signed-permutation $M\in GL(2,\mathbb{Z})$ | **proved** for triangular $M$; wider orbit verified | no module's phase law uniform |
+| **Prop. L** (§15.13d) | independence kills every non-signed-permutation $M\in GL(2,\mathbb{Z})$ | **proved, every $M$** | $0<\sup_{k\neq0}\lvert\hat\mu_i(k)\rvert<1$ — no module uniform, none lattice-supported |
 
 **Known FALSE, not merely unproved.** Block-diagonality under (B1)–(B4) at
 $C^1$: there is an explicit $C^\infty$ counterexample, so triangular is *sharp*
@@ -68,8 +68,8 @@ spectra, and it is checkable with no ground truth.
 
 **Open:** the nonlinear matching lemma (B3), nonlinear indecomposability (B2),
 distributional equivalence with noise, nonlinear perturbation, Lemma T's rational
-case, Proposition L for general $M$, and Theorem D″ without the triangularity
-hypothesis on $h$ itself (Prop. L removes it only at the level of $H_1$).
+case, and Theorem D″ without the triangularity hypothesis on $h$ itself
+(Prop. L removes it only at the level of $H_1$).
 
 ---
 
@@ -3171,29 +3171,48 @@ $$\hat\mu_1(ma+nc)\hat\mu_2(mb+nd)=\hat\mu_1(ma)\hat\mu_2(mb)\cdot\hat\mu_1(nc)\
 > signed permutation** — i.e. iff the modules are recovered up to relabelling and
 > orientation.
 
-*Proof for triangular $M$ (the class task 23's counterexample lives in).* Take
-$c=0$, so $ad=\pm1$ and $|a|=|d|=1$. (L) becomes
-$\hat\mu_1(ma)\hat\mu_2(mb+nd)=\hat\mu_1(ma)\hat\mu_2(mb)\hat\mu_2(nd)$. Since
-$\mu_1$ is not uniform there is $m\neq0$ with $\hat\mu_1(ma)\neq0$; cancel it and
-put $k:=mb$, $n\to nd^{-1}$:
+*Proof.* Write $\Psi(m,n):=\hat\mu_1(ma+nc)\hat\mu_2(mb+nd)$, so (L) says
+$\Psi(m,n)=A(m)B(n)$ with $A(m)=\hat\mu_1(ma)\hat\mu_2(mb)$ and
+$B(n)=\hat\mu_1(nc)\hat\mu_2(nd)$ (put $n=0$, resp. $m=0$, and use $\Psi(0,0)=1$).
 
-$$\hat\mu_2(k+n)=\hat\mu_2(k)\,\hat\mu_2(n)\qquad\forall n.$$
+**The master identity.** Because $\det M=\pm1$, two lattice directions are
+special. At $(m,n)=k\,(d,-b)$ the argument pair becomes
+$(ma+nc,\;mb+nd)=(k\det M,\;0)$, so $\Psi=\hat\mu_1(\pm k)$; factorising that same
+value through $A(kd)B(-kb)$ and taking moduli,
 
-Taking $n=-k$ gives $1=\hat\mu_2(k)\hat\mu_2(-k)=\lvert\hat\mu_2(k)\rvert^2$, so
-$\lvert\hat\mu_2(k)\rvert=1$, which forces $\mu_2$ onto a coset of the $k$-torsion
-subgroup — excluded by hypothesis. Hence $k=mb=0$, and since $m\neq0$, $b=0$.
-Symmetrically $c=0\Rightarrow$ the transposed argument gives $b=0$, so $M$ is
-diagonal with $\det=\pm1$, i.e. $M=\operatorname{diag}(\pm1,\pm1)$. $\square$
+$$|\hat\mu_1(k)|=|\hat\mu_1(kad)|\cdot|\hat\mu_1(kbc)|\cdot|\hat\mu_2(kbd)|^{2}. \tag{L1}$$
 
-**The general case is verified but not proved.** Over 13 matrices spanning the
-signed permutations, the triangular family and general elements
-($(2,1;1,1)$, $(3,2;1,1)$, $(2,1;3,2)$, $(1,1;1,2)$, $(1,2;0,1)$), against two
-non-uniform law pairs, **every non-signed-permutation is rejected** — Fourier
-independence defect $0.31$–$0.81$ against a baseline of $0.004$ — and all four
-signed permutations are preserved exactly. `TODO(gap)` — the general-$M$ proof;
-(L) reduces to an additive functional equation in
-$\log\lvert\hat\mu_i\rvert$ that the triangular argument solves and the general
-one does not yet.
+At $(m,n)=k\,(-c,a)$ the pair becomes $(0,\;k\det M)$, giving the mirror
+
+$$|\hat\mu_2(k)|=|\hat\mu_1(kac)|^{2}\cdot|\hat\mu_2(kcb)|\cdot|\hat\mu_2(kad)|. \tag{L2}$$
+
+Set $r_i:=\sup_{k\neq0}|\hat\mu_i(k)|$. The two hypotheses say exactly
+$0<r_i<1$: $r_i=0$ is $\mu_i$ uniform, and $r_i=1$ means $|\hat\mu_i(k)|=1$ for
+some $k\neq0$, i.e. $\mu_i$ supported on a coset of the $k$-torsion subgroup.
+
+**Case $a,b,c,d$ all nonzero.** Then $kad$, $kbc$ and $kbd$ are nonzero for every
+$k\neq0$, so (L1) bounds $|\hat\mu_1(k)|\le r_1\cdot r_1\cdot r_2^{2}$. Taking
+$\sup_{k\neq0}$ gives $r_1\le r_1^{2}r_2^{2}$, hence $1\le r_1r_2^{2}$, forcing
+$r_1=r_2=1$. Excluded.
+
+**Case $c=0$.** Then $ad=\pm1$ and $bc=0$, so (L1) reads
+$|\hat\mu_1(k)|=|\hat\mu_1(\pm k)|\cdot|\hat\mu_2(kb)|^{2}$, i.e.
+$|\hat\mu_2(kb)|=1$ for every $k$ with $\hat\mu_1(k)\neq0$. Since $r_1>0$ such a
+$k\neq0$ exists; if $b\neq0$ then $kb\neq0$ and $r_2=1$, excluded. So $b=0$. The
+case $b=0$ gives $c=0$ by (L2), symmetrically.
+
+**Case $a=0$ (or $d=0$).** Then $\det M=-bc=\pm1$ forces $b,c=\pm1$, and
+relabelling the two output modules — a permutation, which preserves independence
+— replaces $M$ by $(c,d;0,b)$, which is triangular. The previous case gives
+$d=0$, so $M=(0,b;c,0)$, a signed permutation. $\square$
+
+**Verified as well as proved**, because the index bookkeeping is where this would
+go wrong: the two special directions reproduce $\hat\mu_1(\pm k)$ and
+$\hat\mu_2(\pm k)$ to $\le1.4\times10^{-17}$ over five matrices including a
+$\det=-1$ one. And over 13 matrices spanning the signed permutations, the
+triangular family and general elements, against two non-uniform law pairs, every
+non-signed-permutation is rejected at Fourier defect $0.31$–$0.81$ against a
+baseline of $0.004$.
 
 **And the boundary identifies *which* $M$ escape, matching §15.4 exactly.** With
 $\mu_1$ uniform the survivors are precisely $(1,1;0,1)$, $(1,-1;0,1)$,

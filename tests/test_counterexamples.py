@@ -875,3 +875,32 @@ def test_proposition_l_uniform_module_escapes_are_exactly_the_recipients():
     for a, b, c, d in ((1, 0, 1, 1), (2, 1, 1, 1), (3, 2, 1, 1)):
         got = _fourier_independence_defect(a * p1 + b * p2, c * p1 + d * p2)
         assert got > 20 * base, f"M={a,b,c,d} feeds the NON-uniform module, {got}"
+
+
+def test_proposition_l_master_identity_index_bookkeeping():
+    """The two special lattice directions of Prop. L's proof, checked exactly.
+
+    (m,n) = k(d,-b) sends the argument pair to (k det M, 0), so Psi reduces to
+    mu_1^(+-k); (m,n) = k(-c,a) sends it to (0, k det M).  Everything in the
+    proof rests on this, and a transpose or sign slip here would be invisible in
+    the prose -- so it is pinned, including a det = -1 matrix.
+    """
+    rng = np.random.default_rng(5)
+    n = 400_000
+    p1 = rng.vonmises(0.0, 2.0, n)
+    p2 = rng.vonmises(0.6, 3.0, n)
+
+    def psi(M, m, k):
+        a, b, c, d = M
+        return np.exp(1j * (m * (a * p1 + b * p2) + k * (c * p1 + d * p2))).mean()
+
+    def ch(p, k):
+        return np.exp(1j * k * p).mean()
+
+    for M in ((1, 1, 0, 1), (2, 1, 1, 1), (3, 2, 1, 1), (0, 1, 1, 5), (1, 0, 0, 1)):
+        a, b, c, d = M
+        det = a * d - b * c
+        assert abs(det) == 1, M
+        for k in (1, 2, 3):
+            assert abs(psi(M, k * d, -k * b) - ch(p1, det * k)) < 1e-12, (M, k)
+            assert abs(psi(M, -k * c, k * a) - ch(p2, det * k)) < 1e-12, (M, k)
