@@ -3026,11 +3026,92 @@ distinction §14.4 drew with its $\approx0.3$ concentration threshold.
 > written, treat the two-oscillator case as **open with an identified mechanism**,
 > not closed.
 
+### 15.13c Theorem D″ — the plumbing works, and two oscillators closes for triangular $h$
+
+The `TODO(gap)` above worried that the $u$ appearing at different times might not
+be the *same* map. Writing the reduction out shows it is, and the argument then
+runs on hypotheses that are already stated.
+
+**Setup.** $K=2$, both $f_i$ attracting limit cycles, $h$ **triangular**:
+$h_2=h_2(z_2)$ and $h_1=h_1(z_1,z_2)$. Write $g_s:=h_1(\cdot,s)$. The conjugacy's
+first component is
+
+$$g_{f_2(s)}\circ f_1=\tilde f_1\circ g_s. \tag{$*$}$$
+
+**Step 1 — independence at time $t$, unwound.** $F$ is modular, so
+$F^t_\#(p_1\otimes p_2)=p_1^{(t)}\otimes p_2^{(t)}$: the *true* representation has
+independent module marginals at every time, for free. Route D hypothesises the
+same of the fitted one. Since $\hat z_2^{(t)}=h_2(f_2^t z_2)$ is a bijection of
+$s:=z_2$, conditioning on $\hat z_2^{(t)}$ *is* conditioning on $s$; and
+$\hat z_1^{(t)}=g_{f_2^{t}(s)}(f_1^{t}z_1)$ with $z_1\perp s$. So independence says
+exactly
+
+$$\bigl(g_\sigma\bigr)_\# p_1^{(t)}=q^{(t)}\quad\text{for every }\sigma\in\operatorname{im}f_2^{t}.$$
+
+**Step 2 — the map is $t$-free, which is the point.** For $\sigma,\sigma'$ on the
+cycle (where $f_2$ is a bijection, so both lie in $\operatorname{im}f_2^{t}$ for
+every $t$), set $u:=g_{\sigma'}^{-1}g_\sigma$. This is **one fixed map**, defined
+without reference to $t$, and Step 1 forces
+
+$$u_\# p_1^{(t)}=p_1^{(t)}\qquad\text{for every }t.$$
+
+Time enters only through *which law* $u$ must preserve — never through which map
+$u$ is. That is the bookkeeping §15.13's caveat asked for, and it is trivial once
+written.
+
+**Step 3 — Lemma T.** $p_1^{(t)}$ collapses transversally onto module 1's cycle,
+and there $f_1^t$ advances the phase by $t\omega_1$, so the limiting phase laws are
+$\mu$ and $R_{\omega_1\#}\mu$. Two values of $t$ therefore put $u$ in
+$\operatorname{Stab}_{\mathrm{Homeo}}(\mu)\cap\operatorname{Stab}_{\mathrm{Homeo}}(R_{\omega_1\#}\mu)=\operatorname{Stab}_{O(2)}(\mu)$
+by §15.13b, and **(D-d)** makes it the identity. Hence $g$ is **constant on the
+cycle**, $=g_*$, and ($*$) restricted there gives $g_*f_1=\tilde f_1 g_*$.
+
+**Step 4 — off the cycle, by (D-b′).** Iterating ($*$) backwards,
+$g_s=\tilde f_1^{-n}g_{f_2^{n}(s)}f_1^{n}$. Since $g_*$ intertwines,
+$\tilde f_1^{-n}g_*f_1^{n}=g_*$, so
+
+$$g_s-g_*=\tilde f_1^{-n}\bigl(g_{f_2^{n}(s)}-g_*\bigr)f_1^{n},$$
+
+whose size is at most $\lVert g_{f_2^{n}(s)}-g_*\rVert\,e^{n\sigma_1}$. With
+$s\mapsto g_s$ continuous, $g_{f_2^{n}(s)}\to g_*$ at the transverse rate
+$\rho_2^{\perp}$, so the right side vanishes precisely when
+$\log\rho_2^{\perp}+\sigma_1<0$ — which is **(D-b′)**, already assumed. Hence
+$g_s=g_*$ for all $s$: $h_1$ does not depend on $z_2$, and $h$ is block-diagonal.
+$\square$
+
+> **Theorem D″ (two oscillators, triangular $h$).** Let $f_1,f_2$ attract limit
+> cycles, let $h$ be a triangular modular conjugacy with $s\mapsto g_s$
+> continuous, and assume the fitted representation has independent module
+> marginals. Under **(D-b′)** $\log\rho_2^{\perp}+\sigma_1<0$ and **(D-d)**
+> $\operatorname{Stab}_{O(2)}(p_1)$ trivial, $h$ is block-diagonal.
+
+**What this does and does not settle.**
+
+* **It kills task 23's counterexample by name.** $h(z_1,z_2)=(z_1z_2/\lvert z_2\rvert,z_2)$
+  is triangular and continuous in $s$, so it falls under the theorem; and it
+  survives exactly when (D-d) fails, i.e. when the phase law is uniform, which is
+  §15.5's hole appearing where the theorem says it must.
+* **Triangularity is assumed, not derived, and for two cycles it is not free.**
+  Theorem F supplies it when (F3) holds, and (F3) fails for two cycles — both
+  hulls reach $0$. So this is a theorem about the escapes *inside* the triangular
+  class, which is where every known two-oscillator counterexample lives, but it is
+  not a full identifiability theorem. `TODO(gap)` — what forces triangularity here.
+* **Lemma T is still numerical.** §15.13b verifies it; a proof should follow from
+  the normal form $\operatorname{Stab}_{\mathrm{Homeo}}(\mu)=F_\mu^{-1}SO(2)F_\mu$
+  together with $F_{R_\omega\mu}=F_\mu\circ R_{-\omega}$, but is not written.
+  `TODO(gap)`.
+* **No new hypotheses were needed.** (D-b′) and (D-d) are Theorem D′'s, unchanged.
+  What §15.13c adds is that they suffice once Step 2 is noticed.
+
 **Where this leaves the route.** Theorem D is proved at a fixed point; §15.13a
-closes one oscillator driving one contracting module, modulo analyticity; and
-§15.13b identifies the mechanism for two oscillators but not the proof. That is
-strictly more than any other route in this document reaches, and it is still
-short of the case task 23 exhibits.
+closes one oscillator driving one contracting module, modulo analyticity;
+§15.13b supplies Lemma T; and §15.13c assembles them into Theorem D″, which
+closes **two oscillators for triangular $h$** — the class every known
+two-oscillator counterexample in this repo lives in, task 23's included. Two
+`TODO(gap)`s remain and they are of different weight: proving Lemma T (routine,
+a normal-form computation) and establishing triangularity for two cycles
+(genuinely open — (F3), Theorem F's route to it, fails there). No other route in
+this document reaches the oscillatory case at all.
 
 ---
 

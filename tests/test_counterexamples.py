@@ -712,3 +712,57 @@ def test_lemma_t_uniform_phase_is_the_degenerate_case():
     _, prot = _circle_law(0.0, mu0=0.7)
     for alpha in (0.05, 0.35, 0.8):
         assert _tv(_stab_element(th, p, alpha), th, prot, prot) < 0.02, alpha
+
+
+# ---------------------------------------------------------------------------
+# Theorem D'' (identifiability.md 15.13c): the plumbing behind Lemma T.
+#
+# Independence at time t says the conditional law of zhat_1 given z_2 does not
+# move with z_2.  For the task-23 lattice map h_1 = z_1 * z_2/|z_2| that
+# conditional law is p_1's phase law ROTATED by arg(z_2) -- so it moves iff the
+# phase law has a nontrivial rotational symmetry deficit, which is (D-d).
+#
+# This instantiates the theorem's hypothesis chain on the actual counterexample:
+# concentrated phase -> hypothesis violated -> h rejected; uniform phase -> the
+# 15.5 Hyvarinen-Pajunen hole, and h survives.
+# ---------------------------------------------------------------------------
+
+def _lattice_conditional_phase_shift(kappa, n=200_000, seed=3, n_harm=4):
+    """How far the conditional law of arg(h_1) moves between two values of z_2.
+
+    Returns the max over harmonics of |E e^{i k phi | s1} - E e^{i k phi | s2}|,
+    which is 0 exactly when the conditional law is s-free.
+    """
+    rng = np.random.default_rng(seed)
+    # phase law of module 1: von Mises(kappa); kappa = 0 is uniform
+    if kappa == 0.0:
+        phi = rng.uniform(0.0, _TAU, size=n)
+    else:
+        phi = rng.vonmises(0.0, kappa, size=n)
+    out = 0.0
+    for k in range(1, n_harm + 1):
+        # h_1 = z_1 * z_2/|z_2| rotates module 1's phase by arg(z_2) = s
+        c1 = np.exp(1j * k * (phi + 0.0)).mean()
+        c2 = np.exp(1j * k * (phi + 1.1)).mean()
+        out = max(out, abs(c1 - c2))
+    return float(out)
+
+
+def test_theorem_d2_lattice_moves_the_conditional_law_when_phase_is_concentrated():
+    """(D-d) holds -> the lattice map violates independence -> it is rejected."""
+    moved = _lattice_conditional_phase_shift(kappa=2.0)
+    assert moved > 0.3, f"a concentrated phase law must move, got {moved}"
+
+
+def test_theorem_d2_uniform_phase_is_the_hole_and_the_lattice_survives():
+    """(D-d) fails -> the conditional law is s-free -> 15.5's escape is real."""
+    moved = _lattice_conditional_phase_shift(kappa=0.0)
+    assert moved < 0.02, f"a uniform phase law must NOT move, got {moved}"
+
+
+def test_theorem_d2_the_boundary_is_monotone_in_concentration():
+    """No sharp cliff: the violation grows with concentration, so the hypothesis
+    is quantitative.  Matches 14.4's threshold reading rather than a dichotomy."""
+    vals = [_lattice_conditional_phase_shift(kappa=k) for k in (0.0, 0.25, 1.0, 4.0)]
+    assert all(b > a - 1e-3 for a, b in zip(vals, vals[1:])), vals
+    assert vals[-1] > 10 * max(vals[0], 1e-3), vals
