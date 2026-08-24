@@ -247,11 +247,12 @@ def test_model_shapes_and_loss_terms(decoder):
     # "behavior" is the Route B u-dependence penalty; it is always reported and
     # is an exact zero unless u, an invariant slice and w_behavior are all given.
     assert set(losses) == {"total", "recon", "dyn", "white", "behavior",
-                           "concentration", "fit_quality"}
+                           "concentration", "independence", "fit_quality"}
     assert losses["behavior"].item() == 0.0
     # same contract for the task-46 concentration term: always reported, exact
     # zero unless an invariant slice and a positive weight are both given
     assert losses["concentration"].item() == 0.0
+    assert losses["independence"].item() == 0.0
     assert losses["total"].requires_grad
     assert not losses["fit_quality"].requires_grad
 

@@ -67,6 +67,10 @@ class TrainConfig:
     # paid in gauge.  0 disables.
     w_concentration: float = 0.0
     concentration_target: float = 0.0
+    # Route D (identifiability.md 15): whitened dCor between modules.
+    # Exactly GL(d_b)-invariant, and a JOINT statistic so it cannot be paid
+    # by reshaping one block.  0 disables.
+    w_independence: float = 0.0
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -267,6 +271,7 @@ def fit(
             behavior_per_time=cfg.behavior_per_time,
             w_concentration=cfg.w_concentration,
             concentration_target=cfg.concentration_target,
+            w_independence=cfg.w_independence,
         )
         opt.zero_grad(set_to_none=True)
         out["total"].backward()

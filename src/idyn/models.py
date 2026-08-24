@@ -228,6 +228,7 @@ class LatentDynamicsModel(nn.Module):
         behavior_per_time: bool = True,
         w_concentration: float = 0.0,
         concentration_target: float = 0.0,
+        w_independence: float = 0.0,
     ) -> dict[str, torch.Tensor]:
         out = self(x)
         z, z_pred = out["z"], out["z_pred"]
@@ -265,6 +266,15 @@ class LatentDynamicsModel(nn.Module):
                 z, invariant_slice, target=concentration_target)
             total = total + w_concentration * concentration
 
+        # Route D (identifiability.md §15): independence of the module marginals.
+        # Rejects the §4.3 triangular conjugacy and the §7 lattice regrouping,
+        # the two objects that block Theorems B and F -- and needs no spectral
+        # hypothesis, no non-resonance and no auxiliary variable.
+        independence = z.new_zeros(())
+        if w_independence > 0.0 and len(self.cfg.partition) > 1:
+            independence = self._independence_penalty(z, self.cfg.partition)
+            total = total + w_independence * independence
+
         # `fit_quality` excludes the whitening and behaviour terms: they are
         # well-posedness / structural devices, not part of the reconstruction, and
         # including them would let a restart look worse for a reason unrelated to fit.
@@ -275,8 +285,69 @@ class LatentDynamicsModel(nn.Module):
             "white": white,
             "behavior": behavior.detach() if torch.is_tensor(behavior) else behavior,
             "concentration": concentration.detach(),
+            "independence": independence.detach(),
             "fit_quality": (recon + dyn).detach(),
         }
+
+    @staticmethod
+    def _whitened_dcor(A: torch.Tensor, B: torch.Tensor, eps: float = 1e-6
+                       ) -> torch.Tensor:
+        """Distance correlation between two blocks, each whitened first.
+
+        Route D's objective term (identifiability.md §15). Whitening quotients
+        ``GL(d_b)`` down to ``O(d_b)`` and dCor is orthogonal-invariant, so this
+        is **exactly ``GL(d_b)``-invariant** -- the gauge class CLAUDE.md §3.12
+        requires. Unlike the concentration term it is a *joint* statistic, so it
+        cannot be paid by reshaping one block's radial distribution.
+
+        Measured on `exp18`'s system: the true representation scores 0.098 and
+        the lattice image 0.579, a 5.9x separation. **And it is blind exactly
+        where Theorem D' says it must be** -- with ``p_1`` rotationally symmetric
+        the same pair reads 0.081 / 0.082, a ratio of 1.01. That is a feature,
+        not a defect: the term cannot manufacture a discrimination the data does
+        not support, which is the failure mode of §3.12 and §3.15.
+        """
+        def _whiten(X: torch.Tensor) -> torch.Tensor:
+            Xc = X - X.mean(0, keepdim=True)
+            S = Xc.T @ Xc / max(X.shape[0] - 1, 1)
+            S = S + eps * torch.eye(X.shape[1], device=X.device, dtype=X.dtype)
+            return torch.linalg.solve_triangular(
+                torch.linalg.cholesky(S), Xc.T, upper=False).T
+
+        def _centred_distances(X: torch.Tensor) -> torch.Tensor:
+            D = torch.cdist(X, X)
+            return (D - D.mean(0, keepdim=True) - D.mean(1, keepdim=True)
+                    + D.mean())
+
+        a, b = _centred_distances(_whiten(A)), _centred_distances(_whiten(B))
+        num = (a * b).mean().clamp_min(0.0)
+        den = ((a * a).mean() * (b * b).mean()).clamp_min(1e-30).sqrt()
+        return (num / den).sqrt()
+
+    @classmethod
+    def _independence_penalty(
+        cls, z: torch.Tensor, partition: Sequence[int]
+    ) -> torch.Tensor:
+        """Mean whitened dCor over module pairs, scored per timestep.
+
+        Per timestep for the same reason as §3.15: pooling times mixes an
+        oscillatory block's phases and washes out the dependence a lattice
+        regrouping creates.
+        """
+        bounds, off = [], 0
+        for d in partition:
+            bounds.append((off, off + d))
+            off += d
+        pairs = [(i, j) for i in range(len(bounds)) for j in range(i + 1, len(bounds))]
+        if not pairs:
+            return z.new_zeros(())
+        vals = []
+        for t in range(z.shape[1]):
+            for i, j in pairs:
+                ai, bi = bounds[i]
+                aj, bj = bounds[j]
+                vals.append(cls._whitened_dcor(z[:, t, ai:bi], z[:, t, aj:bj]))
+        return torch.stack(vals).mean()
 
     @staticmethod
     def _whitened_resultant(w: torch.Tensor) -> torch.Tensor:

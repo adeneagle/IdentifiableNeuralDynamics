@@ -1173,3 +1173,74 @@ def test_proposition_R_boundary_a_uniform_phase_enlarges_the_stabiliser():
     ident = tot(1, 0, 0, 1)
     assert abs(tot(1, 0, 1, 1) - ident) < 1e-2, "pouring into a uniform module is free"
     assert tot(1, 1, 0, 1) < 0.1 * ident, "but pouring OUT of it still destroys module 1"
+
+
+# ============================================================================
+# The Route D objective term (identifiability.md 15).  Whitened dCor between
+# modules: GL(d_b)-invariant, differentiable, separates the true representative
+# from its lattice image -- and blind exactly where Theorem D' says it must be.
+# ============================================================================
+
+def _wd(A, B):
+    from idyn.models import LatentDynamicsModel
+    return float(LatentDynamicsModel._whitened_dcor(
+        torch.as_tensor(A, dtype=torch.float64),
+        torch.as_tensor(B, dtype=torch.float64)))
+
+
+def _cyc(phase, rad):
+    return np.stack([rad * np.cos(phase), rad * np.sin(phase)], 1)
+
+
+def test_independence_term_is_GL_invariant():
+    """Same gauge class as section 3.12 demands: no coordinate change pays it."""
+    rng = np.random.default_rng(0)
+    n = 500
+    r1 = 1 + 0.2 * rng.random(n)
+    r2 = 1 + 0.2 * rng.random(n)
+    p1, p2 = rng.vonmises(0.0, 4.0, n), rng.vonmises(0.3, 4.0, n)
+    A, B = _cyc(p1, r1), _cyc(p2 + p1, r2)          # a lattice image: dependent
+    base = _wd(A, B)
+    assert base > 0.3, "fixture must be genuinely dependent"
+    for M in (np.diag([9.0, 9.0]), np.array([[1.0, 2.5], [0.0, 1.0]]),
+              np.diag([4.0, 0.1])):
+        assert abs(_wd(A, B @ M.T) - base) < 5e-3
+
+
+def test_independence_term_separates_the_lattice_image():
+    rng = np.random.default_rng(1)
+    n = 500
+    r1 = 1 + 0.2 * rng.random(n)
+    r2 = 1 + 0.2 * rng.random(n)
+    p1, p2 = rng.vonmises(0.0, 4.0, n), rng.vonmises(0.3, 4.0, n)
+    true = _wd(_cyc(p1, r1), _cyc(p2, r2))
+    lat = _wd(_cyc(p1 + p2, r1), _cyc(p2, r2))       # module 1 receives phi_2
+    assert lat > 4 * true, f"true {true}, lattice {lat}"
+
+
+def test_independence_term_is_blind_exactly_where_theorem_D_prime_says():
+    """Its honest limit, and a FEATURE rather than a defect.
+
+    With p_1 rotationally symmetric, Stab(p_1) contains SO(2) and the lattice
+    image is genuinely independence-preserving (identifiability.md 15.13).  A
+    term that still separated here would be manufacturing a discrimination the
+    data does not support -- which is exactly how sections 3.12 and 3.15 failed.
+    """
+    rng = np.random.default_rng(2)
+    n = 500
+    r1 = 1 + 0.2 * rng.random(n)
+    r2 = 1 + 0.2 * rng.random(n)
+    p2 = rng.vonmises(0.3, 4.0, n)
+    u1 = rng.uniform(-np.pi, np.pi, n)               # Stab(p_1) = SO(2)
+    true = _wd(_cyc(u1, r1), _cyc(p2, r2))
+    lat = _wd(_cyc(u1 + p2, r1), _cyc(p2, r2))
+    assert lat < 1.5 * true, f"must NOT separate: true {true}, lattice {lat}"
+
+
+def test_independence_term_is_differentiable():
+    from idyn.models import LatentDynamicsModel
+    g = torch.Generator().manual_seed(0)
+    A = torch.randn(300, 2, generator=g, dtype=torch.float64, requires_grad=True)
+    B = torch.randn(300, 2, generator=g, dtype=torch.float64)
+    LatentDynamicsModel._whitened_dcor(A, B).backward()
+    assert torch.isfinite(A.grad).all() and A.grad.norm() > 0
