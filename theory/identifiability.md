@@ -47,6 +47,7 @@ from.
 | **Lemma T** (§15.13b) | two time points collapse $\operatorname{Stab}_{\mathrm{Homeo}}(\mu)$ to $\operatorname{Stab}_{O(2)}(\mu)$ | **proved for irrational $\alpha$**; rational case searched, no escape | $\mu$ not $R_\omega$-invariant |
 | **Theorem D″** (§15.13c) | two oscillators ⟹ block-diagonal | **proved** for triangular $h$ | (D-b′) and (D-d), both already Theorem D′'s |
 | **Prop. L** (§15.13d) | independence kills every non-signed-permutation $M\in GL(2,\mathbb{Z})$ | **proved, every $M$** | $0<\sup_{k\neq0}\lvert\hat\mu_i(k)\rvert<1$ — no module uniform, none lattice-supported |
+| **Cor. R** (§15.13e) | on the attracting torus $h$ is a signed permutation $\circ$ translation — **block-diagonal, no triangularity assumed** | **proved** | $\omega_1,\omega_2,2\pi$ rationally independent — *generic*, unlike (B4′) which is identically false here |
 
 **Known FALSE, not merely unproved.** Block-diagonality under (B1)–(B4) at
 $C^1$: there is an explicit $C^\infty$ counterexample, so triangular is *sharp*
@@ -3224,12 +3225,63 @@ point **into** a uniform module — a sharper statement than "some module is
 uniform", and the reason §15.4's proviso is about the recipient rather than the
 donor.
 
+### 15.13e Corollary R — on the attractor, rigidity finishes the job, and no triangularity is needed
+
+Proposition L pins $h$'s action on $H_1$; what remains is the part of $h$ that is
+homotopically trivial, and on the torus that is settled by a classical rigidity
+argument rather than by anything new.
+
+After relabelling by the signed permutation Prop. L allows, write the restriction
+of $h$ to the attracting torus in asymptotic-phase coordinates (§7.1 of
+`counterexamples.md`, where both flows are *rigid* rotations) as
+$h_i(\theta)=\theta_i+u_i(\theta)$ with $u_i:T^2\to\mathbb{R}$. The conjugacy
+$h\circ F=\tilde F\circ h$ becomes
+
+$$u_i(\theta+\omega)-u_i(\theta)=\tilde\omega_i-\omega_i=:c_i .$$
+
+Averaging over Haar measure gives $c_i=0$, so $\tilde\omega=\omega$ — the rotation
+numbers are identified, as Tier 1 already said — and in Fourier,
+
+$$\hat u_i(m,n)\left(e^{\,i(m\omega_1+n\omega_2)}-1\right)=0 .$$
+
+> **Corollary R.** If $m\omega_1+n\omega_2\notin2\pi\mathbb{Z}$ for every
+> $(m,n)\neq(0,0)$ — i.e. $\omega_1,\omega_2,2\pi$ rationally independent — then
+> every $\hat u_i(m,n)$ with $(m,n)\neq0$ vanishes, so each $u_i$ is **constant**
+> and $h|_{T^2}$ is a signed permutation composed with a rigid translation: block
+> diagonal.
+
+**Three things this settles, and one it does not.**
+
+1. **Theorem D″'s triangularity hypothesis is not needed on the attractor.**
+   Prop. L handles $H_1$ and Corollary R handles the rest, neither assuming
+   anything about the shape of $h$. Triangularity is still used off the attractor
+   (Theorem D″ Step 4), where the transverse coordinate lives.
+2. **The non-resonance here is on *rotation numbers*, and that is a completely
+   different condition from (B4′).** Prop. N (§5.3) shows cross-module
+   non-resonance of the **Lyapunov spectrum** is *identically false* as soon as any
+   module rotates — $\nu=0+\nu$. Rational independence of the $\omega_i$ is by
+   contrast **generic**: it fails only on a measure-zero set. So the oscillatory
+   structure that destroys (B4′) is exactly what makes this hypothesis available.
+3. **The escape is real and is periodicity.** At $\omega=(2\pi/3,\,2\pi/5)$ the
+   resonant modes give exact conjugacies — measured defect $1.8\times10^{-15}$ for
+   $(3,0)$, $(0,5)$, $(3,5)$ — against $0.23$–$0.56$ for every mode under
+   non-resonance. Rational rotation numbers mean periodic orbits, so the
+   hypothesis is "the flow on the torus is not periodic".
+
+**And the surviving modes are graded correctly, which is the check that this is
+not too strong.** A mode $(m,0)$ in $u_1$ makes $h_1$ depend on $\theta_1$ alone —
+a *within-module* reparameterisation, which §7 grants and no theorem here should
+forbid. Only modes with **both** indices nonzero, like $(3,5)$, break block
+diagonality. So the sharp requirement is $m\omega_1+n\omega_2\notin2\pi\mathbb{Z}$
+for $n\neq0$ (killing $u_1$'s cross terms) and for $m\neq0$ (killing $u_2$'s);
+full rational independence is the convenient sufficient form.
+
 **Consequence for §15.13c.** For the lattice class, Theorem D″'s triangularity
-hypothesis can be dropped: Proposition L kills every non-diagonal $M$ directly,
-so $h$ is homotopic to a signed permutation on the torus and the $GL(2,\mathbb{Z})$
-ambiguity of task 23 is resolved. What that does **not** give is block-diagonality
-of $h$ as a *map* — only that its action on $H_1$ is trivial. Theorem D″ supplies
-the rest inside the triangular class.
+hypothesis can be dropped on the attractor entirely: Prop. L kills every
+non-signed-permutation $M$ and Corollary R kills the homotopically trivial part.
+What that does **not** give is block-diagonality of $h$ off the attractor — where
+§3.8's support caveat applies and Theorem D″ Step 4's (D-b′) is still what
+extends it.
 
 **Where this leaves the route.** Theorem D is proved at a fixed point; §15.13a
 closes one oscillator driving one contracting module, modulo analyticity;

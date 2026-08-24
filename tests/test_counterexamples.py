@@ -904,3 +904,58 @@ def test_proposition_l_master_identity_index_bookkeeping():
         for k in (1, 2, 3):
             assert abs(psi(M, k * d, -k * b) - ch(p1, det * k)) < 1e-12, (M, k)
             assert abs(psi(M, -k * c, k * a) - ch(p2, det * k)) < 1e-12, (M, k)
+
+
+# ---------------------------------------------------------------------------
+# Corollary R (identifiability.md 15.13e): torus rigidity finishes Route D on
+# the attractor, with NO triangularity hypothesis.
+#
+# h|_T2 = theta + u conjugates rotation by omega to rotation by omega~ iff
+# u_i(th + om) - u_i(th) = c_i; averaging kills c_i, and Fourier leaves
+# u^(m,n) (e^{i<mn,om>} - 1) = 0.  Non-resonant omega -> u constant.
+#
+# The escape is periodicity, and the modes that survive are graded correctly:
+# (m,0) in u_1 is a WITHIN-module reparameterisation, which section 7 grants.
+# ---------------------------------------------------------------------------
+
+def _torus_conjugacy_defect(u1, u2, omega, g=128):
+    t1, t2 = np.meshgrid(np.linspace(0.0, _TAU, g, endpoint=False),
+                         np.linspace(0.0, _TAU, g, endpoint=False), indexing="ij")
+
+    def shift(u):
+        U = np.fft.fft2(u)
+        m = np.fft.fftfreq(g, 1.0 / g)[:, None]
+        n = np.fft.fftfreq(g, 1.0 / g)[None, :]
+        return np.real(np.fft.ifft2(U * np.exp(1j * (m * omega[0] + n * omega[1]))))
+
+    return max(float(np.abs(shift(u1) - u1).max()), float(np.abs(shift(u2) - u2).max()))
+
+
+def _mode(m, n, amp=0.3, g=128):
+    t1, t2 = np.meshgrid(np.linspace(0.0, _TAU, g, endpoint=False),
+                         np.linspace(0.0, _TAU, g, endpoint=False), indexing="ij")
+    return amp * np.cos(m * t1 + n * t2)
+
+
+def test_corollary_r_non_resonant_rotation_forces_a_rigid_translation():
+    """Every non-constant single mode fails, so u is constant and h is block-diagonal."""
+    omega = np.array([0.4 * _TAU / np.pi, 0.7 * np.sqrt(2.0)])
+    zero = np.zeros((128, 128))
+    for m, n in ((1, 0), (0, 1), (1, 1), (3, 0), (0, 5), (3, 5)):
+        d = _torus_conjugacy_defect(_mode(m, n), zero, omega)
+        assert d > 1e-2, f"mode {(m, n)} should not conjugate, defect {d}"
+
+
+def test_corollary_r_the_escape_is_periodicity_and_it_is_graded():
+    """Rational omega admits resonant modes -- and (m,0) ones are harmless.
+
+    (3,0) makes u_1 depend on theta_1 alone: a within-module reparameterisation,
+    which section 7 grants.  Only (3,5) -- both indices nonzero -- breaks block
+    diagonality, so the criterion is correctly blind to the gauge.
+    """
+    omega = np.array([_TAU / 3.0, _TAU / 5.0])
+    zero = np.zeros((128, 128))
+    for m, n in ((3, 0), (0, 5), (3, 5)):
+        assert _torus_conjugacy_defect(_mode(m, n), zero, omega) < 1e-10, (m, n)
+    for m, n in ((1, 0), (0, 1), (1, 1)):
+        assert _torus_conjugacy_defect(_mode(m, n), zero, omega) > 1e-2, (m, n)
