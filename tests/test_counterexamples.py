@@ -811,3 +811,67 @@ def test_lemma_t_every_rational_survivor_is_a_genuine_rotational_symmetry():
                         f"survivor at q={q}, omega={omega} is NOT a symmetry "
                         f"(defect {defect:.4f}) -- Lemma T counterexample"
                     )
+
+
+# ---------------------------------------------------------------------------
+# Proposition L (identifiability.md 15.13d): independence resolves the
+# GL(2,Z) lattice ambiguity of task 23, with NO triangularity assumption.
+#
+# Proved above for triangular M; verified here over the wider orbit.  The
+# uniform-phase rows are the Hyvarinen-Pajunen boundary, and they identify
+# WHICH M escape: exactly those whose off-diagonal action points into the
+# uniform module.
+# ---------------------------------------------------------------------------
+
+_GL2Z_SIGNED_PERMS = ((1, 0, 0, 1), (0, 1, 1, 0), (-1, 0, 0, 1), (1, 0, 0, -1))
+_GL2Z_OTHER = ((1, 1, 0, 1), (1, -1, 0, 1), (1, 0, 1, 1), (1, 0, -1, 1),
+               (2, 1, 1, 1), (1, 2, 0, 1), (3, 2, 1, 1), (2, 1, 3, 2), (1, 1, 1, 2))
+
+
+def _phases(kappa, n, rng):
+    return rng.uniform(0.0, _TAU, n) if kappa == 0.0 else rng.vonmises(0.0, kappa, n)
+
+
+def _fourier_independence_defect(p1, p2, K=4):
+    best = 0.0
+    for m in range(-K, K + 1):
+        for k in range(-K, K + 1):
+            if m == 0 and k == 0:
+                continue
+            joint = np.exp(1j * (m * p1 + k * p2)).mean()
+            prod = np.exp(1j * m * p1).mean() * np.exp(1j * k * p2).mean()
+            best = max(best, abs(joint - prod))
+    return float(best)
+
+
+def test_proposition_l_only_signed_permutations_preserve_independence():
+    """Neither module uniform -> the whole non-permutation orbit is rejected."""
+    rng = np.random.default_rng(11)
+    for k1, k2 in ((2.0, 2.0), (2.0, 3.0)):
+        p1, p2 = _phases(k1, 200_000, rng), _phases(k2, 200_000, rng)
+        base = _fourier_independence_defect(p1, p2)
+        for a, b, c, d in _GL2Z_SIGNED_PERMS:
+            got = _fourier_independence_defect(a * p1 + b * p2, c * p1 + d * p2)
+            assert got < 3 * base, (a, b, c, d, got, base)
+        for a, b, c, d in _GL2Z_OTHER:
+            got = _fourier_independence_defect(a * p1 + b * p2, c * p1 + d * p2)
+            assert got > 20 * base, (a, b, c, d, got, base)
+
+
+def test_proposition_l_uniform_module_escapes_are_exactly_the_recipients():
+    """The Hyvarinen-Pajunen boundary, and it is sharper than 'some module uniform'.
+
+    With mu_1 uniform, (1,1;0,1) escapes -- module 1 receives -- but (2,1;1,1)
+    does NOT, because c != 0 makes module 2 a recipient and mu_2 is not uniform.
+    """
+    rng = np.random.default_rng(11)
+    p1, p2 = _phases(0.0, 200_000, rng), _phases(2.0, 200_000, rng)
+    base = _fourier_independence_defect(p1, p2)
+
+    for a, b, c, d in ((1, 1, 0, 1), (1, -1, 0, 1), (1, 2, 0, 1)):
+        got = _fourier_independence_defect(a * p1 + b * p2, c * p1 + d * p2)
+        assert got < 3 * base, f"recipient-uniform M={a,b,c,d} must escape, {got}"
+
+    for a, b, c, d in ((1, 0, 1, 1), (2, 1, 1, 1), (3, 2, 1, 1)):
+        got = _fourier_independence_defect(a * p1 + b * p2, c * p1 + d * p2)
+        assert got > 20 * base, f"M={a,b,c,d} feeds the NON-uniform module, {got}"

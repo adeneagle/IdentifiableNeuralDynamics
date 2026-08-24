@@ -3133,6 +3133,71 @@ $\square$
 * **No new hypotheses were needed.** (D-b′) and (D-d) are Theorem D′'s, unchanged.
   What §15.13c adds is that they suffice once Step 2 is noticed.
 
+### 15.13d Proposition L — independence resolves the $GL(2,\mathbb{Z})$ ambiguity outright, no triangularity needed
+
+Theorem D″ assumes $h$ triangular, and §15.13c flags that as the heavier of its
+two gaps because (F3) — Theorem F's route to triangularity — fails for two
+cycles. **For the lattice ambiguity that assumption is removable**, and dropping
+it is what turns this into an answer to task 23.
+
+Two attracting cycles span an invariant torus, and a conjugacy acts on
+$H_1(T^2)=\mathbb{Z}^2$ by some $M\in GL(2,\mathbb{Z})$ (§7 of
+`counterexamples.md`). Independence can be tested against $M$ directly. With
+$\phi_i\sim\mu_i$ independent and $\psi=M\phi$,
+
+$$\mathbb{E}\,e^{i(m\psi_1+n\psi_2)}=\hat\mu_1(ma+nc)\,\hat\mu_2(mb+nd),$$
+
+so $\psi_1\perp\psi_2$ is exactly
+
+$$\hat\mu_1(ma+nc)\hat\mu_2(mb+nd)=\hat\mu_1(ma)\hat\mu_2(mb)\cdot\hat\mu_1(nc)\hat\mu_2(nd)
+\qquad\forall\,m,n\in\mathbb{Z}. \tag{L}$$
+
+> **Proposition L.** If neither $\mu_1$ nor $\mu_2$ is uniform, and neither is
+> supported on a coset of a finite cyclic subgroup, then (L) holds **iff $M$ is a
+> signed permutation** — i.e. iff the modules are recovered up to relabelling and
+> orientation.
+
+*Proof for triangular $M$ (the class task 23's counterexample lives in).* Take
+$c=0$, so $ad=\pm1$ and $|a|=|d|=1$. (L) becomes
+$\hat\mu_1(ma)\hat\mu_2(mb+nd)=\hat\mu_1(ma)\hat\mu_2(mb)\hat\mu_2(nd)$. Since
+$\mu_1$ is not uniform there is $m\neq0$ with $\hat\mu_1(ma)\neq0$; cancel it and
+put $k:=mb$, $n\to nd^{-1}$:
+
+$$\hat\mu_2(k+n)=\hat\mu_2(k)\,\hat\mu_2(n)\qquad\forall n.$$
+
+Taking $n=-k$ gives $1=\hat\mu_2(k)\hat\mu_2(-k)=\lvert\hat\mu_2(k)\rvert^2$, so
+$\lvert\hat\mu_2(k)\rvert=1$, which forces $\mu_2$ onto a coset of the $k$-torsion
+subgroup — excluded by hypothesis. Hence $k=mb=0$, and since $m\neq0$, $b=0$.
+Symmetrically $c=0\Rightarrow$ the transposed argument gives $b=0$, so $M$ is
+diagonal with $\det=\pm1$, i.e. $M=\operatorname{diag}(\pm1,\pm1)$. $\square$
+
+**The general case is verified but not proved.** Over 13 matrices spanning the
+signed permutations, the triangular family and general elements
+($(2,1;1,1)$, $(3,2;1,1)$, $(2,1;3,2)$, $(1,1;1,2)$, $(1,2;0,1)$), against two
+non-uniform law pairs, **every non-signed-permutation is rejected** — Fourier
+independence defect $0.31$–$0.81$ against a baseline of $0.004$ — and all four
+signed permutations are preserved exactly. `TODO(gap)` — the general-$M$ proof;
+(L) reduces to an additive functional equation in
+$\log\lvert\hat\mu_i\rvert$ that the triangular argument solves and the general
+one does not yet.
+
+**And the boundary identifies *which* $M$ escape, matching §15.4 exactly.** With
+$\mu_1$ uniform the survivors are precisely $(1,1;0,1)$, $(1,-1;0,1)$,
+$(1,2;0,1)$ — the matrices for which module 1 is the **recipient**; with $\mu_2$
+uniform, their transposes. Note $(2,1;1,1)$ is rejected *even when $\mu_1$ is
+uniform*, because $c\neq0$ makes module 2 a recipient too and $\mu_2$ is not
+uniform. So the Hyvärinen–Pajunen escape needs the entire off-diagonal action to
+point **into** a uniform module — a sharper statement than "some module is
+uniform", and the reason §15.4's proviso is about the recipient rather than the
+donor.
+
+**Consequence for §15.13c.** For the lattice class, Theorem D″'s triangularity
+hypothesis can be dropped: Proposition L kills every non-diagonal $M$ directly,
+so $h$ is homotopic to a signed permutation on the torus and the $GL(2,\mathbb{Z})$
+ambiguity of task 23 is resolved. What that does **not** give is block-diagonality
+of $h$ as a *map* — only that its action on $H_1$ is trivial. Theorem D″ supplies
+the rest inside the triangular class.
+
 **Where this leaves the route.** Theorem D is proved at a fixed point; §15.13a
 closes one oscillator driving one contracting module, modulo analyticity;
 §15.13b supplies Lemma T; and §15.13c assembles them into Theorem D″, which
