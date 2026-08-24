@@ -25,6 +25,38 @@ natural target: within a single population, "a slow component evolving
 autonomously and a faster one driven by it" is the expected structure, whereas a
 symmetric partition into interchangeable modules is not.
 
+### 0.1 What is proved — the short version
+
+Added 2026-08-24 because the file has outgrown a linear read. Each row links to
+the section that states it; the ledger is what a write-up should be assembled
+from.
+
+| result | says | status | key hypothesis |
+|---|---|---|---|
+| **Prop. T1** (§6.0) | the fitted transition is *automatically* conjugate to the true one, so every conjugacy invariant is identified | **free** — no theorem | injective decoders |
+| **Theorem A** (§3) | linear decoder ⟹ $h$ is a block permutation | **proved, sharp** | (A1) indecomposable, (A2) disjoint spectra — both necessary |
+| **Theorem F** (§6.2) | $h$ is block *lower-triangular*; the flag, every head system and the level spectra are identified | **proved** modulo (F4) | (F3) ordered separation — **holds 2/36 on real data** |
+| **Theorem B** (§5.3) | analytic decoder ⟹ $h$ block-diagonal | **proved at a fixed point** | (B4′) non-resonance — **identically false if any module rotates** (Prop. N, §5.3) |
+| **Lemma C/C′** (§4.4) | a one-sided gap kills one cross-derivative | **proved**, reaches periodic attractors | oriented gap; §3.7 proves both orientations can never hold |
+| **Lemma D–D‴** (§4.5–4.5c) | behaviour kills the cross-derivative the gap cannot | **proved** | additive $h_B$, two behaviour levels |
+| **Prop. S** (§14.1) | Route B kills every coupling valued in a **non-compact** group; the residue is compact | **proved** | $p_B$ of finite nonsingular second moment |
+| **Prop. C** (§15.1) | a rotational coupling **strictly decreases** the phase resultant | **proved, exact** | $T\perp z_B$ |
+| **Theorem D** (§15.12) | independence of module marginals ⟹ block-diagonal | **proved at a contracting fixed point** | $\log\rho_2+\sigma_1<0$ — $f_2$'s rate against $f_1$'s *own spread*; **free for a conformal module** |
+| **Theorem D′** (§15.13) | the same on a limit cycle | **sketch only** — see the caveat there | trivial $\operatorname{Stab}(p_1)$ |
+
+**Known FALSE, not merely unproved.** Block-diagonality under (B1)–(B4) at
+$C^1$: there is an explicit $C^\infty$ counterexample, so triangular is *sharp*
+(§4.3). And for two oscillatory modules only the $GL(2,\mathbb{Z})$ **orbit** of
+the rotation vector is identified (§7 of `counterexamples.md`).
+
+**The one condition that keeps recurring.** §14 and §15 close on the same
+object: no module's law may have a nontrivial orthogonal symmetry. That is a
+property of the *recording* — whether trials are phase-aligned — not of the
+spectra, and it is checkable with no ground truth.
+
+**Open:** the nonlinear matching lemma (B3), nonlinear indecomposability (B2),
+distributional equivalence with noise, nonlinear perturbation, and Theorem D′.
+
 ---
 
 ## 1. Setting
