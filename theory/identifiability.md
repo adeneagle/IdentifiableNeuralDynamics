@@ -2609,3 +2609,217 @@ equality case is only sharp there — in higher dimensions $T$ is pinned only on
 the mean direction. (d) The whole approach needs non-uniform phase laws, which is
 a property of how trials are seeded, and on a continuous recording with no
 alignment it may simply be absent.
+
+### 15.11 Toward a proof — the escape group, and why B and D have the same hole
+
+Task 47 asks whether independence *plus modular conjugacy* is rigid. The
+following reduces the question and, in doing so, unifies it with §14.
+
+**The escape group, exactly.** Theorem F gives $h$ block lower-triangular, so
+write $h=(h_1(z_1,z_2),\,h_2(z_2))$ and put $g_s:=h_1(\cdot,s)$. Because $h_2$ is
+a bijection in $z_2$, independence of the images is equivalent to
+$h_1(z_1,z_2)\perp z_2$. With $z_1\perp z_2$ that says: **$g_s$ pushes $p_1$ to
+the same law $\nu$ for every $s$**. Hence for any $s,s'$,
+
+$$g_{s'}^{-1}\circ g_s \ \text{ preserves } p_1 .$$
+
+So the independence-preserving triangular maps are exactly $g_s = T_0\circ u_s$
+with $u_s$ in the $p_1$-preserving group — which for diffeomorphisms is
+infinite-dimensional, so independence *alone* cannot be enough. That is §15.5's
+Hyvärinen–Pajunen limit, derived rather than quoted.
+
+**What the conjugacy adds.** The $1$-component of $h\circ F=\tilde F\circ h$ reads
+
+$$g_{f_2(s)}\circ f_1 \;=\; \tilde f_1 \circ g_s ,$$
+
+so the family $\{g_s\}$ is not free: it is determined along each $f_2$-orbit by
+its value at one point, and over a **fixed or periodic** point $s^*$ of $f_2$ the
+map $g_{s^*}$ is a genuine conjugacy $f_1\to\tilde f_1$. Combining the two
+displays, the transports $u_s$ must be $p_1$-preserving **and** compatible with
+$f_1$'s own dynamics. The natural conjecture is therefore that the escape is
+valued in
+
+$$\operatorname{Stab}(p_1)\ \cap\ C(f_1),$$
+
+the measure-preserving maps that also commute with the module's own map.
+
+**Both counterexamples are of exactly this form**, which is the evidence for the
+shape:
+
+| escape | $\operatorname{Stab}(p_1)$ | in $C(f_1)$? | regularity |
+|---|---|---|---|
+| $h_1=z_1\operatorname{sgn}(z_2)$, $p_1$ symmetric | $\{\pm1\}=O(1)$ | yes ($f_1$ odd) | **discontinuous at $z_2=0$** |
+| $h_1=R(\theta(z_2))z_1$, $p_1$ rotationally symmetric | $SO(2)$ | yes ($f_1$ a rotation-scaling) | smooth; a real conjugacy on a cycle (§13.2) |
+
+Measured: the first is an exact conjugacy (defect $0$) with dCor $0.0248$ against
+a baseline of $0.0247$ while changing $50.3\%$ of samples; the second reads
+$0.0465$ against $0.0401$, and **concentrating $p_1$'s phase sends it to
+$0.8512$**. The $d_1=1$ case is discrete ($\pm1$), so no *continuous* family
+exists there — §4.5's remark that the escape needs $d_B\ge2$, recovered here from
+the group rather than from the construction.
+
+> **This is the unification with §14.** Proposition S says Route B's irreducible
+> residue is a coset of $\operatorname{Stab}_G(p_B)$. The display above says Route
+> D's hole is $\operatorname{Stab}(p_1)\cap C(f_1)$. **They are the same object**,
+> so the two routes do not fail independently — and neither is a fallback for the
+> other. What closes *both* is a single checkable condition on the recording:
+> **every module's law has trivial stabiliser**, i.e. no module is distributionally
+> invariant under a nontrivial symmetry.
+
+> **Sharpened conjecture (task 47).** Let $h$ be a modular conjugacy with both
+> representations having independent module marginals. If
+> $\operatorname{Stab}(p_i)$ is trivial for every $i$, then $h$ is block-diagonal
+> up to permutation. `TODO(gap)`
+>
+> What is proved above: the reduction to $g_{s'}^{-1}g_s\in\operatorname{Stab}(p_1)$,
+> and the orbit constraint $g_{f_2(s)}\circ f_1=\tilde f_1\circ g_s$. What is not:
+> that the two together force $u_s$ constant. The missing step is a rigidity
+> statement for a $p_1$-preserving family compatible with $f_1$ — plausibly the
+> same $C(f_1)$-centraliser argument that makes §4.5's Step 1 work, but it has not
+> been written.
+
+### 15.12 Theorem D — Route D closes at a contracting fixed point
+
+§15.11's reduction closes, and the resulting hypothesis is *not* a spectral
+separation between the modules.
+
+> **Theorem D.** Let $h$ be a modular conjugacy, block lower-triangular
+> (Theorem F, or assumed), $h=(h_1(z_1,z_2),h_2(z_2))$, and write
+> $g_s:=h_1(\cdot,s)$. Assume
+>
+> * **(D-a) Independence.** $z_1\perp z_2$, and the images $h_1\perp h_2$.
+> * **(D-b) A contracting base.** $f_2$ has an attracting fixed point $s_0$ in
+>   $\Omega_2$ with rate $\rho_2<1$, and $s\mapsto g_s$ is Lipschitz into $C^1$.
+> * **(D-c) Conformality budget.** $f_1$ (or its linear part) has Lyapunov spread
+>   $\sigma_1=\lambda_{\max}(f_1)-\lambda_{\min}(f_1)$ with
+>   $$\log\rho_2+\sigma_1<0 .$$
+>
+> Then $h_1$ does not depend on $z_2$, so $h$ is **block-diagonal**.
+
+*Proof.* $h_2$ is a bijection in $z_2$, so (D-a) is equivalent to
+$h_1(z_1,z_2)\perp z_2$, i.e. $(g_s)_*p_1=\nu$ for a single $\nu$ and every $s$.
+Hence $u_s:=g_{s_0}^{-1}\circ g_s$ preserves $p_1$, with $u_{s_0}=\mathrm{id}$.
+
+The $1$-component of $h\circ F=\tilde F\circ h$ is
+$g_{f_2(s)}\circ f_1=\tilde f_1\circ g_s$. Evaluating at the fixed point gives
+$\tilde f_1=g_{s_0}f_1g_{s_0}^{-1}$; substituting and cancelling $g_{s_0}$ on the
+left yields the **cocycle relation**
+
+$$u_{f_2(s)}\circ f_1=f_1\circ u_s,\qquad\text{i.e.}\qquad
+u_s=f_1^{-1}\circ u_{f_2(s)}\circ f_1 ,$$
+
+and iterating, $u_s=f_1^{-n}\circ u_{f_2^{n}(s)}\circ f_1^{n}$ for every $n$.
+
+*The origin is fixed, and this step is not free.* The Lipschitz bound below needs
+$u_s(0)=0$, which nothing so far supplies. It comes from using (D-a) at **every
+time**, which is legitimate because $F$ is modular: if the module marginals are
+independent at $t=0$ they are independent at every $t$, so $(g_s)_*p_1^{(t)}$ is
+$s$-free for all $t$ and hence $u_s$ preserves $p_1^{(t)}:=(f_1^{t})_*p_1$ for all
+$t$. Since $f_1$ contracts, $p_1^{(t)}\Rightarrow\delta_0$, and a continuous $u_s$
+preserving the limit gives $\delta_{u_s(0)}=\delta_0$, i.e. $u_s(0)=0$. *(This is
+the one place the whole time-family of independence constraints is used rather
+than a single one — and it is why independence at a single snapshot would not
+suffice.)*
+
+Write $u_t=\mathrm{id}+v_t$, so $v_t(0)=0$. By (D-b), $f_2^n(s)\to s_0$ at rate
+$\rho_2$ and $u_{s_0}=\mathrm{id}$, so $\operatorname{Lip}(v_{f_2^n(s)})=O(\rho_2^{\,n})$. And
+$\lVert f_1^{-n}v(f_1^{n}x)\rVert\le\operatorname{cond}(f_1^{n})\operatorname{Lip}(v)\lVert x\rVert$
+with $\operatorname{cond}(f_1^n)=e^{n\sigma_1+o(n)}$. Hence
+$\lVert u_s-\mathrm{id}\rVert\le C\,\rho_2^{\,n}e^{n\sigma_1+o(n)}\to0$ by (D-c).
+So $u_s=\mathrm{id}$ for every $s$, i.e. $g_s=g_{s_0}$. $\square$
+
+**(D-c) is not Lemma C's gap, and the difference is the point.** Lemma C needs a
+separation *between* the modules, $\lambda_{\max}(f_2)<\lambda_{\min}(f_1)$, which
+§3.7 shows can never hold in both directions and which (F3) then fails on real
+data. (D-c) compares $f_2$'s rate to $f_1$'s **own spread** — an *internal*
+property of one module. In particular:
+
+> For a **conformal** $f_1$ — a rotation-scaling, i.e. any `TwistBlock`, whose
+> spectrum $\{\log s,\log s\}$ is repeated — $\sigma_1=0$ and **(D-c) is free**:
+> any contracting $f_2$ will do.
+
+So the oscillatory module that (B4$'$) excludes identically (Prop. N) and that
+(F3) cannot order is exactly the case where Theorem D costs nothing.
+
+Verified numerically at the level of the mechanism: iterating
+$A_s=f_1^{-n}A_{f_2^n(s)}f_1^{n}$ with $A_{f_2^n s}\to I$ at rate $\rho_2$, the
+residual $\sup_{n>40}\lVert A_s-I\rVert$ is $2.2\times10^{-3}$ for conformal $f_1$
+at $\rho_2=0.9$, and for a non-conformal $f_1$ with $\sigma_1=1.386$ it is
+$4.0\times10^{-5}$ when $\rho_2e^{\sigma_1}=0.8<1$ but **$1.2\times10^{32}$** when
+$\rho_2e^{\sigma_1}=3.6>1$ — the condition is sharp, not conservative.
+
+**Every known escape fails exactly one hypothesis**, which is the check that the
+hypotheses are load-bearing rather than decorative:
+
+| escape | fails |
+|---|---|
+| §4.3 triangular, $g_s = $ translation by $c\operatorname{sgn}(s)\lvert s\rvert^{p}$ | **(D-a)** — the translation moves the law, so independence is lost (measured $8.2\times$ baseline) |
+| $h_1=z_1\operatorname{sgn}(z_2)$ | **(D-b)** — $s\mapsto g_s$ jumps at $s=0$ |
+| $h_1=R(\theta(z_2))z_1$, $p_1$ symmetric | **(D-b)** — it lives on a *cycle*; at a fixed point $\theta\circ f_2-\theta$ constant forces $\theta$ constant (§4.5 Step 1) |
+
+**What remains open is the non-fixed-point case, and it is exactly where §15.11's
+stabiliser condition is needed.** On a limit cycle there is no $s_0$ to contract
+to, the cocycle iteration has nothing to converge against, and the rotational
+escape is a genuine conjugacy (§13.2, defect $7.5\times10^{-16}$). So the honest
+division is: **at a fixed point, Theorem D — no stabiliser hypothesis required;
+off it, the conjecture of §15.11 with trivial $\operatorname{Stab}(p_i)$.**
+`TODO(gap)`
+
+**Theorem D and Theorem F are complementary, and the cleanest case shows it.**
+Take $f_1$ conformal at $0.8$ and $f_2$ slower at $0.9$. Then (F3) **holds**, but
+in the order $[1,0]$ — $f_2$ leads — so Theorem F gives $h_2=h_2(z_2)$ and
+explicitly *permits* $h_1$ to depend on $z_2$. Killing that surviving block by
+Lemma C would need $\lambda_{\max}(f_2)<\lambda_{\min}(f_1)$, i.e.
+$\log0.9<\log0.8$, which is false — and by §3.7 the two orientations can never
+both hold anyway. Theorem D's condition is $\log0.9+0<0$, which does hold. **So
+Theorem D removes exactly the cross-block Theorem F is forced to leave in**, and
+it does so with a hypothesis §3.7 does not obstruct. Pinned in
+`tests/test_spectra_and_cocycle.py::test_theorem_D_kills_the_cross_block_theorem_F_is_forced_to_permit`.
+
+### 15.13 Theorem D′ — the limit-cycle case, and where the stabiliser enters
+
+Theorem D used the fixed point twice: to get $\tilde f_1=g_{s_0}f_1g_{s_0}^{-1}$,
+and to make $u_{f_2^n(s)}\to\mathrm{id}$. On an attracting **limit cycle** there is
+no $s_0$ to contract to, and §13.2's rotational escape is a genuine conjugacy —
+so something must be added. It turns out to be exactly Proposition S's object.
+
+> **Theorem D′.** As Theorem D, but with $f_2$ attracting a limit cycle with
+> transverse rate $\rho_2^{\perp}$. Assume
+>
+> * **(D-b′)** $\log\rho_2^{\perp}+\sigma_1<0$;
+> * **(D-d)** $\operatorname{Stab}_{GL(d_1)}(p_1)$ is **trivial** — the whitened
+>   directional law of module 1 has no nontrivial orthogonal symmetry.
+>
+> Then $h$ is block-diagonal.
+
+*Proof sketch.* The transverse contraction plays the role the fixed point played:
+$f_2^{n}(s)$ approaches the cycle at rate $\rho_2^{\perp}$, so by the same
+distortion bound $u_s$ is determined by its restriction to the cycle, and the
+nonlinear part of $u$ dies under (D-b′). On the cycle, take linear parts of
+$u_s=f_1^{-n}u_{f_2^{n}(s)}f_1^{n}$: for conformal $f_1$ the conjugation is
+trivial, so $A$ is constant along $f_2$-orbits, which are dense when $\omega_2$ is
+irrational, giving $A$ constant. Independence forces $A\in\operatorname{Stab}_{GL}(p_1)$,
+compact by Proposition S, and (D-d) makes it $\{I\}$. $\square$ `TODO(gap)` —
+the density step needs $\omega_2$ irrational, and the rational case needs the
+periodic-orbit version.
+
+**Why (D-d) is the right hypothesis and not an extra assumption.** It is
+Proposition S's stabiliser, so §14 and §15 close on the same condition. It is
+exactly what the two known smooth escapes need in order to exist: the rotational
+escape requires $p_1$ rotationally symmetric, and §15.9's restart-2 evasion is an
+optimiser *manufacturing* that symmetry by flattening the phase. And it is
+checkable with no ground truth — circular concentration, or the harmonic content
+of the whitened directional law.
+
+**Measured, and it is the same number both ways.** With $p_1$ rotationally
+symmetric the rotational escape reads dCor $0.0465$ against a baseline of
+$0.0401$ (invisible); concentrating $p_1$'s phase sends it to $\mathbf{0.8512}$.
+The hypothesis is not decorative — it is the difference between the escape
+existing and not.
+
+> **The whole picture, in one line.** At a **fixed point** Route D needs no
+> symmetry hypothesis (Theorem D); on a **cycle** it needs exactly the trivial
+> stabiliser that Proposition S already identified as Route B's irreducible
+> residue (Theorem D′). So the two routes that looked independent fail and close
+> on the *same* condition, and that condition is a property of the recording —
+> whether trials are phase-aligned — rather than of the spectra.

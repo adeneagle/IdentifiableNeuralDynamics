@@ -727,3 +727,83 @@ def test_two_oscillatory_modules_are_resonant_at_every_frequency():
     for a1, a2 in ((0.3, 0.4), (0.3, 0.3), (0.2, 0.45)):
         s = [np.array([0.0, np.log(abs(1 - 2 * a))]) for a in (a1, a2)]
         assert not SPX.is_cross_module_nonresonant(s, max_order=4), (a1, a2)
+
+
+# ---------------------------------------------------------------------------
+# Theorem D (identifiability.md 15.12): Route D closes at a contracting fixed
+# point.  The proof reduces to the cocycle A_s = f_1^{-n} A_{f_2^n s} f_1^n with
+# A_{f_2^n s} -> I at rate rho_2, so the hypothesis is
+#
+#     log rho_2 + spread(f_1) < 0,
+#
+# comparing f_2's rate to f_1's OWN spread -- an internal property of one
+# module, NOT a separation between modules as Lemma C needs.  For a conformal
+# f_1 (any TwistBlock: spectrum {log s, log s}, spread 0) it is free.
+# ---------------------------------------------------------------------------
+
+def _theorem_d_residual(f1, rho2, n_lo=40, n_hi=70, seed=0):
+    """sup over large n of ||f_1^{-n} (I + rho2^n D) f_1^n - I||, D fixed."""
+    rng = np.random.default_rng(seed)
+    D = 0.3 * rng.standard_normal((2, 2))
+    worst = 0.0
+    for n in range(n_lo, n_hi):
+        F = np.linalg.matrix_power(f1, n)
+        conj = np.linalg.solve(F, (np.eye(2) + rho2 ** n * D) @ F)
+        worst = max(worst, float(np.abs(conj - np.eye(2)).max()))
+    return worst
+
+
+def _conformal(s, omega):
+    return s * np.array([[np.cos(omega), -np.sin(omega)],
+                         [np.sin(omega), np.cos(omega)]])
+
+
+def test_theorem_D_is_free_for_a_conformal_module():
+    """spread 0, so any contracting f_2 works -- the oscillatory case.
+
+    This is the point of Theorem D: the module that (B4') excludes identically
+    (Prop. N) and that (F3) cannot order is exactly where its hypothesis costs
+    nothing.
+    """
+    f1 = _conformal(0.8, 0.7)
+    assert _theorem_d_residual(f1, 0.9) < 1e-2
+    assert _theorem_d_residual(f1, 0.5) < 1e-10
+
+
+def test_theorem_D_condition_is_sharp_not_conservative():
+    """Non-conformal f_1: converges iff rho_2 * exp(spread) < 1, and it is sharp."""
+    f1 = np.diag([0.8, 0.2])
+    spread = np.log(0.8) - np.log(0.2)
+    ok, bad = 0.2, 0.9
+    assert ok * np.exp(spread) < 1 < bad * np.exp(spread), "fixture must straddle"
+    assert _theorem_d_residual(f1, ok) < 1e-3
+    assert _theorem_d_residual(f1, bad) > 1e6, "must diverge on the wrong side"
+
+
+def test_theorem_D_kills_the_cross_block_theorem_F_is_forced_to_permit():
+    """The two results are complementary, and this is the configuration showing it.
+
+    Take f_1 conformal at 0.8 and f_2 slower at 0.9.  Then:
+
+    * (F3) HOLDS, but in the order [1, 0] -- f_2 leads.  So Theorem F gives
+      h_2 = h_2(z_2) and explicitly PERMITS h_1 to depend on z_2.
+    * Lemma C's oriented gap for killing that surviving block needs
+      lambda_max(f_2) < lambda_min(f_1), i.e. log 0.9 < log 0.8, which is FALSE
+      -- and by section 3.7 it can never hold in both directions anyway.
+    * Theorem D's condition log rho_2 + spread(f_1) = log 0.9 + 0 < 0 holds, so
+      it removes exactly the dependence Theorem F had to leave in.
+    """
+    from idyn import spectra as SPX
+
+    f1 = _conformal(0.8, 0.7)                       # spectrum {log .8, log .8}
+    rho2 = 0.9                                       # f_2 is the SLOWER module
+
+    fg = SPX.filtration_gap([np.array([np.log(0.8)] * 2), np.array([np.log(rho2)] * 2)])
+    assert fg.ordered and list(fg.order) == [1, 0], (fg.ordered, fg.order)
+
+    # Lemma C cannot kill h_1's dependence on z_2 here
+    assert np.log(rho2) > np.log(0.8), "the oriented gap Lemma C needs fails"
+
+    # Theorem D can
+    assert np.log(rho2) + 0.0 < 0, "Theorem D's condition holds (spread 0)"
+    assert _theorem_d_residual(f1, rho2) < 1e-2

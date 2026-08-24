@@ -579,3 +579,53 @@ def test_route_D_gaussian_degeneracy_is_real_but_excluded_by_A2():
         C = R @ np.diag([m1, m2]) @ np.linalg.inv(R)
         off = abs(C[0, 1]) + abs(C[1, 0])
         assert bool(off < 1e-12) == modular, (m1, m2, off)
+
+
+def test_route_D_escape_is_stabiliser_valued_sign_flip():
+    """A counterexample to the NAIVE Route D conjecture, and its shape.
+
+    ``h_1 = z_1 sgn(z_2)`` is an exact modular conjugacy (f_1 odd, f_2
+    orientation-preserving), preserves independence because for each fixed z_2 it
+    is a p_1-preserving map, and is not block-diagonal.  It escapes because
+    ``{+-1} = Stab(p_1)`` is nontrivial for symmetric p_1 -- the same object
+    Proposition S identifies as Route B's residue (identifiability.md 15.11).
+
+    It is discontinuous at ``z_2 = 0``, which is why the d_B = 1 case needs no
+    extra hypothesis: the stabiliser is discrete, so no continuous family exists.
+    """
+    rng = np.random.default_rng(0)
+    n = 4000
+    mu1, mu2 = 0.6, 0.8
+    z1, z2 = rng.standard_normal(n), rng.standard_normal(n)
+    h1 = z1 * np.sign(z2)
+
+    # exact conjugacy: h_1(F z) == f~_1(h_1(z)) with f~_1 = mu1 .
+    np.testing.assert_allclose((mu1 * z1) * np.sign(mu2 * z2), mu1 * h1, atol=1e-12)
+    # independence-preserving
+    assert _dep(np.stack([h1, np.zeros(n), z2, np.zeros(n)], 1)) < 2 * _dep_base(n)
+    # but genuinely not block-diagonal
+    assert np.mean(h1 != z1) > 0.4
+
+
+def test_route_D_escape_is_stabiliser_valued_rotation_and_symmetry_breaking_closes_it():
+    """The SMOOTH escape, and the condition that removes it.
+
+    ``h_1 = R(theta(z_2)) z_1`` with p_1 rotationally symmetric is
+    independence-preserving because Stab(p_1) contains SO(2).  Concentrating
+    p_1's phase makes Stab trivial and the escape becomes visible -- which is the
+    sharpened conjecture's hypothesis, measured.
+    """
+    rng = np.random.default_rng(1)
+    n = 4000
+    th2 = rng.uniform(-np.pi, np.pi, n)
+    r1 = 1 + 0.2 * np.abs(rng.standard_normal(n))
+    donor = np.stack([np.cos(th2), np.sin(th2)], 1)
+
+    def rotated(phase):
+        return np.stack([r1 * np.cos(phase + th2), r1 * np.sin(phase + th2)], 1)
+
+    from idyn.metrics import distance_correlation as dc
+    sym = dc(rotated(rng.uniform(-np.pi, np.pi, n)), donor)      # Stab = SO(2)
+    conc = dc(rotated(rng.vonmises(0.0, 4.0, n)), donor)         # Stab trivial
+    assert sym < 2 * _dep_base(n), "symmetric p_1 hides the coupling"
+    assert conc > 8 * sym, f"breaking the symmetry must expose it: {sym} -> {conc}"
