@@ -2955,12 +2955,79 @@ finishes it.
    $C^\infty$ a flat $u_s$ survives the jet argument, which is (FLAT-D) again,
    the same residual Route A carries.
 
-**Scope, and it must not be overread: this does *not* close the two-oscillator
+**Scope, and it must not be overread: §15.13a does *not* close the two-oscillator
 case.** (D-e) and the $u_s(0)=0$ step both need $f_1$ to have a contracting fixed
 point. In task 23's lattice regrouping $h(z_1,z_2)=(z_1z_2/\lvert z_2\rvert,z_2)$
 the *recipient* module is itself a limit cycle, so there is no fixed point to
 expand at and this argument is silent. What is closed is the configuration
 **one oscillatory module driving one contracting module** — where Theorem F is
 either unavailable ((F3) cannot order a cycle against a module whose hull it
-contains) or permits the very cross-block Theorem D removes. Two oscillators
-remains the open case, as it is for every other route in this document.
+contains) or permits the very cross-block Theorem D removes. For two oscillators
+see §15.13b, which gets the mechanism but not yet the theorem.
+
+### 15.13b Two time points collapse the circle stabiliser to its *rotational* part
+
+The two-oscillator case is not reached by §15.13a, but the obstruction there is
+sharper than it looks and the same **(D-d)** closes it — using time, which §15
+already invokes.
+
+When module 1 is itself a limit cycle the escape lives in the phase, and the
+stabiliser is much larger than $O(2)$. Classically, an orientation-preserving
+homeomorphism of $S^1$ preserving a non-atomic full-support law $\mu$ is
+CDF-conjugate to a rotation, so
+
+$$\operatorname{Stab}_{\mathrm{Homeo}}(\mu)=F_\mu^{-1}\circ SO(2)\circ F_\mu$$
+
+is an entire circle group of generally *non-rotation* maps — infinite-dimensional
+as a family over $\mu$, and far too big for (D-d) to bite. That is why "trivial
+rotational symmetry" looks insufficient on a cycle.
+
+**But independence is imposed at every $t$, and $p_1^{(t)}$ is $\mu$ rotated by
+$t\omega_1$.** So the escape must lie in $\bigcap_t R_{t\omega_1}\operatorname{Stab}(\mu)R_{-t\omega_1}$,
+and **two values of $t$ already suffice**:
+
+> **Lemma T (measured).** For a full-support circle law $\mu$ and $\omega\neq0$,
+> $\operatorname{Stab}_{\mathrm{Homeo}}(\mu)\cap\operatorname{Stab}_{\mathrm{Homeo}}(R_\omega{}_\#\mu)
+> \;=\;\operatorname{Stab}_{O(2)}(\mu)$ — the *rotational* symmetries, and nothing more.
+
+Measured, sampling floor $\approx0.008$ in total variation:
+
+| $\mu$ | $\operatorname{Stab}_{O(2)}(\mu)$ | element found | TV |
+|---|---|---|---|
+| von Mises $\kappa=2$ | trivial | $U(0)=6.264\approx2\pi$, i.e. the identity | $0.037$ |
+| pure 2nd harmonic | $\mathbb{Z}_2$ | $U(0)=3.142=\pi$ **exactly** | $0.008$ (floor) |
+| $\kappa=2$ + 2nd harmonic | trivial | $U(0)=0.012$, the identity | $0.082$ |
+| uniform | all of $SO(2)$ | every $\alpha$ | $0.007$ |
+
+The middle row is what makes this a *identification* rather than a bound: the one
+surviving non-identity element is the half-turn, to three decimals, exactly the
+$\mathbb{Z}_2$ that law possesses. And the last row is the Hyvärinen–Pajunen hole
+of §15.5 appearing as the degenerate case, where the collapse does not happen at
+all.
+
+**So on a cycle the hypothesis is unchanged.** (D-d) — trivial
+$\operatorname{Stab}_{O(2)}(p_1)$, i.e. a phase-concentrated module — is what
+Theorem D′ already assumes, and Lemma T says it is enough even though the naive
+stabiliser is infinite-dimensional. Note the **economy**: two time points, the
+same count as Lemma D's two behaviour levels (§4.5), and for the same reason —
+the dynamics supply what an auxiliary variable would otherwise have to.
+
+**Margin depends on concentration *and* on $\omega$, so report both.** At
+$\kappa=0.5$ the collapse reads $0.0147$ against the floor at $\omega=0.7$ but
+$0.0412$ at $\omega=2.3$; at $\kappa=0.15$ it is at floor for both. A weakly
+concentrated phase law is *formally* covered and *practically* not — the same
+distinction §14.4 drew with its $\approx0.3$ concentration threshold.
+
+> `TODO(gap)` — **Lemma T is verified numerically and is a statement about circle
+> measures alone; its application to Theorem D′ is not written out.** The
+> dynamical plumbing needs care: showing that the relevant $u_s$ is literally the
+> same circle map across two times, with the index $s$ transported by $f_2$ at the
+> same time, is exactly the bookkeeping §15.13's caveat flags. Until that is
+> written, treat the two-oscillator case as **open with an identified mechanism**,
+> not closed.
+
+**Where this leaves the route.** Theorem D is proved at a fixed point; §15.13a
+closes one oscillator driving one contracting module, modulo analyticity; and
+§15.13b identifies the mechanism for two oscillators but not the proof. That is
+strictly more than any other route in this document reaches, and it is still
+short of the case task 23 exhibits.

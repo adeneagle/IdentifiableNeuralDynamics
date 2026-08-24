@@ -629,3 +629,86 @@ def test_route_D_escape_is_stabiliser_valued_rotation_and_symmetry_breaking_clos
     conc = dc(rotated(rng.vonmises(0.0, 4.0, n)), donor)         # Stab trivial
     assert sym < 2 * _dep_base(n), "symmetric p_1 hides the coupling"
     assert conc > 8 * sym, f"breaking the symmetry must expose it: {sym} -> {conc}"
+
+
+# ---------------------------------------------------------------------------
+# Lemma T (identifiability.md 15.13b): two time points collapse the circle
+# stabiliser to its ROTATIONAL part.
+#
+# On a limit cycle the Route D escape lives in the phase, and
+# Stab_Homeo(mu) = F^-1 o SO(2) o F is an entire circle group of non-rotation
+# maps -- far bigger than O(2), which is why (D-d) looks insufficient there.
+# But independence holds at every t and p^(t) is mu rotated by t*omega, so the
+# escape must preserve TWO rotated copies.  That cuts it down to Stab_O2(mu).
+# ---------------------------------------------------------------------------
+
+_TAU = 2.0 * np.pi
+
+
+def _circle_law(kappa, mu0=0.0, skew=0.0, n=100_000):
+    th = np.linspace(0.0, _TAU, n, endpoint=False)
+    p = np.exp(kappa * np.cos(th - mu0) + skew * np.cos(2.0 * (th - mu0)))
+    return th, p / p.sum()
+
+
+def _stab_element(th, p, alpha):
+    """F^-1 o R_alpha o F -- the general orientation-preserving p-preserving homeo."""
+    F = np.concatenate([[0.0], np.cumsum(p)[:-1]])
+
+    def U(x):
+        u = np.interp(np.mod(x, _TAU), th, F, period=_TAU)
+        return np.interp(np.mod(u + alpha, 1.0), F, th)
+
+    return U
+
+
+def _tv(U, th, p, q, seed=1, n_samp=300_000, bins=120):
+    rng = np.random.default_rng(seed)
+    s = rng.choice(th, size=n_samp, p=p)
+    h, _ = np.histogram(np.mod(U(s), _TAU), bins=bins, range=(0.0, _TAU), density=True)
+    r, _ = np.histogram(th, bins=bins, range=(0.0, _TAU), weights=q * th.size,
+                        density=True)
+    return 0.5 * float(np.abs(h - r).sum()) * (_TAU / bins)
+
+
+def _surviving_element(kappa, skew, omega=0.7):
+    """The alpha != 0 best preserving BOTH mu and R_omega # mu, and where it sends 0."""
+    th, p = _circle_law(kappa, skew=skew)
+    _, prot = _circle_law(kappa, mu0=omega, skew=skew)
+    alphas = np.arange(0.01, 1.0, 0.01)
+    errs = np.array([_tv(_stab_element(th, p, a), th, prot, prot) for a in alphas])
+    j = int(errs.argmin())
+    U = _stab_element(th, p, alphas[j])
+    return float(errs[j]), float(np.mod(U(np.array([0.0]))[0], _TAU))
+
+
+def test_lemma_t_every_stab_element_preserves_mu_itself():
+    """Sanity: the construction really does produce mu-preserving maps.
+
+    Without this the collapse below would be vacuous -- a family that preserves
+    nothing trivially fails to preserve two things.
+    """
+    th, p = _circle_law(2.0)
+    for alpha in (0.05, 0.35, 0.8):
+        assert _tv(_stab_element(th, p, alpha), th, p, p) < 0.02, alpha
+
+
+def test_lemma_t_two_times_collapse_stabiliser_to_rotations():
+    """A trivial Stab_O2 leaves only the identity; a Z_2 leaves exactly the half turn."""
+    # trivial rotational symmetry -> only the identity survives
+    err, shift = _surviving_element(kappa=2.0, skew=0.0)
+    assert err > 0.03, f"a non-identity escape survived at TV {err}"
+    assert min(shift, _TAU - shift) < 0.1, f"and the argmin is the identity, U(0)={shift}"
+
+    # Z_2 rotational symmetry -> the half turn survives, and it is exactly pi
+    err2, shift2 = _surviving_element(kappa=0.0, skew=0.8)
+    assert err2 < 0.02, f"the half turn should survive, TV {err2}"
+    assert abs(shift2 - np.pi) < 0.05, f"and it is the half turn, U(0)={shift2}"
+
+
+def test_lemma_t_uniform_phase_is_the_degenerate_case():
+    """Uniform mu: every element survives -- the Hyvarinen-Pajunen hole of 15.5."""
+    th, p = _circle_law(0.0)
+    _, prot = _circle_law(0.0, mu0=0.7)
+    for alpha in (0.05, 0.35, 0.8):
+        assert _tv(_stab_element(th, p, alpha), th, prot, prot) < 0.02, alpha
