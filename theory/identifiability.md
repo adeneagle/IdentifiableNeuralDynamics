@@ -2823,3 +2823,25 @@ existing and not.
 > residue (Theorem D′). So the two routes that looked independent fail and close
 > on the *same* condition, and that condition is a property of the recording —
 > whether trials are phase-aligned — rather than of the spectra.
+
+> **Caveat on §15.13's sketch, added on re-reading it.** Theorem D′ is billed as
+> a sketch and it should be read as a weaker claim than Theorem D, which is
+> written out in full. Two steps need care that the sketch glosses:
+>
+> 1. **Killing the nonlinear part.** At a fixed point this works because
+>    $u_{f_2^n(s)}\to\mathrm{id}$, so the residual is $O(\rho_2^{\,n})$. On a cycle
+>    $u_{f_2^n(s)}$ converges to $u$ *restricted to the cycle*, which need not be
+>    the identity, so the argument has to be rerun with the transverse coordinate
+>    alone and it is not obvious it survives unchanged.
+> 2. **Ordering.** The sketch kills the nonlinear part first and then applies the
+>    stabiliser. The reverse order does not work: $u_s$ preserving $p_1$ does
+>    **not** imply its *linear part* does, so "independence puts $A$ in
+>    $\operatorname{Stab}_{GL}(p_1)$" is only available once $u_s$ is known to be
+>    linear.
+>
+> Also, the $t\to\infty$ trick that pins $u_s(0)=0$ in Theorem D is unavailable
+> when module 1 is itself oscillatory, since $p_1^{(t)}$ then does not converge
+> to $\delta_0$. **What is solid is the fixed-point theorem and the empirical
+> claim** — the escape exists iff $\operatorname{Stab}(p_1)$ is nontrivial, measured
+> at $0.0465$ versus $0.8512$. The cycle theorem is a conjecture with a plausible
+> route, not a result. `TODO(gap)`
