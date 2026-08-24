@@ -766,3 +766,48 @@ def test_theorem_d2_the_boundary_is_monotone_in_concentration():
     vals = [_lattice_conditional_phase_shift(kappa=k) for k in (0.0, 0.25, 1.0, 4.0)]
     assert all(b > a - 1e-3 for a, b in zip(vals, vals[1:])), vals
     assert vals[-1] > 10 * max(vals[0], 1e-3), vals
+
+
+def _rotation_symmetry_defect(p, q):
+    return 0.5 * float(np.abs(p - np.roll(p, int(round(p.size / q)))).sum())
+
+
+def test_lemma_t_every_rational_survivor_is_a_genuine_rotational_symmetry():
+    """The residual case in Lemma T's proof, searched.
+
+    The proof closes for irrational alpha; what is open is whether Phi could
+    commute with some R_{p/q} that is NOT a symmetry of mu.  Over several laws
+    and rotations, every alpha that survives has symmetry defect ~0 -- and a
+    Z_4 law correctly yields both q=2 and q=4.  Evidence, not a proof; if this
+    test ever fails it has found a counterexample to Lemma T and that is the
+    more valuable outcome.
+    """
+    n = 60_000
+    th = np.linspace(0.0, _TAU, n, endpoint=False)
+
+    def law(coefs):
+        e = np.zeros_like(th)
+        for k, (a, b) in enumerate(coefs, start=1):
+            e += a * np.cos(k * th) + b * np.sin(k * th)
+        p = np.exp(e)
+        return p / p.sum()
+
+    laws = [
+        [(2.0, 0.0)],                                  # von Mises, trivial Stab
+        [(1.2, 0.4), (0.7, -0.3)],                     # asymmetric, trivial Stab
+        [(0.0, 0.0), (0.0, 0.0), (1.4, 0.0)],          # 3rd harmonic only -> Z_3
+        [(0.0, 0.0), (0.0, 0.0), (0.0, 0.0), (1.2, 0.0)],  # 4th only -> Z_4
+    ]
+    for coefs in laws:
+        p = law(coefs)
+        for omega in (0.7, 1.9):
+            prot = np.interp(np.mod(th - omega, _TAU), th, p, period=_TAU)
+            prot = prot / prot.sum()
+            for q in (2, 3, 4, 5):
+                U = _stab_element(th, p, 1.0 / q)
+                if _tv(U, th, prot, prot, n_samp=200_000, bins=100) < 0.03:
+                    defect = _rotation_symmetry_defect(p, q)
+                    assert defect < 0.05, (
+                        f"survivor at q={q}, omega={omega} is NOT a symmetry "
+                        f"(defect {defect:.4f}) -- Lemma T counterexample"
+                    )

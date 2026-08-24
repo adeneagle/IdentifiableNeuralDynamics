@@ -3018,13 +3018,43 @@ $0.0412$ at $\omega=2.3$; at $\kappa=0.15$ it is at floor for both. A weakly
 concentrated phase law is *formally* covered and *practically* not — the same
 distinction §14.4 drew with its $\approx0.3$ concentration threshold.
 
-> `TODO(gap)` — **Lemma T is verified numerically and is a statement about circle
-> measures alone; its application to Theorem D′ is not written out.** The
-> dynamical plumbing needs care: showing that the relevant $u_s$ is literally the
-> same circle map across two times, with the index $s$ transported by $f_2$ at the
-> same time, is exactly the bookkeeping §15.13's caveat flags. Until that is
-> written, treat the two-oscillator case as **open with an identified mechanism**,
-> not closed.
+**Proof of Lemma T, and what is left of it.** Let $G:=F_\mu$ be $\mu$'s CDF map,
+an orientation-preserving homeomorphism $S^1\to\mathbb{R}/\mathbb{Z}$ with
+$G_\#\mu=\lambda$. A homeomorphism preserving Lebesgue measure on the circle is a
+rotation, so $\operatorname{Stab}_{\mathrm{Homeo}}(\mu)=G^{-1}\,SO(2)\,G$; write
+$U=G^{-1}R_\alpha G$.
+
+*The easy inclusion is one line and needs no CDF.* If $R_s{}_\#\mu=\mu$ then
+$R_s{}_\#(R_\omega{}_\#\mu)=R_\omega{}_\#(R_s{}_\#\mu)=R_\omega{}_\#\mu$, because
+rotations commute. So $\operatorname{Stab}_{O(2)}(\mu)$ always survives, and the
+content is the reverse inclusion.
+
+*The reverse.* From $\nu:=R_\omega{}_\#\mu$ one computes
+$F_\nu=T_{-c}\circ F_\mu\circ R_{-\omega}$ with $c=F_\mu(-\omega)$, and
+translations commute with rotations of $\mathbb{R}/\mathbb{Z}$, so
+$\operatorname{Stab}(\nu)=R_\omega G^{-1}SO(2)\,G R_{-\omega}$. Requiring
+$U\in\operatorname{Stab}(\mu)\cap\operatorname{Stab}(\nu)$ gives
+$R_\alpha=\Phi R_\beta\Phi^{-1}$ with $\Phi:=G R_\omega G^{-1}$; conjugation
+preserves rotation number, so $\beta=\alpha$ and
+
+$$\boxed{\;\Phi\ \text{commutes with}\ R_\alpha.\;}$$
+
+**If $\alpha$ is irrational this is immediate**: the centraliser of an irrational
+rotation in $\mathrm{Homeo}^+(S^1)$ is the rotation group, so $\Phi$ is a
+rotation, whence $R_\omega=G^{-1}\Phi G\in\operatorname{Stab}(\mu)$ — impossible
+unless $\mu$ is already $R_\omega$-invariant. **So $\alpha\in\mathbb{Q}$.** And a
+$\mathbb{Z}_q$ symmetry of $\mu$ does give a commuting $\alpha=1/q$: since
+$G^{-1}R_{1/q}G=R_{2\pi/q}$ is the symmetry, $\Phi R_{1/q}\Phi^{-1}=G R_\omega
+R_{2\pi/q}R_{-\omega}G^{-1}=R_{1/q}$.
+
+> `TODO(gap)` — **what remains is the rational case: could $\Phi$ commute with
+> some $R_{p/q}$ that is *not* a symmetry of $\mu$?** Equivalently, could $\Phi$
+> descend to the $q$-fold quotient circle without $\mu$ having the corresponding
+> symmetry. Searched and not found: over 5 laws (von Mises, 1st+3rd, an
+> asymmetric 1st+2nd, and pure 3rd- and 4th-harmonic laws) $\times$ 2 rotations
+> $\times$ $q\in\{2,3,4,5\}$, **every** surviving $\alpha$ had rotational-symmetry
+> defect $0.0000$ — including the $\mathbb{Z}_4$ law correctly yielding both $q=2$
+> and $q=4$. Evidence, not a proof.
 
 ### 15.13c Theorem D″ — the plumbing works, and two oscillators closes for triangular $h$
 
