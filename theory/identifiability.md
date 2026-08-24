@@ -42,12 +42,24 @@ from.
 | **Prop. S** (§14.1) | Route B kills every coupling valued in a **non-compact** group; the residue is compact | **proved** | $p_B$ of finite nonsingular second moment |
 | **Prop. C** (§15.1) | a rotational coupling **strictly decreases** the phase resultant | **proved, exact** | $T\perp z_B$ |
 | **Theorem D** (§15.12) | independence of module marginals ⟹ block-diagonal | **proved at a contracting fixed point** | $\log\rho_2+\sigma_1<0$ — $f_2$'s rate against $f_1$'s *own spread*; **free for a conformal module** |
-| **Theorem D′** (§15.13) | the same on a limit cycle | **sketch only** — see the caveat there | trivial $\operatorname{Stab}(p_1)$ |
+| **Theorem D′** (§15.13) | the same on a limit cycle | **sketch** — one obligation left, see §15.13a–c | trivial $\operatorname{Stab}(p_1)$ |
+| **(D-e)** (§15.13a) | the linearisation step, when $f_1$ has a fixed point | **proved**, boundary certified sharp | $\log\rho_1+\sigma_1<0$ — **free for a conformal module**; anisotropy breaks it, not slowness |
+| **Lemma T** (§15.13b) | two time points collapse $\operatorname{Stab}_{\mathrm{Homeo}}(\mu)$ to $\operatorname{Stab}_{O(2)}(\mu)$ | **proved for irrational $\alpha$**; rational case searched, no escape | $\mu$ not $R_\omega$-invariant |
+| **Theorem D″** (§15.13c) | two oscillators ⟹ block-diagonal | **proved** for triangular $h$ | (D-b′) and (D-d), both already Theorem D′'s |
+| **Prop. L** (§15.13d) | independence kills every non-signed-permutation $M\in GL(2,\mathbb{Z})$ | **proved** for triangular $M$; wider orbit verified | no module's phase law uniform |
 
 **Known FALSE, not merely unproved.** Block-diagonality under (B1)–(B4) at
 $C^1$: there is an explicit $C^\infty$ counterexample, so triangular is *sharp*
-(§4.3). And for two oscillatory modules only the $GL(2,\mathbb{Z})$ **orbit** of
-the rotation vector is identified (§7 of `counterexamples.md`).
+(§4.3).
+
+> **Amended 2026-08-24.** This paragraph used to end "and for two oscillatory
+> modules only the $GL(2,\mathbb{Z})$ **orbit** of the rotation vector is
+> identified". That remains true **of the dynamical invariants** and is why the
+> rotation number cannot pin the splitting (§7 of `counterexamples.md`, task 23).
+> It is *not* a statement that the data fails to determine the representative:
+> **Proposition L resolves the orbit from the initial-condition distribution
+> alone**, which the spectra cannot see. The ambiguity is intrinsic to the
+> invariants, not to the observations.
 
 **The one condition that keeps recurring.** §14 and §15 close on the same
 object: no module's law may have a nontrivial orthogonal symmetry. That is a
@@ -55,7 +67,9 @@ property of the *recording* — whether trials are phase-aligned — not of the
 spectra, and it is checkable with no ground truth.
 
 **Open:** the nonlinear matching lemma (B3), nonlinear indecomposability (B2),
-distributional equivalence with noise, nonlinear perturbation, and Theorem D′.
+distributional equivalence with noise, nonlinear perturbation, Lemma T's rational
+case, Proposition L for general $M$, and Theorem D″ without the triangularity
+hypothesis on $h$ itself (Prop. L removes it only at the level of $H_1$).
 
 ---
 
