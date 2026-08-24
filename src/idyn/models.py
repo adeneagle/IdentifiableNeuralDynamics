@@ -226,6 +226,8 @@ class LatentDynamicsModel(nn.Module):
         w_behavior: float = 0.0,
         behavior_whiten: bool = True,
         behavior_per_time: bool = True,
+        w_concentration: float = 0.0,
+        concentration_target: float = 0.0,
     ) -> dict[str, torch.Tensor]:
         out = self(x)
         z, z_pred = out["z"], out["z_pred"]
@@ -252,6 +254,17 @@ class LatentDynamicsModel(nn.Module):
                                                  per_time=behavior_per_time)
             total = total + w_behavior * behavior
 
+        # Task 46 / §14.4: the behavioural penalty above can only *see* a
+        # coupling that moves the block's first two conditional moments, so on an
+        # oscillatory block it needs a u-dependent mean direction to bite. This
+        # term supplies the precondition rather than hoping the encoder inherits
+        # it from the data -- exp18 §13.4 showed it does not.
+        concentration = z.new_zeros(())
+        if invariant_slice is not None and w_concentration > 0.0:
+            concentration = self._concentration_penalty(
+                z, invariant_slice, target=concentration_target)
+            total = total + w_concentration * concentration
+
         # `fit_quality` excludes the whitening and behaviour terms: they are
         # well-posedness / structural devices, not part of the reconstruction, and
         # including them would let a restart look worse for a reason unrelated to fit.
@@ -261,8 +274,77 @@ class LatentDynamicsModel(nn.Module):
             "dyn": dyn,
             "white": white,
             "behavior": behavior.detach() if torch.is_tensor(behavior) else behavior,
+            "concentration": concentration.detach(),
             "fit_quality": (recon + dyn).detach(),
         }
+
+    @staticmethod
+    def _whitened_resultant(w: torch.Tensor) -> torch.Tensor:
+        """Directional resultant ``|E[w/|w|]|`` of a block, after whitening it.
+
+        This is the *only* quantity §14.3 leaves a whitened second-moment
+        behavioural detector able to use, and it is exactly the right gauge
+        class for an objective term: whitening quotients out everything in
+        ``GL(d_b)`` except ``O(d_b)``, and a resultant length is ``O(d_b)``-
+        invariant, so **whitened resultant is exactly ``GL(d_b)``-invariant**.
+
+        That is what stops this being CLAUDE.md §3.12 a third time.  §7 grants
+        the model an arbitrary coordinate change inside a module, so any term
+        the optimiser can pay by rescaling, shrinking, rotating or shearing the
+        block is measuring the gauge rather than the structure -- which is how
+        §3.12 (scale) and §3.15 (time-pooling) each failed.  There is no element
+        of ``GL(d_b)`` that moves this number.
+
+        ### The whitening must NOT centre, and that is the whole content
+
+        Measured while building this: whitening by the *covariance* -- i.e.
+        subtracting the mean first, as ``_behavioural_penalty`` and
+        ``behavior.block_u_dependence`` both do -- makes a strongly concentrated
+        block (resultant 0.0177) indistinguishable from one whose phase has been
+        replaced by uniform noise (0.0196).  Centring removes the mean direction,
+        and by §14.4 the mean direction *is* the only thing a second-moment
+        detector can still see.  So the obvious construction is exactly blind to
+        the quantity it exists to hold.
+
+        Whitening by the **uncentred** second moment ``S = E[w w^T]`` keeps it
+        and stays ``GL(d_b)``-invariant: under ``w -> A w`` we get
+        ``S -> A S A^T``, whose Cholesky factor is ``A L Q`` for some orthogonal
+        ``Q``, so ``y -> Q^T y`` and the resultant length is unchanged.  What it
+        does *not* quotient out is a translation of the block, and that is
+        correct rather than a gap: the coupling ``h_B = T(z_A) . z_B`` acts
+        linearly, which distinguishes the origin.  Translate the coordinates and
+        the coupling stops being linear, so the group whose invariance is being
+        claimed has changed too.
+        """
+        d_b = w.shape[-1]
+        S = w.T @ w / max(w.shape[0], 1)
+        S = S + 1e-6 * torch.eye(d_b, device=S.device, dtype=S.dtype)
+        L = torch.linalg.cholesky(S)
+        y = torch.linalg.solve_triangular(L, w.T, upper=False).T
+        y = y / (y.norm(dim=-1, keepdim=True) + 1e-9)
+        return y.mean(0).norm()
+
+    @classmethod
+    def _concentration_penalty(
+        cls, z: torch.Tensor, block: slice, target: float
+    ) -> torch.Tensor:
+        """Squared deviation of the block's whitened resultant from ``target``.
+
+        **Per timestep, and that is not optional.**  An oscillatory block's mean
+        direction advances by ``omega`` each step, so pooling timesteps averages
+        a rotating mean vector towards zero and reports a concentrated block as
+        diffuse -- CLAUDE.md §3.15 exactly, one term over.  Scoring each step and
+        averaging keeps the magnitude.
+
+        ``target`` is meant to be the *data's* own resultant, so the term asks
+        the fit to preserve a property the recording has rather than to invent
+        one.  Setting it to a value the data does not support is a deliberate
+        falsifiability check (exp21's forced arm): if the optimiser can reach it
+        anyway, the term is fakeable and worthless.
+        """
+        r = torch.stack([cls._whitened_resultant(z[:, t, block])
+                         for t in range(z.shape[1])]).mean()
+        return (r - target) ** 2
 
     @staticmethod
     def _behavioural_penalty(

@@ -1021,3 +1021,155 @@ def test_a_nonzero_mean_is_what_restores_the_kill():
         hB = _matched(lambda th, z: np.einsum("nab,nb->na", _rot(th), z), zA0, zB)
         ratios.append(_dep(hB, u) / _dep(zB, u))
     assert ratios[0] < 2.0 < 5.0 < ratios[1]
+
+
+# ============================================================================
+# Task 46: the concentration term, and the trap inside it
+#
+# Section 14.4 says the only thing a whitened second-moment behavioural detector
+# can still see is a u-dependent MEAN DIRECTION.  So the fitted block has to
+# carry one, and exp18 showed the encoder will not supply it unasked.  These pin
+# the objective term that asks for it -- including the near-miss that would have
+# made it useless.
+# ============================================================================
+
+def _conc_block(n, T, ang, gen):
+    r = 1.0 + 0.3 * torch.randn(n, T, generator=gen).abs()
+    zb = torch.stack([r * torch.cos(ang), r * torch.sin(ang)], -1)
+    return torch.cat([torch.randn(n, T, 2, generator=gen), zb], -1)
+
+
+def _resultant(z):
+    from idyn.models import LatentDynamicsModel
+    return LatentDynamicsModel._concentration_penalty(z, slice(2, 4), 0.0).item() ** 0.5
+
+
+def test_concentration_term_is_exactly_GL_invariant():
+    """The property that stops this being CLAUDE.md section 3.12 a third time.
+
+    Rescaling, shrinking, rotating and shearing the block are all gauge under
+    section 7, so an objective term the optimiser can pay with any of them is
+    measuring the gauge.  There is no element of GL(2) that moves this number.
+    """
+    gen = torch.Generator().manual_seed(0)
+    n, T = 400, 6
+    z = _conc_block(n, T, 0.4 * torch.randn(n, T, generator=gen) + 1.0, gen)
+    base = _resultant(z)
+    assert base > 0.5, "the fixture must actually be concentrated"
+    for A in (torch.diag(torch.tensor([7.0, 7.0])),
+              torch.diag(torch.tensor([0.02, 0.02])),
+              torch.tensor([[0.5403, -0.8415], [0.8415, 0.5403]]),
+              torch.tensor([[1.0, 2.5], [0.0, 1.0]]),
+              torch.tensor([[3.0, 0.0], [0.0, 0.2]])):
+        z2 = z.clone()
+        z2[:, :, 2:4] = z[:, :, 2:4] @ A.T
+        assert abs(_resultant(z2) - base) / base < 5e-3
+
+
+def test_concentration_term_must_not_centre_the_block():
+    """The near-miss, kept as a test because it is the whole content.
+
+    Whitening by the *covariance* -- centring first, as every other detector in
+    this repo does -- makes a strongly concentrated block indistinguishable from
+    one whose phase is uniform noise, because centring removes the mean
+    direction and by section 14.4 that is the only visible signal.  Uncentred
+    whitening keeps it.  A regression here would silently restore a term that
+    holds nothing.
+    """
+    gen = torch.Generator().manual_seed(1)
+    n, T = 400, 6
+    r_ang = 0.4 * torch.randn(n, T, generator=gen) + 1.0
+    flat_ang = 2 * np.pi * torch.rand(n, T, generator=gen)
+    conc, flat = _conc_block(n, T, r_ang, gen), _conc_block(n, T, flat_ang, gen)
+    assert _resultant(conc) > 10 * _resultant(flat)
+
+    # and the centred variant -- the version that was written first -- does not
+    def centred_resultant(z):
+        w = z[:, 0, 2:4]
+        wc = w - w.mean(0, keepdim=True)
+        L = torch.linalg.cholesky(wc.T @ wc / (len(wc) - 1) + 1e-6 * torch.eye(2))
+        y = torch.linalg.solve_triangular(L, wc.T, upper=False).T
+        return (y / y.norm(dim=-1, keepdim=True)).mean(0).norm().item()
+
+    assert centred_resultant(conc) < 3 * centred_resultant(flat), (
+        "if this passes the centred form, the near-miss is no longer a near-miss")
+
+
+def test_concentration_term_is_monotone_and_hits_its_target():
+    gen = torch.Generator().manual_seed(2)
+    n, T = 600, 6
+    vals = [_resultant(_conc_block(n, T, torch.randn(n, T, generator=gen) / k ** 0.5 + 1.0, gen))
+            for k in (0.1, 0.3, 0.6, 1.2, 3.0)]
+    assert all(b > a for a, b in zip(vals, vals[1:])), vals
+    # the penalty is zero exactly at its target, and positive off it
+    from idyn.models import LatentDynamicsModel as _M
+    z = _conc_block(n, T, 0.4 * torch.randn(n, T, generator=gen) + 1.0, gen)
+    r = _resultant(z)
+    assert _M._concentration_penalty(z, slice(2, 4), r).item() < 1e-6
+    assert _M._concentration_penalty(z, slice(2, 4), r - 0.3).item() > 1e-3
+
+
+# ============================================================================
+# Propositions C and R (identifiability.md section 15): the phase resultant
+# strictly decreases under the rotational escape, so it BREAKS the GL(K,Z)
+# lattice ambiguity rather than merely quotienting it -- in the one regime
+# where Theorem B (Prop. N), Theorem F ((F3)) and Route B (13.3) are all dead.
+# ============================================================================
+
+def _R(phase, rad):
+    from idyn.models import LatentDynamicsModel
+    w = np.stack([rad * np.cos(phase), rad * np.sin(phase)], 1)
+    return float(LatentDynamicsModel._whitened_resultant(
+        torch.as_tensor(w, dtype=torch.float64)))
+
+
+def test_proposition_C_the_resultants_multiply():
+    """R_{h_B} = R_theta * R_{z_B}: the circular convolution theorem, and the
+    reason a rotational coupling can never leave the resultant alone."""
+    rng = np.random.default_rng(0)
+    n = 200_000
+    circ = lambda a: float(np.hypot(np.cos(a).mean(), np.sin(a).mean()))
+    for kB, kA in ((4.0, 2.0), (4.0, 0.5), (1.0, 2.0)):
+        tb, ta = rng.vonmises(0.0, kB, n), rng.vonmises(0.6, kA, n)
+        assert abs(circ(tb) * circ(ta) - circ(tb + ta)) < 5e-3
+    # equality iff theta is a.s. constant -- the strictness half
+    tb = rng.vonmises(0.0, 2.0, n)
+    assert abs(circ(tb + 0.6) - circ(tb)) < 5e-3
+
+
+def test_proposition_R_the_true_representative_maximises_the_resultant():
+    """Over the GL(2,Z) orbit, nothing beats the identity.
+
+    Ties are allowed only for signed permutations, which relabel modules and are
+    the ambiguity section 1.1 already accepts.
+    """
+    rng = np.random.default_rng(1)
+    n = 120_000
+    p1, p2 = rng.vonmises(0.0, 4.0, n), rng.vonmises(0.3, 1.0, n)
+    r1 = 1 + 0.3 * np.abs(rng.standard_normal(n))
+    r2 = 1 + 0.3 * np.abs(rng.standard_normal(n))
+    tot = lambda a, b, c, d: _R(a * p1 + b * p2, r1) + _R(c * p1 + d * p2, r2)
+    ident = tot(1, 0, 0, 1)
+    for m in ((1, 1, 0, 1), (1, -1, 0, 1), (1, 0, 1, 1), (2, 1, 1, 1), (1, 2, 0, 1)):
+        assert tot(*m) < ident - 0.02, m
+    assert abs(tot(0, 1, 1, 0) - ident) < 5e-3, "a swap only relabels"
+
+
+def test_proposition_R_boundary_a_uniform_phase_enlarges_the_stabiliser():
+    """The negative half, and it bounds what the criterion can deliver.
+
+    A module whose phase law is already uniform has resultant 0 and cannot lose
+    any, so lattice elements that pour only into it tie with the identity.  The
+    ambiguity is resolved exactly as far as the phases are concentrated -- which
+    is why this is a condition on the recording, not on the estimator.
+    """
+    rng = np.random.default_rng(2)
+    n = 120_000
+    p1 = rng.vonmises(0.0, 4.0, n)
+    p2 = rng.uniform(-np.pi, np.pi, n)             # module 2 is symmetric
+    r1 = 1 + 0.3 * np.abs(rng.standard_normal(n))
+    r2 = 1 + 0.3 * np.abs(rng.standard_normal(n))
+    tot = lambda a, b, c, d: _R(a * p1 + b * p2, r1) + _R(c * p1 + d * p2, r2)
+    ident = tot(1, 0, 0, 1)
+    assert abs(tot(1, 0, 1, 1) - ident) < 1e-2, "pouring into a uniform module is free"
+    assert tot(1, 1, 0, 1) < 0.1 * ident, "but pouring OUT of it still destroys module 1"

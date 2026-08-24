@@ -975,6 +975,36 @@ normal form and does extend to periodic attractors — see §4.4. So off the fix
 point the filtration survives and block-diagonality does not, which widens the
 gap between Theorem F and Theorem B rather than closing it.
 
+> **Sharpened 2026-08-25 — caveat (b) is a structural exclusion, not a technical
+> gap, and it is one line.** I had been reading it as "limit cycles are Siegel,
+> small divisors return, hard". The hypothesis is worse off than that: it is
+> *identically false* the moment any rotation is present anywhere in the system.
+>
+> **Proposition N.** If some module has a Lyapunov exponent $\lambda_{i,0}=0$
+> — equivalently a Floquet multiplier of modulus $1$: any invariant circle,
+> limit cycle, or neutral rotation — then cross-module non-resonance (B4$'$)
+> fails for **every** other module and at **every** order $\ge2$.
+>
+> *Proof.* Let $\nu$ be any exponent of a module $j\neq i$. Then
+> $\nu = \lambda_{i,0} + \nu$ is a resonance of order $2$ whose multi-index has
+> support meeting module $i\neq j$. Multiplicatively: multiplier $1$ means
+> $\mu = 1\cdot\mu$, so the monomial $z_i^{(0)}z_j$ is resonant. Appending the
+> neutral direction $k$ more times gives order $k+2$. $\square$
+>
+> Verified with `spectra.is_cross_module_nonresonant`: two limit cycles at
+> $a=(0.3,0.4)$ give $30$ resonances at order $\le4$; **one** limit cycle
+> against a plain contracting spiral already gives $12$, the first being
+> $\lambda_{2,b}=\lambda_{1,\text{neutral}}+\lambda_{2,b}$. Two contracting
+> spirals at $(0.92,0.55)$ are non-resonant, as expected.
+>
+> **Consequence, and it is the reason to stop looking for a fix.** Combined with
+> (F3) failing for two cycles (both hulls reach $0$, §6.5 rider 2) and Route B
+> being blind to the lattice regrouping (§13.3), **all three routes are dead in
+> the oscillatory regime, each for a different and now-understood reason.** That
+> is a complete negative rather than three open problems, and it is what
+> redirects the effort onto §14–15: characterise the ambiguity exactly instead
+> of trying to remove it.
+
 ### 5.4 Why analyticity closes step 4 (and weakens (B1$'$))
 
 Two consequences of $h$ being real-analytic rather than merely $C^\infty$.
@@ -2295,3 +2325,287 @@ dimension-free but nothing here checks $d_B \ge 3$, where $O(d_B)$ has a much
 richer subgroup lattice. (d) Nothing here says the concentration condition
 survives learning — that is stage 2, and `exp18` is the reason to expect it needs
 to be *imposed* rather than inherited.
+
+---
+
+## 15. Route D — independence of the module marginals (`exp21`)
+
+**New (2026-08-25).** §14 characterised what Route B can and cannot reach: it
+kills every coupling valued in a non-compact group, and the residue is compact —
+for the lattice regrouping, a rotation of the invariant block. Stage 2 was meant
+to *impose* the missing precondition as an objective term. Building it produced
+two facts that redirect the whole question, and a third that is better than what
+was being aimed at.
+
+### 15.1 Proposition C — the escape is strictly resultant-decreasing
+
+Write $R(w) := \lVert\mathbb{E}[w/\lVert w\rVert]\rVert$ for the directional
+resultant of a block, computed after whitening by its **uncentred** second
+moment (see §15.3 for why uncentred).
+
+> **Proposition C.** Let $h_B = T(z_A)\,z_B$ with $T$ valued in $O(d_B)$ and
+> independent of $z_B$. Then
+> $$\mathbb{E}\!\left[\tfrac{h_B}{\lVert h_B\rVert}\right]
+>   = \mathbb{E}[T]\;\mathbb{E}\!\left[\tfrac{z_B}{\lVert z_B\rVert}\right],
+>   \qquad\text{so}\qquad R(h_B)\le R(z_B),$$
+> with equality iff $T\,m$ is a.s. constant, where $m=\mathbb{E}[z_B/\lVert z_B\rVert]$.
+> For $d_B=2$ and $m\neq0$ that forces $T$ a.s. constant.
+
+*Proof.* $\lVert Tz\rVert=\lVert z\rVert$ for $T$ orthogonal, and independence
+factorises the expectation. $\mathbb{E}[T]$ is an average of orthogonal matrices,
+so $\lVert\mathbb{E}[T]\rVert_{\mathrm{op}}\le1$ by convexity; equality on $m$
+needs $Tm$ a.s. equal by strict convexity of the ball. In $SO(2)$ a rotation
+fixing a nonzero vector is the identity. $\square$
+
+In $d_B=2$ this is the circular convolution theorem: the phase of $h_B$ is
+$\phi_B+\theta$, so the resultants **multiply**, $R_{h_B}=R_\theta R_{z_B}$.
+
+**Why it matters.** The compact residue Proposition S leaves behind does not
+merely fail to be invisible — it moves a scalar functional *monotonically*. So
+the true representative is that functional's maximiser, and **no behavioural
+variable is involved**.
+
+### 15.2 But the objective form is unavailable
+
+The obvious move — add $R$ to the loss and maximise — does not survive contact.
+Optimising the whitened resultant over an unconstrained 2-D point cloud reaches
+$0.9996$ by giving the radius a heavy tail: whitening fixes the second moment,
+and a heavy-tailed radius then lets the *direction* concentrate almost
+arbitrarily (spread $524\times$; §15.8). So a term rewarding concentration is
+payable without changing the representation — CLAUDE.md §3.12, §3.15 and §13.4 a fourth time, caught here
+before it was run rather than after.
+
+What survives is a **comparison across fits of the same data**, with the radial
+tail reported beside it so a degenerate fit is visible.
+
+### 15.3 The statistic, and the near-miss inside it
+
+`exp18_mechanism` used the raw circular concentration $\lvert\mathbb{E}e^{i\phi}\rvert$.
+That is invariant under rescaling and rotating the block but **not** under
+shearing it, and §7 grants the whole of $GL(d_b)$ inside a module — so the raw
+statistic is a gauge quantity in the §3.12 sense.
+
+Whitening by the **uncentred** second moment $S=\mathbb{E}[ww^\top]$ fixes that
+and is exactly $GL(d_b)$-invariant: under $w\mapsto Aw$ the Cholesky factor goes
+to $ALQ$ with $Q$ orthogonal, so the whitened points rotate and $R$ does not move.
+
+**Uncentred is load-bearing.** Whitening by the *covariance* — centring first, as
+every other detector in this repo does — makes a strongly concentrated block
+score $0.0177$ and a phase-randomised one $0.0196$, i.e. indistinguishable:
+centring removes the mean direction, and by §14.4 the mean direction is the
+entire signal. The obvious construction is exactly blind to the quantity it
+exists to hold. What it does *not* quotient out is a translation, and that is
+correct rather than a gap — $h_B=T(z_A)z_B$ acts linearly, which distinguishes
+the origin.
+
+### 15.4 Proposition R′ — independence is the criterion; the resultant proxies it
+
+The reason the true representative maximises $R$ is not really about
+concentration:
+
+> In the true representation the modules' phases are **independent**. Under a
+> lattice image $\phi_B\mapsto\phi_B+\phi_A$ the donor's phase appears in *both*
+> coordinates, so the modules become **dependent**.
+
+> **Proposition R′.** The true representative is the unique element of the
+> $GL(K,\mathbb{Z})$ orbit, up to signed permutation, in which the modules'
+> phase laws are statistically independent — provided **no** module has a
+> uniform phase law.
+
+**The proviso is exactly right and the obvious version of it is wrong**, which is
+worth spelling out because I got it backwards first. The relevant fact is
+
+$$\phi_i + \phi_j \perp \phi_j \iff \phi_i \text{ is uniform},$$
+
+*not* $\phi_j$. Adding an independent uniform angle makes the **marginal**
+uniform, but independence of the pair needs the angle being *added* to be the
+uniform one: conditioning on $\phi_j$ shifts $\phi_i$'s law, and a shifted
+non-uniform law still depends on the shift.
+
+So a single uniform module already opens an escape, and it is a specific one:
+elements that donate the **uniform** module's phase into another coordinate,
+leaving the uniform module alone. `exp21` part 7 shows both halves at
+$\kappa=(4.0,0.0)$ — module 2 uniform. The element $(1,0;1,1)$, which pours
+$\phi_2$ into module 1's slot, **ties** with the identity; the element
+$(1,1;0,1)$, which pours the *concentrated* $\phi_1$ into module 2's, is rejected
+at $0.86$. With **both** uniform the orbit is entirely undetermined.
+
+This reframes the criterion as the standard nonlinear-ICA assumption rather than
+a new aesthetic preference, and it is exactly the distinction §1.3 drew: iVAE
+needs conditionally independent **scalar** components, which excludes rotation
+outright, whereas what is wanted here is independence of **modules**, which a
+2-D rotation satisfies perfectly well. **Modularity of the dynamics plus
+independence of the initial conditions is what pins the representative.**
+
+### 15.5 Route D, and the two escapes that bound it
+
+Applied beyond the lattice, independence does considerably more, and the pattern
+is the right one — it rejects the two escapes that block Theorems B and F, and
+is blind to the one a different hypothesis already covers:
+
+| counterexample | what it blocks | independence |
+|---|---|---|
+| §4.3 triangular conjugacy | makes block-diagonality **false** under (B1)–(B4) | **rejects** |
+| §7 lattice regrouping | makes rotation numbers non-identifiable | **rejects** |
+| §3.1 regrouping | (B2) indecomposability's job | correctly blind |
+
+§4.3 is the important one: it is polynomial, hence $C^\infty$, so no regularity
+hypothesis removes it — and it makes the modules dependent.
+
+**Two escapes bound the route, and they are different in kind.**
+
+1. **Hyvärinen–Pajunen.** Independence alone is insufficient for nonlinear ICA,
+   and the counterexample lives inside our own setting: with both phase laws
+   *uniform*, $(\phi_A,\phi_B)\mapsto(\phi_A,\phi_A+\phi_B)$ preserves
+   independence exactly. So Route D is a **conjecture** — what is claimed is that
+   independence *plus being a modular conjugacy* is rigid. `TODO(gap)`
+2. **The Gaussian degeneracy, and it costs nothing.** iid Gaussian modules are
+   rotation-invariant, so a rotation preserves independence and Route D is blind.
+   But that rotation is a *modular conjugacy* only when the two modules have the
+   same map — with distinct eigenvalues $RFR^{-1}$ acquires off-diagonal mass. So
+   **(A2), which Theorem A already assumes, excludes it**, and Route D composes
+   with (A2) without a Gaussian hole.
+
+### 15.6 Why this is the route to prefer
+
+Not on strength — on the *kind* of hypothesis, which is §1.0's criterion.
+
+| | (B4$'$) non-resonance | (F3) ordered separation | Route D independence |
+|---|---|---|---|
+| about | the spectra | the spectra | the initial-condition law |
+| in the oscillatory regime | **identically false** (Prop. N) | fails (both hulls reach $0$) | available |
+| checkable on data | yes | yes, and it mostly fails | yes, model-free (dCor) |
+| can the experimenter arrange it? | no | no | **partly** — it is a fact about how trials are seeded |
+
+Route D constrains the latent *distribution* rather than the map, so it is
+orthogonal to A, B and C rather than a weakening of any of them.
+
+### 15.7 Where Route D sits in the literature
+
+The static half of Route D is **independent subspace analysis** — independence of
+*blocks* rather than of scalar components, which is exactly what a 2-D
+oscillatory module needs and exactly what iVAE-style componentwise independence
+forbids (§1.3). The shape of the positioning is therefore §1.0's preferred one:
+
+* independence of blocks under **linear** mixing is classical, and is Theorem A's
+  territory anyway;
+* under **nonlinear** mixing, independence alone is *not* identifiable
+  (Hyvärinen–Pajunen), which §15.5 reproduces inside our own setting;
+* the contribution is that **modular dynamics** supplies what independence lacks.
+
+> **Provenance, unverified.** The ISA attribution above is from recollection
+> (Hyvärinen & Hoyer, independent subspace analysis, ~2000) and has **not** been
+> checked against primary text. §4.3 records that this repo has already
+> mis-attributed one arXiv ID from memory; treat the citation as a lead for
+> `literature.md`, not as established, and read the paper before it appears in a
+> write-up. What does **not** depend on the citation is anything measured in
+> `exp21` — those are properties of constructed distributions.
+
+### 15.8 What `exp21` measures — 25/26
+
+Parts 1–3 and 5–8 are analytic (exact distributions, no fitting), so any failure
+there is the criterion's or the instrument's. Part 4 refits `exp18`'s own arms.
+
+**Proposition C is exact** (part 1). Over a grid of concentrations the product
+law holds to $1.8\times10^{-3}$, and the equality case lands: at $\kappa_\theta=0$
+(constant $\theta$) $R_{h_B}=0.6982$ against $R_{z_B}=0.6982$.
+
+**The objective form is unavailable** (part 3). Free maximisation reaches
+$0.9996$ with a radial spread of $524\times$ — a configuration nothing in the
+data resembles, reached because whitening pins the second moment while leaving
+the radius free.
+
+**The resultant separates R1 from R2 on `exp18`'s own system** (part 2), and
+fails to at $\kappa_B=0$ exactly as it must:
+
+| $\kappa_B$ | $0$ | $0.5$ | $1$ | $2$ | $4$ |
+|---|---|---|---|---|---|
+| $R_1/R_2$ | $1.07$ | $1.72$ | $2.09$ | $2.10$ | $1.97$ |
+
+**Sensitivity: the resultant dominates where behaviour is blind** (part 5). By
+Proposition C the *relative* deficit is $1-R_\theta$, a property of the coupling
+alone — so it does not degrade as the block flattens, while the behavioural
+detector's signal-to-floor scales with $R_{z_B}$:
+
+| $R_{z_B}$ | $0.002$ | $0.126$ | $0.239$ | $0.434$ | $0.647$ | $0.748$ |
+|---|---|---|---|---|---|---|
+| behaviour ($\times$ floor) | $0.66$ | $4.2$ | $4.4$ | $15.4$ | $40.9$ | $58.3$ |
+| relative deficit | — | $15.6\%$ | $16.2\%$ | $15.2\%$ | $13.3\%$ | $10.6\%$ |
+
+At $R_{z_B}=0.126$ behaviour is **below** its detection threshold while the
+deficit is undiminished. **Both die at $R_{z_B}=0$**, so the resultant is not an
+independent escape-closer — it is a uniformly more sensitive instrument for the
+same condition.
+
+**Independence is sharper by one to two orders of magnitude** (part 7), against a
+measured floor of $0.0023$:
+
+| $\kappa$ | identity | best non-permutation | margin |
+|---|---|---|---|
+| $(4,4)$ | $0.0017$ | $0.1681$ | $98\times$ |
+| $(4,1)$ | $0.0027$ | $0.0821$ | $31\times$ |
+| $(1,0.5)$ | $0.0035$ | $0.0129$ | $3.7\times$ |
+| $(4,0)$ | $0.0035$ | $0.0036$ | $1.0\times$ |
+| $(0,0)$ | $0.0042$ | $0.0041$ | $1.0\times$ |
+
+The identity sits *at the floor*, i.e. it is genuinely independent rather than
+merely least dependent — and the last two rows are §15.4's proviso, measured.
+
+**Route D against the three escapes** (part 8), dCor baseline $0.065$: §4.3
+triangular $0.531$ ($8.2\times$), §7 lattice $0.623$ ($9.6\times$), §3.1
+regrouping $0.077$ ($1.2\times$, correctly blind), Hyvärinen–Pajunen uniform-phase
+lattice $0.054$ ($0.8\times$, the honest hole). The instrument also sees §3.10's
+blind spot: on the *even* coupling $h_B=z_B+cz_A^2$, dCor rises monotonically
+$0.106\to0.366$ while the linear probe stays at $0.007$–$0.057$.
+
+### 15.9 Under learning — and the one check that fails
+
+Part 4 refits `exp18`'s adversarial/matched arms, scoring both criteria. Data
+targets: $R_1=0.7449$, $R_2=0.3912$.
+
+| restart | matched $R$ | adversarial $R$ | matched dCor | adversarial dCor |
+|---|---|---|---|---|
+| 0 | $0.7154$ | $0.2833$ | $0.273$ | $0.469$ |
+| 1 | $0.7130$ | $0.2828$ | $0.278$ | $0.461$ |
+| 2 | $0.7116$ | $0.2055$ | $0.278$ | $\mathbf{0.272}$ |
+
+**The resultant is correct in 3/3.** Radial tails are $1.5$–$1.7$ in every arm,
+so no fit reached its score by part 3's degeneracy. This also confirms `exp18`'s
+conclusion survives the move to a gauge-invariant statistic — its raw numbers
+were $0.809$ vs $0.270$, the whitened ones $0.713$ vs $0.283$.
+
+**The independence criterion is 2/3, and the check is committed failing.** On
+restart 2 the adversarial fit's modules are as independent as the matched fit's
+($0.272$ against $0.278$). That is not noise, and it is not a defect in the
+criterion — **it is the Hyvärinen–Pajunen escape of §15.5, found by gradient
+descent.** Restart 2 is also the arm with the lowest resultant ($0.2055$, against
+$0.283$ for the other two) and the lowest $u$-dependence ($0.189$ against
+$0.43$): the encoder flattened the recipient's phase furthest toward uniform, and
+at a uniform phase the lattice map *is* independence-preserving. The evasion and
+the theoretical hole are the same object.
+
+**So the two criteria are complementary, and neither alone suffices.**
+Independence is far sharper when it applies; the resultant still separates
+restart 2 by $3.5\times$ precisely because flattening the phase is what it
+measures. Report both.
+
+### 15.10 What this licenses, and what it does not
+
+**Licensed.** (i) Proposition C, proved and exact: the compact residue of
+Proposition S moves a scalar functional strictly, so it is canonicalisable
+without any behavioural variable. (ii) Proposition R′ as a *criterion* — the
+independent representative is unique up to signed permutation when no module's
+phase law is uniform. (iii) Route D rejects the two counterexamples that block
+Theorems B and F while leaving (B2)'s alone. (iv) Both statistics are
+$GL(d_b)$-invariant and computable on a fit with no ground truth.
+
+**Not licensed.** (a) **Route D is a conjecture, not a theorem** — independence
+alone is insufficient for nonlinear ICA, §15.5 exhibits the counterexample inside
+this setting, and §15.9 shows an optimiser finding it. What needs proving is that
+independence *plus modular conjugacy* is rigid. `TODO(gap)` (b) Nothing here is a
+proof that the *fitted* model attains the independent representative; part 4 is
+three restarts of one system. (c) $d_B=2$ throughout, and Proposition C's
+equality case is only sharp there — in higher dimensions $T$ is pinned only on
+the mean direction. (d) The whole approach needs non-uniform phase laws, which is
+a property of how trials are seeded, and on a continuous recording with no
+alignment it may simply be absent.

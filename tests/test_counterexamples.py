@@ -504,3 +504,78 @@ def test_F1_is_what_excludes_the_regrouping_for_a_contracting_module():
     assert r_cycle > 0.5, f"a limit-cycle donor must stay away from 0, got {r_cycle}"
     # sup||Dh|| differs by seven orders of magnitude between the two
     assert (1.0 / r_spiral) / (1.0 / r_cycle) > 1e6
+
+
+# ---------------------------------------------------------------------------
+# Route D (identifiability.md section 15): independence of the module marginals.
+# These pin what it rejects, what it must NOT reject, and the two escapes that
+# bound it -- one of which turns out to be excluded by (A2) for free.
+# ---------------------------------------------------------------------------
+
+def _dep(Z, k=2):
+    from idyn.metrics import distance_correlation as dc
+    return float(dc(Z[:, :k], Z[:, k:]))
+
+
+def _dep_base(n, k=2):
+    from idyn.metrics import distance_correlation_baseline as dcb
+    return float(dcb(n, k, k, seed=0))
+
+
+def test_route_D_rejects_the_triangular_conjugacy():
+    """The object that makes block-diagonality FALSE under (B1)-(B4).
+
+    It is polynomial, hence C-infinity, so no regularity hypothesis removes it --
+    but it makes the modules dependent, so independence does.
+    """
+    rng = np.random.default_rng(0)
+    n = 1500
+    Z = rng.standard_normal((n, 4))
+    h = Z.copy()
+    h[:, 0] = Z[:, 0] + 0.8 * np.sign(Z[:, 2]) * np.abs(Z[:, 2]) ** 2
+    assert _dep(h) > 4 * _dep_base(n)
+
+
+def test_route_D_rejects_the_lattice_regrouping_when_phases_are_concentrated():
+    rng = np.random.default_rng(1)
+    n = 1500
+    t1, t2 = rng.vonmises(0.0, 4.0, n), rng.vonmises(0.3, 4.0, n)
+    r1 = 1 + 0.2 * np.abs(rng.standard_normal(n))
+    r2 = 1 + 0.2 * np.abs(rng.standard_normal(n))
+    lat = np.stack([r1 * np.cos(t1), r1 * np.sin(t1),
+                    r2 * np.cos(t2 + t1), r2 * np.sin(t2 + t1)], 1)
+    assert _dep(lat) > 4 * _dep_base(n)
+
+
+def test_route_D_is_correctly_blind_to_the_regrouping_counterexample():
+    """Section 3.1 is (B2)'s job.  A criterion rejecting all three rejects too much."""
+    rng = np.random.default_rng(2)
+    n = 1500
+    Z = rng.standard_normal((n, 4))
+    assert _dep(Z[:, [0, 2, 1, 3]]) < 2 * _dep_base(n)
+
+
+def test_route_D_gaussian_degeneracy_is_real_but_excluded_by_A2():
+    """The classical ICA escape, and why it costs nothing here.
+
+    iid Gaussian modules are rotation-invariant, so a rotation preserves
+    independence and Route D is blind.  But that rotation is a *modular
+    conjugacy* only when the two modules have the same map -- and (A2), which
+    Theorem A already assumes, excludes equal spectra.  So Route D composes with
+    (A2) without a Gaussian hole.
+    """
+    rng = np.random.default_rng(3)
+    n = 4000
+    th = 0.7
+    R = np.array([[np.cos(th), -np.sin(th)], [np.sin(th), np.cos(th)]])
+
+    g = rng.standard_normal((n, 2)) @ R.T
+    assert _dep(g, k=1) < 2 * _dep_base(n, 1), "Gaussian rotation hides -- the escape"
+    u = rng.uniform(-1.7, 1.7, (n, 2)) @ R.T
+    assert _dep(u, k=1) > 4 * _dep_base(n, 1), "non-Gaussian rotation does not"
+
+    # and the escape is only a modular conjugacy at equal eigenvalues
+    for (m1, m2), modular in (((0.8, 0.8), True), ((0.8, 0.5), False)):
+        C = R @ np.diag([m1, m2]) @ np.linalg.inv(R)
+        off = abs(C[0, 1]) + abs(C[1, 0])
+        assert bool(off < 1e-12) == modular, (m1, m2, off)

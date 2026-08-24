@@ -61,6 +61,12 @@ class TrainConfig:
     # ``fit`` is given ``warm_z``.
     warm_steps: int = 0
     warm_lr: float = 3e-3
+    # Task 46 / identifiability.md 14.4: hold the pinned block's WHITENED
+    # directional resultant at ``concentration_target`` (meant to be the data's
+    # own).  Exactly GL(d_b)-invariant, so unlike 3.12 and 3.15 it cannot be
+    # paid in gauge.  0 disables.
+    w_concentration: float = 0.0
+    concentration_target: float = 0.0
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -255,10 +261,12 @@ def fit(
         out = model.losses(
             Xt[idx], cfg.w_recon, cfg.w_dyn, cfg.w_white,
             u=(Ut[idx] if behav else None),
-            invariant_slice=(inv if behav else None),
+            invariant_slice=inv,
             w_behavior=cfg.w_behavior,
             behavior_whiten=cfg.behavior_whiten,
             behavior_per_time=cfg.behavior_per_time,
+            w_concentration=cfg.w_concentration,
+            concentration_target=cfg.concentration_target,
         )
         opt.zero_grad(set_to_none=True)
         out["total"].backward()

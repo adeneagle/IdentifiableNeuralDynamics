@@ -1,0 +1,544 @@
+{
+  "seed": 20260825,
+  "n_analytic": 200000,
+  "n_restarts": 3,
+  "part1_product_law": {
+    "rows": [
+      {
+        "kappa_B": 4.0,
+        "kappa_theta": 2.0,
+        "R_zB": 0.8625510969745873,
+        "R_theta": 0.697723565577827,
+        "product": 0.6018222268741751,
+        "measured_R_hB": 0.6018835455183945,
+        "abs_err": 6.131864421943245e-05
+      },
+      {
+        "kappa_B": 4.0,
+        "kappa_theta": 0.5,
+        "R_zB": 0.8632641901574364,
+        "R_theta": 0.2432042854801746,
+        "product": 0.20994955054786088,
+        "measured_R_hB": 0.20990951898491716,
+        "abs_err": 4.003156294371535e-05
+      },
+      {
+        "kappa_B": 1.0,
+        "kappa_theta": 2.0,
+        "R_zB": 0.44491718852362705,
+        "R_theta": 0.6981431786172041,
+        "product": 0.31061590021731483,
+        "measured_R_hB": 0.30887045384517153,
+        "abs_err": 0.0017454463721433
+      },
+      {
+        "kappa_B": 8.0,
+        "kappa_theta": 8.0,
+        "R_zB": 0.9351742190183164,
+        "R_theta": 0.934978083096998,
+        "product": 0.8743673986594777,
+        "measured_R_hB": 0.8743102719701723,
+        "abs_err": 5.712668930535347e-05
+      },
+      {
+        "kappa_B": 2.0,
+        "kappa_theta": 0.0,
+        "R_zB": 0.6981793613225267,
+        "R_theta": 1.0,
+        "product": 0.6981793613225267,
+        "measured_R_hB": 0.6981793613225267,
+        "abs_err": 0.0
+      }
+    ],
+    "max_abs_err": 0.0017454463721433
+  },
+  "part2_separation": {
+    "kappa_b=0.0": {
+      "R1": 0.027712233111542847,
+      "R2": 0.02596827480992393,
+      "ratio": 1.06715726456162,
+      "donor_R1": 0.44160670036459665
+    },
+    "kappa_b=0.5": {
+      "R1": 0.21998245724972668,
+      "R2": 0.12815776051030714,
+      "ratio": 1.7164973574271727,
+      "donor_R1": 0.43430260657355185
+    },
+    "kappa_b=1.0": {
+      "R1": 0.4338969163731626,
+      "R2": 0.20754181655321685,
+      "ratio": 2.0906481574613416,
+      "donor_R1": 0.4330230384618903
+    },
+    "kappa_b=2.0": {
+      "R1": 0.6454012770406043,
+      "R2": 0.30677900738455854,
+      "ratio": 2.1037987003835976,
+      "donor_R1": 0.4366405162050121
+    },
+    "kappa_b=4.0": {
+      "R1": 0.7499573573241338,
+      "R2": 0.3811761752746132,
+      "ratio": 1.9674822456672094,
+      "donor_R1": 0.4385891280650914
+    }
+  },
+  "part3_degenerate_max": {
+    "max_resultant": 0.9996201992034912,
+    "radial_spread": 523.5385131835938,
+    "radial_tail": 251.1099023363066
+  },
+  "part5_sensitivity": {
+    "kappa_b=0.0": {
+      "R_zB": 0.0019566745953851173,
+      "behaviour_ratio": 0.6597948424246232,
+      "relative_deficit": -0.6007688471287443
+    },
+    "kappa_b=0.25": {
+      "R_zB": 0.12553547127697526,
+      "behaviour_ratio": 4.162999599869019,
+      "relative_deficit": 0.15560045968543632
+    },
+    "kappa_b=0.5": {
+      "R_zB": 0.23891553806933774,
+      "behaviour_ratio": 4.419143460908227,
+      "relative_deficit": 0.16157370715052322
+    },
+    "kappa_b=1.0": {
+      "R_zB": 0.43402159684474984,
+      "behaviour_ratio": 15.35983385178095,
+      "relative_deficit": 0.15243056327429474
+    },
+    "kappa_b=2.0": {
+      "R_zB": 0.6473462552042109,
+      "behaviour_ratio": 40.87681200170597,
+      "relative_deficit": 0.1334280993920729
+    },
+    "kappa_b=4.0": {
+      "R_zB": 0.7478958119865446,
+      "behaviour_ratio": 58.32628099156702,
+      "relative_deficit": 0.10588441050130261
+    }
+  },
+  "part6_proposition_R": {
+    "kappa=(4.0,4.0)": {
+      "totals": {
+        "1,0,0,1": 1.4957430489069257,
+        "1,1,0,1": 1.433035752634229,
+        "1,-1,0,1": 1.4327203097765848,
+        "1,0,1,1": 1.433180099753741,
+        "2,1,1,1": 1.166497474029022,
+        "0,1,1,0": 1.4960160048636288,
+        "1,2,0,1": 1.228868630593802,
+        "3,2,1,1": 0.8516170589527567,
+        "-1,0,0,-1": 1.4957430489069257
+      },
+      "identity": 1.4957430489069257,
+      "argmax": "0,1,1,0",
+      "n_strictly_better_than_identity": 0,
+      "runner_up_nonpermutation": 1.433180099753741
+    },
+    "kappa=(4.0,1.0)": {
+      "totals": {
+        "1,0,0,1": 1.1830190435973498,
+        "1,1,0,1": 0.8153029349947734,
+        "1,-1,0,1": 0.8148481669913371,
+        "1,0,1,1": 1.1279446605161139,
+        "2,1,1,1": 0.6336897552092027,
+        "0,1,1,0": 1.1831078848156356,
+        "1,2,0,1": 0.5290653649443303,
+        "3,2,1,1": 0.4146291581127866,
+        "-1,0,0,-1": 1.1830190435973498
+      },
+      "identity": 1.1830190435973498,
+      "argmax": "0,1,1,0",
+      "n_strictly_better_than_identity": 0,
+      "runner_up_nonpermutation": 1.1279446605161139
+    },
+    "kappa=(1.0,0.5)": {
+      "totals": {
+        "1,0,0,1": 0.6750257269936017,
+        "1,1,0,1": 0.3452647380477871,
+        "1,-1,0,1": 0.34674179324267446,
+        "1,0,1,1": 0.5414692083907715,
+        "2,1,1,1": 0.1330492115941591,
+        "0,1,1,0": 0.674880389188847,
+        "1,2,0,1": 0.25542438142380824,
+        "3,2,1,1": 0.10876651702439169,
+        "-1,0,0,-1": 0.6750257269936017
+      },
+      "identity": 0.6750257269936017,
+      "argmax": "1,0,0,1",
+      "n_strictly_better_than_identity": 0,
+      "runner_up_nonpermutation": 0.5414692083907715
+    },
+    "kappa=(4.0,0.0)": {
+      "totals": {
+        "1,0,0,1": 0.7492632398702461,
+        "1,1,0,1": 0.0023720367820612652,
+        "1,-1,0,1": 0.002206920677677363,
+        "1,0,1,1": 0.7489878890386864,
+        "2,1,1,1": 0.0024440501987260024,
+        "0,1,1,0": 0.7493341361846523,
+        "1,2,0,1": 0.0040535313914056275,
+        "3,2,1,1": 0.0025360822214471053,
+        "-1,0,0,-1": 0.7492632398702461
+      },
+      "identity": 0.7492632398702461,
+      "argmax": "0,1,1,0",
+      "n_strictly_better_than_identity": 0,
+      "runner_up_nonpermutation": 0.7489878890386864
+    }
+  },
+  "part7_independence": {
+    "floor": {
+      "mean": 0.002257965397710706,
+      "max": 0.0028564423635600708,
+      "n": 120000
+    },
+    "kappa=(4.0,4.0)": {
+      "dependence": {
+        "1,0,0,1": 0.001712608783053085,
+        "1,1,0,1": 0.3971862421583031,
+        "1,-1,0,1": 0.16810815727931844,
+        "1,0,1,1": 0.39405669061236037,
+        "2,1,1,1": 0.7396549750654658,
+        "0,1,1,0": 0.001712608783053085,
+        "1,2,0,1": 0.602122738760728,
+        "3,2,1,1": 0.8482817495572819,
+        "-1,0,0,-1": 0.001712608783053085
+      },
+      "identity": 0.001712608783053085,
+      "argmin": "1,0,0,1",
+      "best_nonpermutation": 0.16810815727931844,
+      "margin": 98.15911195995989
+    },
+    "kappa=(4.0,1.0)": {
+      "dependence": {
+        "1,0,0,1": 0.0026497852533830524,
+        "1,1,0,1": 0.6884045553717243,
+        "1,-1,0,1": 0.08210930926276162,
+        "1,0,1,1": 0.16598029964051597,
+        "2,1,1,1": 0.762987951641806,
+        "0,1,1,0": 0.0026497852533830524,
+        "1,2,0,1": 0.8522732055951001,
+        "3,2,1,1": 0.8599725025788395,
+        "-1,0,0,-1": 0.0026497852533830524
+      },
+      "identity": 0.0026497852533830524,
+      "argmin": "1,0,0,1",
+      "best_nonpermutation": 0.08210930926276162,
+      "margin": 30.98715609422705
+    },
+    "kappa=(1.0,0.5)": {
+      "dependence": {
+        "1,0,0,1": 0.00350884275871291,
+        "1,1,0,1": 0.42299064423542587,
+        "1,-1,0,1": 0.012923944032415511,
+        "1,0,1,1": 0.1903445504974961,
+        "2,1,1,1": 0.44587283493255336,
+        "0,1,1,0": 0.00350884275871291,
+        "1,2,0,1": 0.44844531664864234,
+        "3,2,1,1": 0.4489001219125341,
+        "-1,0,0,-1": 0.00350884275871291
+      },
+      "identity": 0.00350884275871291,
+      "argmin": "1,0,0,1",
+      "best_nonpermutation": 0.012923944032415511,
+      "margin": 3.683249698301153
+    },
+    "kappa=(4.0,0.0)": {
+      "dependence": {
+        "1,0,0,1": 0.0035447265141146174,
+        "1,1,0,1": 0.864460669865552,
+        "1,-1,0,1": 0.004170923694786902,
+        "1,0,1,1": 0.0036129246158849875,
+        "2,1,1,1": 0.8644590343027416,
+        "0,1,1,0": 0.0035447265141146174,
+        "1,2,0,1": 0.8644599845091855,
+        "3,2,1,1": 0.864460870908553,
+        "-1,0,0,-1": 0.0035447265141146174
+      },
+      "identity": 0.0035447265141146174,
+      "argmin": "1,0,0,1",
+      "best_nonpermutation": 0.0036129246158849875,
+      "margin": 1.0192393126800656
+    },
+    "kappa=(0.0,0.0)": {
+      "dependence": {
+        "1,0,0,1": 0.00414508396993737,
+        "1,1,0,1": 0.0040552957451409095,
+        "1,-1,0,1": 0.006119798651190681,
+        "1,0,1,1": 0.005052057036120091,
+        "2,1,1,1": 0.0041988783395858886,
+        "0,1,1,0": 0.00414508396993737,
+        "1,2,0,1": 0.004294216415057683,
+        "3,2,1,1": 0.005045037124395904,
+        "-1,0,0,-1": 0.00414508396993737
+      },
+      "identity": 0.00414508396993737,
+      "argmin": "1,1,0,1",
+      "best_nonpermutation": 0.0040552957451409095,
+      "margin": 0.9783386234277379
+    }
+  },
+  "part8_route_D": {
+    "baseline": 0.06488541850083157,
+    "n": 1500,
+    "even_coupling_blind_spot": {
+      "c=0.25": {
+        "linear_abs_corr": 0.007005594335695125,
+        "dcor": 0.10574751791537473
+      },
+      "c=0.5": {
+        "linear_abs_corr": 0.028131976268763768,
+        "dcor": 0.16963693767761234
+      },
+      "c=1.0": {
+        "linear_abs_corr": 0.03050667616871489,
+        "dcor": 0.26753483075776496
+      },
+      "c=2.0": {
+        "linear_abs_corr": 0.057497539465864236,
+        "dcor": 0.3445022939161277
+      },
+      "c=5.0": {
+        "linear_abs_corr": 0.016389070393821866,
+        "dcor": 0.3657125497905201
+      }
+    },
+    "cases": {
+      "4.3_triangular": {
+        "true": 0.05546018721782282,
+        "under_h": 0.53121503247598,
+        "ratio_to_baseline": 8.186970890373034,
+        "expected": "reject"
+      },
+      "7_lattice": {
+        "true": 0.05309289745671755,
+        "under_h": 0.6229872759536659,
+        "ratio_to_baseline": 9.60134480670232,
+        "expected": "reject"
+      },
+      "3.1_regrouping": {
+        "true": 0.07179950173664913,
+        "under_h": 0.07664736337444737,
+        "ratio_to_baseline": 1.1812725438992902,
+        "expected": "blind"
+      },
+      "HP_uniform_phase_lattice": {
+        "true": 0.05309289745671755,
+        "under_h": 0.05413360480012428,
+        "ratio_to_baseline": 0.8342953786979197,
+        "expected": "blind"
+      }
+    }
+  },
+  "part4_fitted": {
+    "data": {
+      "R1": 0.7449373539950664,
+      "R2": 0.39117498175146553
+    },
+    "fits": [
+      {
+        "restart": 0,
+        "adversarial": {
+          "seed": 20261824,
+          "fit_quality": 0.002769224112853408,
+          "resultant": 0.2832932778508945,
+          "radial_tail": 1.5428160959638328,
+          "u_dependence": 0.4359141715496019,
+          "module_dependence": 0.46944477311175653,
+          "module_dependence_baseline": 0.09850878741789215
+        },
+        "matched": {
+          "seed": 20261830,
+          "fit_quality": 0.0021633931901305914,
+          "resultant": 0.7153780078161166,
+          "radial_tail": 1.5195778772415012,
+          "u_dependence": 0.10083405672912713,
+          "module_dependence": 0.2732778858726531,
+          "module_dependence_baseline": 0.09850878741789215
+        }
+      },
+      {
+        "restart": 1,
+        "adversarial": {
+          "seed": 20262824,
+          "fit_quality": 0.0026569818146526814,
+          "resultant": 0.2828313366432962,
+          "radial_tail": 1.7132215682158856,
+          "u_dependence": 0.4312922811873833,
+          "module_dependence": 0.4609746420934873,
+          "module_dependence_baseline": 0.09850878741789215
+        },
+        "matched": {
+          "seed": 20262830,
+          "fit_quality": 0.0021447744220495224,
+          "resultant": 0.713005139175672,
+          "radial_tail": 1.46975365155537,
+          "u_dependence": 0.1314833420690239,
+          "module_dependence": 0.27836954636742406,
+          "module_dependence_baseline": 0.09850878741789215
+        }
+      },
+      {
+        "restart": 2,
+        "adversarial": {
+          "seed": 20263824,
+          "fit_quality": 0.003027915023267269,
+          "resultant": 0.2055112734380675,
+          "radial_tail": 1.5437037355338543,
+          "u_dependence": 0.18860743180355388,
+          "module_dependence": 0.27241173802325686,
+          "module_dependence_baseline": 0.09850878741789215
+        },
+        "matched": {
+          "seed": 20263830,
+          "fit_quality": 0.0021107082720845938,
+          "resultant": 0.7115788180990416,
+          "radial_tail": 1.5184449831329463,
+          "u_dependence": 0.10558867509608105,
+          "module_dependence": 0.2780382747460305,
+          "module_dependence_baseline": 0.09850878741789215
+        }
+      }
+    ]
+  },
+  "checks": [
+    {
+      "name": "part1 Prop. C: resultants multiply",
+      "pass": true,
+      "detail": "max abs err 1.75e-03"
+    },
+    {
+      "name": "part1 equality iff theta constant",
+      "pass": true,
+      "detail": "kappa_theta=0 -> R_hB 0.6982 vs R_zB 0.6982"
+    },
+    {
+      "name": "part2 no separation at kappa_B=0 (the honest boundary)",
+      "pass": true,
+      "detail": "ratio 1.07x"
+    },
+    {
+      "name": "part2 separation grows with kappa_B",
+      "pass": true,
+      "detail": "ratios [1.07, 1.72, 2.09, 2.1, 1.97]"
+    },
+    {
+      "name": "part2 R1 clears R2 decisively at the asymmetric setting",
+      "pass": true,
+      "detail": "ratio 1.97x"
+    },
+    {
+      "name": "part3 PREDICTED: free maximisation is fakeable, so no objective form",
+      "pass": true,
+      "detail": "R 0.9996, radial spread 524x"
+    },
+    {
+      "name": "part4 the criterion prefers matched in EVERY restart",
+      "pass": true,
+      "detail": "3/3"
+    },
+    {
+      "name": "part4 no radial-tail degeneracy in either arm",
+      "pass": true,
+      "detail": "max tail 1.7"
+    },
+    {
+      "name": "part5 HONEST BOUNDARY: both instruments die at R_zB = 0",
+      "pass": true,
+      "detail": "R_zB 0.0020, behaviour 0.66x floor -- neither fires"
+    },
+    {
+      "name": "part5 the relative deficit is scale-free in R_zB (Prop. C: it is 1 - R_theta)",
+      "pass": true,
+      "detail": "deficits [15.6, 16.2, 15.2, 13.3, 10.6]%"
+    },
+    {
+      "name": "part5 the resultant dominates in the weakly-concentrated band",
+      "pass": true,
+      "detail": "at R_zB=0.126: behaviour 4.16x (blind), deficit 15.6%"
+    },
+    {
+      "name": "part4 ROUTE D UNDER LEARNING: the matched fit's modules are more independent than the adversarial fit's, in every restart",
+      "pass": false,
+      "detail": "2/3; matched 0.273, 0.278, 0.278 vs adversarial 0.469, 0.461, 0.272 (baseline 0.099)"
+    },
+    {
+      "name": "part4 matched tracks the data's R1 better than the adversarial arm tracks R2",
+      "pass": true,
+      "detail": "matched med 0.7130 vs data R1 0.7449; adversarial med 0.2828 vs data R2 0.3912"
+    },
+    {
+      "name": "part6 Prop. R: the identity maximises the total resultant in every regime",
+      "pass": true,
+      "detail": "kappa=(4.0,4.0) argmax 0,1,1,0; kappa=(4.0,1.0) argmax 0,1,1,0; kappa=(1.0,0.5) argmax 1,0,0,1; kappa=(4.0,0.0) argmax 0,1,1,0"
+    },
+    {
+      "name": "part6 and it beats every NON-permutation element when both phases are concentrated",
+      "pass": true,
+      "detail": "kappa=(4.0,4.0): 1.496 vs 1.433; kappa=(4.0,1.0): 1.183 vs 1.128; kappa=(1.0,0.5): 0.675 vs 0.541"
+    },
+    {
+      "name": "part6 BOUNDARY: a uniform phase law enlarges the stabiliser, so the resolution is only as good as the concentration",
+      "pass": true,
+      "detail": "identity 0.7493 ties (1,0,1,1) at 0.7490, while (1,1,0,1) collapses to 0.0024"
+    },
+    {
+      "name": "part7 Prop. R': the identity is the unique independent representative",
+      "pass": true,
+      "detail": "kappa=(4.0,4.0) argmin 1,0,0,1; kappa=(4.0,1.0) argmin 1,0,0,1"
+    },
+    {
+      "name": "part7 and its margin is 1-2 orders of magnitude, far beyond the resultant's",
+      "pass": true,
+      "detail": "kappa=(4.0,4.0): 98.2x; kappa=(4.0,1.0): 31.0x"
+    },
+    {
+      "name": "part7 identity sits at the floor, i.e. it is genuinely independent",
+      "pass": true,
+      "detail": "floor 0.00226; identities 0.00171, 0.00265"
+    },
+    {
+      "name": "part7 BOUNDARY: with BOTH phase laws uniform the orbit is undetermined",
+      "pass": true,
+      "detail": "margin 0.98x -- every representative is independent, so nothing selects one"
+    },
+    {
+      "name": "part7 BOUNDARY: one uniform phase law already enlarges the stabiliser",
+      "pass": true,
+      "detail": "margin 1.02x"
+    },
+    {
+      "name": "part8 Route D rejects the 4.3 triangular counterexample -- the object that makes block-diagonality FALSE under (B1)-(B4)",
+      "pass": true,
+      "detail": "0.5312 = 8.2x baseline"
+    },
+    {
+      "name": "part8 Route D rejects the section 7 lattice regrouping",
+      "pass": true,
+      "detail": "0.6230 = 9.6x baseline"
+    },
+    {
+      "name": "part8 and is CORRECTLY blind to the 3.1 regrouping ((B2)'s job, not its own)",
+      "pass": true,
+      "detail": "0.0766 = 1.2x baseline"
+    },
+    {
+      "name": "part8 the dCor instrument sees section 3.10's blind spot (even coupling) where a linear probe does not",
+      "pass": true,
+      "detail": "dCor [0.106, 0.17, 0.268, 0.345, 0.366] rises monotonically; linear |corr| [0.007, 0.028, 0.031, 0.057, 0.016] stays at nothing"
+    },
+    {
+      "name": "part8 HONEST LIMIT: with uniform phases the lattice IS independence-preserving (Hyvarinen-Pajunen), so this is not a proof",
+      "pass": true,
+      "detail": "0.0541 = 0.8x baseline"
+    }
+  ],
+  "n_pass": 25,
+  "n_check": 26,
+  "runtime_s": 2067.9665327072144
+}

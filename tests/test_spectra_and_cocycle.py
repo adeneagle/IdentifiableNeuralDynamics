@@ -692,3 +692,38 @@ def test_module_rotation_numbers_matches_the_per_block_answers():
     assert [abs(r.rho) for r in rot] == pytest.approx(
         [0.40 / (2 * np.pi), 1.30 / (2 * np.pi)], abs=1e-9
     )
+
+
+# ---------------------------------------------------------------------------
+# Proposition N (identifiability.md 5.3): a single NEUTRAL exponent destroys
+# cross-module non-resonance globally.  This is what makes Theorem B's
+# restriction to fixed points a structural exclusion rather than a technical
+# gap -- worth a test, because the natural reading ("limit cycles are Siegel,
+# small divisors, hard") suggests a hypothesis that merely becomes difficult.
+# ---------------------------------------------------------------------------
+
+def test_one_neutral_exponent_kills_cross_module_nonresonance_everywhere():
+    """nu = 0 + nu is an order-2 resonance against every other module."""
+    from idyn import spectra as SPX
+
+    cycle = np.array([0.0, np.log(0.4)])           # {0, log|1-2a|}
+    spiral = np.array([np.log(0.55), np.log(0.55)])
+    # two contracting spirals are fine -- so the failure below is the zero, not
+    # some artefact of the checker
+    assert SPX.is_cross_module_nonresonant(
+        [np.array([np.log(0.92)] * 2), spiral], max_order=4)
+    # one neutral direction is already enough
+    assert not SPX.is_cross_module_nonresonant([cycle, spiral], max_order=4)
+    res = SPX.cross_module_resonances([cycle, spiral], max_order=4)
+    assert res, "expected explicit resonances"
+    # and the mechanism is the appended zero, not a numerical coincidence
+    assert any(abs(r.target - np.log(0.55)) < 1e-12 for r in res), [str(r) for r in res]
+
+
+def test_two_oscillatory_modules_are_resonant_at_every_frequency():
+    """So Theorem B can never cover the case the applied claim cares about."""
+    from idyn import spectra as SPX
+
+    for a1, a2 in ((0.3, 0.4), (0.3, 0.3), (0.2, 0.45)):
+        s = [np.array([0.0, np.log(abs(1 - 2 * a))]) for a in (a1, a2)]
+        assert not SPX.is_cross_module_nonresonant(s, max_order=4), (a1, a2)
