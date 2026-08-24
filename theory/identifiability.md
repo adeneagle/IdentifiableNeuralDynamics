@@ -2827,13 +2827,32 @@ so something must be added. It turns out to be exactly Proposition S's object.
 *Proof sketch.* The transverse contraction plays the role the fixed point played:
 $f_2^{n}(s)$ approaches the cycle at rate $\rho_2^{\perp}$, so by the same
 distortion bound $u_s$ is determined by its restriction to the cycle, and the
-nonlinear part of $u$ dies under (D-b′). On the cycle, take linear parts of
-$u_s=f_1^{-n}u_{f_2^{n}(s)}f_1^{n}$: for conformal $f_1$ the conjugation is
-trivial, so $A$ is constant along $f_2$-orbits, which are dense when $\omega_2$ is
-irrational, giving $A$ constant. Independence forces $A\in\operatorname{Stab}_{GL}(p_1)$,
-compact by Proposition S, and (D-d) makes it $\{I\}$. $\square$ `TODO(gap)` —
-the density step needs $\omega_2$ irrational, and the rational case needs the
-periodic-orbit version.
+nonlinear part of $u$ dies under (D-b′). Once $u_s$ is linear, independence
+applies **pointwise in $s$**: §15.11 gives $u_{s\#}p_1=p_1$ for each $s$
+*separately*, so $u_s\in\operatorname{Stab}_{GL}(p_1)$, which is compact by
+Proposition S, and (D-d) makes it $\{I\}$. Hence $g_s=g_{s_0}$ for all $s$, i.e.
+$h_1$ does not depend on $z_2$. $\square$ `TODO(gap)` — the linearisation step
+only; see the caveat below.
+
+> **Simplification, found on re-reading (2026-08-24), and it removes one of the
+> two flagged gaps.** An earlier version of this sketch took linear parts of
+> $u_s=f_1^{-n}u_{f_2^{n}(s)}f_1^{n}$, argued that for conformal $f_1$ the
+> conjugation is trivial so $A$ is constant along $f_2$-orbits, and then used
+> **density** of those orbits to make $A$ constant before applying the stabiliser
+> once. That route carried a `TODO(gap)` for $\omega_2$ rational, where the orbits
+> are finite and the density step is unavailable.
+>
+> **The density step was never needed.** Independence is a statement about every
+> $g_s$ individually — §15.11 derives $u_{s\#}p_1=p_1$ for each $s$ — so the
+> stabiliser applies pointwise and there is nothing to propagate along an orbit.
+> Consequently **(D-d) alone finishes the linear case, at every rotation number**,
+> rational or irrational, and no periodic-orbit variant is required.
+>
+> Note the ordering constraint below is what makes this available at all: the
+> pointwise argument needs $u_s$ *linear* first, because a nonlinear $u_s$ can
+> preserve $p_1$ without its linear part doing so. So the two observations are
+> complementary — one removes a gap, the other says why the remaining gap is the
+> only one.
 
 **Why (D-d) is the right hypothesis and not an extra assumption.** It is
 Proposition S's stabiliser, so §14 and §15 close on the same condition. It is
@@ -2858,7 +2877,10 @@ existing and not.
 
 > **Caveat on §15.13's sketch, added on re-reading it.** Theorem D′ is billed as
 > a sketch and it should be read as a weaker claim than Theorem D, which is
-> written out in full. Two steps need care that the sketch glosses:
+> written out in full. Two steps needed care that the sketch glossed; **the
+> simplification above closes the second one and leaves the first as the sole
+> obligation**, so read point 2 as the reason point 1 is load-bearing rather than
+> as an independent gap:
 >
 > 1. **Killing the nonlinear part.** At a fixed point this works because
 >    $u_{f_2^n(s)}\to\mathrm{id}$, so the residual is $O(\rho_2^{\,n})$. On a cycle
@@ -2877,3 +2899,11 @@ existing and not.
 > claim** — the escape exists iff $\operatorname{Stab}(p_1)$ is nontrivial, measured
 > at $0.0465$ versus $0.8512$. The cycle theorem is a conjecture with a plausible
 > route, not a result. `TODO(gap)`
+>
+> **Sole remaining obligation, stated precisely so it can be attacked or
+> refuted:** *on an attracting limit cycle, under (D-b′), is every $u_s$ linear?*
+> Everything else in Theorem D′ now follows — the stabiliser step is pointwise
+> and needs no density, no conformality of $f_1$, and no condition on $\omega_2$.
+> If the answer is no, the counterexample is a nonlinear $p_1$-preserving $u_s$
+> compatible with the cocycle, which would be a new escape and worth more than
+> the theorem.
