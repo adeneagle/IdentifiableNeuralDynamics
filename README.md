@@ -46,7 +46,9 @@ certified numerically.
 | **Does learning recover it?** | **Partly — and the earlier "no" is retracted.** That penalty was gauge-dependent and the optimiser paid it by shrinking the block instead of making it $u$-invariant, so no arm ever imposed the hypothesis (§3.12). Fixed, `exp13` kills the forbidden cross-block at every dose and recovers block-diagonality at 3 of 4 — the exception is consistent across all 8 restarts, and is the front line |
 | Literature positioning | Drafted in `theory/literature.md`, provenance-tagged |
 | **Identifiability test (no ground truth)** | **Built and validated on synthetic systems** (`exp14`, task 40). Compares two fits *to each other* — module count, dimensions, filtration order, per-module Lyapunov spectra, and **rotation numbers**, the invariant the spectrum provably cannot see. Blind to a within-module gauge change and to the §3.7 triangular conjugacy; catches the §3.1 regrouping and a frequency change. Under a **linear** observation map, disjoint neuron splits agree to $2.5\times10^{-4}$ in 16/16 comparisons, with signs and module order differing freely — the gauge quotiented out. Under a **strong nonlinear** map it is limited by **per-restart reliability**, not by data or training: $3\times$ the budget makes recovery *worse*, population size helps only to ~32 neurons/side, and what remains is fits that put two modules on one factor. That failure is invisible to `fit_quality` ($r=+0.24$, wrong sign) and to `coherence` ($r=-0.48$) but visible as duplicate invariants, which needs no ground truth — screening on it takes the median error $0.0633\to0.0032$ while leaving the negative control untouched at $0.0636$. `exp14` passes 11/11 under that protocol |
-| **Real data** | **None — everything here is synthetic** (`make_dataset`). The adequacy half of the empirical program is still unbuilt: co-smoothing over a nested model ladder (task 39). `CLAUDE.md` §6 |
+| **Real data** | **Two datasets.** NLB **MC_Maze** (`exp15`): the modular constraint is *free* on held-out-neuron co-smoothing, the rotation number is reproducible across disjoint neuron halves and the Lyapunov spectrum is not, and the latent flow is >=99% linear -- so only **Theorem A** is validated there. The **Hsu open-field** recording (`exp19`): only area **M56** has decoder curvature surviving per-unit Gaussianisation, which is the precondition Theorem B needs and the NLB benchmarks lack |
+| **Route B, exactly** | **Prop. S** (`exp20`): behaviour kills every coupling valued in a **non-compact** group -- translations, scalings, shears -- and the residue is a *compact* stabiliser of the block law. Additivity was never the load-bearing hypothesis; non-compactness was |
+| **Route D (new)** | Independence of the **module marginals** rejects the two counterexamples that block Theorems B and F, and is correctly blind to the one (B2) handles. **Theorem D** proves it at a contracting fixed point under `log rho_2 + spread(f_1) < 0` -- an *internal* property of one module, and **free for a conformal one**. The limit-cycle case is a sketch |
 
 ### The main finding
 
@@ -89,7 +91,9 @@ See [theory/counterexamples.md](theory/counterexamples.md) §3 and §5, and
 - **The triangular / filtration structure is proved unconditionally** and is
   recorded as the safe fallback: an ordered filtration of dynamical factors, a
   slow component evolving autonomously and a faster one driven by it. Its formal
-  write-up is deferred while Route A (block-diagonal) is pushed to completion.
+  write-up is **done** -- Theorem F, `identifiability.md` §6 -- and Route A is
+  now **parked** rather than being pushed; see `CLAUDE.md` for why priority moved
+  to Route D.
   It also reaches **further** than the block-diagonal result: the cocycle
   argument never uses the fixed point, and it holds at attracting periodic
   orbits ([identifiability.md](theory/identifiability.md) §4.4, certified in
@@ -189,6 +193,14 @@ in that file).
 | `exp12_decoder_strength_sweep` | CLAUDE.md task 29. Sweeps observation nonlinearity and finds a **confirmed dose-response**: `jac_diag` falls monotonically $0.994 \to 0.730 \to 0.702 \to 0.567$ across doses $(0.00, 0.31, 0.43, 0.60)$, the forbidden cross-block violated in $0/8$ restarts at low dose but $8/8$ at high. Not fit failure — better fits are *more* coupled. **But the B∘C reading is retracted (§3.12)**: no arm imposed the behavioural hypothesis, so this measures *dynamics-only* fitting. Two checks fail **by design** |
 | `exp13_conjugacy_residual` | CLAUDE.md tasks 32–33. Asks which Lemma D hypothesis a fitted $h$ breaks and finds the answer is none of them — the behavioural one was never imposed (§3.12). Re-runs the exp12 dose sweep under both the old and the whitened penalty, reporting the other three candidates alongside: the conjugacy residual $\lVert h\circ F-\tilde F\circ h\rVert$, the *learned* spectral gap, and the additivity defect of $h_B$ |
 | `exp14_invariant_agreement` | CLAUDE.md task 40 — the identifiability test that needs **no ground truth**: fit on disjoint neuron subsets and compare the fits to each other. Validates the new machinery (`spectra.rotation_number`, `metrics.invariant_agreement`) on exact systems first, where the answer is known: blind to a within-module gauge change *and* to the §3.7 triangular conjugacy, not blind to the §3.1 regrouping or a frequency change. Then measures learned models, and the useful part is what it found there — a fitted map iterated past its data converges to a **spurious attractor**, and recoverability is **per-invariant** (§3.13). Checks are per-invariant rather than one boolean, for that reason |
+| `exp15_real_data` / `exp15b` | First real data. NLB MC_Maze: the modular constraint is free on held-out-neuron co-smoothing; the rotation number reproduces across disjoint neuron halves against a per-neuron circular-shift null and the Lyapunov spectrum does not. `exp15b` closes every escape on why -- the latent flow is >=99% linear on these benchmarks, including single trials and MC_RTT |
+| `exp16_route_c_calibration` | Runs the task-40 protocol where the answer is CERTAIN. Headline is negative: two limit cycles are provably identified only up to GL(2,Z), yet two independent fits agree to 0.0004, so **cross-split agreement is necessary but not sufficient** |
+| `exp17_adversarial_init` | Fixes exp16 by warm-starting the two fits at *deliberately different* representatives. Verdict correct in all four arms; the pre-registered prediction was refuted and is committed failing |
+| `exp18_behaviour_vs_lattice` | Asks whether behaviour kills the GL(2,Z) regrouping that Route C cannot. **No** -- the regrouping acts by a rotation, which is a symmetry of a rotationally symmetric block law. Breaking the symmetry works in the data and does not survive learning: the encoder flattens the phase back |
+| `exp19_hsu_nonlinearity` | A second real dataset, and a corrected instrument: what gates Theorem B is curvature of the **decoder**, not of the flow. Only M56 survives per-unit Gaussianisation |
+| `exp20_stabiliser_dichotomy` | **Proposition S**, analytic and 15/15. Route B kills every non-compactly-valued coupling at matched displacement; the residue is compact and *conjugate to* O(d_B), not equal to it. Pre-registered negative: the practical detector is blinder than the criterion, and section 3.12's whitening fix is the same fact as that blindness |
+| `exp21_resultant_canonicalises` | **Route D**, 25/26. Independence of the module marginals rejects the triangular conjugacy and the lattice regrouping, and is correctly blind to the section 3.1 regrouping. The one failing check is the Hyvarinen-Pajunen hole found by gradient descent |
+| `exp22_independence_under_learning` | Does Route D survive fitting? Reruns exp18's adversarial 2x2 with the whitened-dCor term, with a symmetric-p_B control that must stay put because the term is provably blind there |
 
 Read `exp02` and `exp03` together. `exp02` shows the method reports
 non-uniqueness when the truth is non-unique, so `exp03`'s positive result is not
@@ -235,7 +247,7 @@ experiments/           exp01..exp14, each writing results/<name>.json
                           run_all.py covers exp01..exp10 only, exp13/exp14 are
                           excluded on cost -- their machinery is covered by tests/)
 environment.yml        pinned env; requirements.txt is the pure-pip equivalent
-tests/                 362 tests
+tests/                 417 tests (416 passing + 1 skipped)
 ```
 
 ## Conventions
